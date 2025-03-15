@@ -1,66 +1,66 @@
 defmodule Phoenix.Channel do
-  @moduledoc ~S"""
-  Defines a Phoenix Channel.
+@moduledoc ~S"""
+  Define um Canal Phoenix.
 
-  Channels provide a means for bidirectional communication from clients that
-  integrate with the `Phoenix.PubSub` layer for soft-realtime functionality.
+  Canais fornecem um meio de comunicação bidirecional a partir de clientes que
+  se integram com a camada `Phoenix.PubSub` para funcionalidade em tempo quase real.
 
-  For a conceptual overview, see the [Channels guide](channels.html).
+  Para uma visão conceitual, consulte o [guia de Canais](channels.html).
 
-  ## Topics & Callbacks
+  ## Tópicos e Callbacks
 
-  Every time you join a channel, you need to choose which particular topic you
-  want to listen to. The topic is just an identifier, but by convention it is
-  often made of two parts: `"topic:subtopic"`. Using the `"topic:subtopic"`
-  approach pairs nicely with the `Phoenix.Socket.channel/3` allowing you to
-  match on all topics starting with a given prefix by using a splat (the `*`
-  character) as the last character in the topic pattern:
+  Cada vez que você se conecta a um canal, precisa escolher qual tópico específico
+  deseja ouvir. O tópico é apenas um identificador, mas por convenção é
+  frequentemente composto por duas partes: `"tópico:subtópico"`. Usar a abordagem
+  `"tópico:subtópico"` combina bem com o `Phoenix.Socket.channel/3`, permitindo
+  corresponder a todos os tópicos que começam com um determinado prefixo usando um
+  curinga (o caractere `*`) como o último caractere no padrão do tópico:
 
       channel "room:*", MyAppWeb.RoomChannel
 
-  Any topic coming into the router with the `"room:"` prefix would dispatch
-  to `MyAppWeb.RoomChannel` in the above example. Topics can also be pattern
-  matched in your channels' `join/3` callback to pluck out the scoped pattern:
+  Qualquer tópico que chegue ao roteador com o prefixo `"room:"` seria encaminhado
+  para `MyAppWeb.RoomChannel` no exemplo acima. Os tópicos também podem ser combinados
+  por padrão no callback `join/3` dos seus canais para extrair o padrão de escopo:
 
-      # handles the special `"lobby"` subtopic
+      # trata o subtópico especial `"lobby"`
       def join("room:lobby", _payload, socket) do
         {:ok, socket}
       end
 
-      # handles any other subtopic as the room ID, for example `"room:12"`, `"room:34"`
+      # trata qualquer outro subtópico como o ID da sala, por exemplo `"room:12"`, `"room:34"`
       def join("room:" <> room_id, _payload, socket) do
         {:ok, socket}
       end
 
-  ## Authorization
+  ## Autorização
 
-  Clients must join a channel to send and receive PubSub events on that channel.
-  Your channels must implement a `join/3` callback that authorizes the socket
-  for the given topic. For example, you could check if the user is allowed to
-  join that particular room.
+  Os clientes devem se juntar a um canal para enviar e receber eventos PubSub nesse canal.
+  Seus canais devem implementar um callback `join/3` que autoriza o socket
+  para o tópico específico. Por exemplo, você poderia verificar se o usuário tem permissão
+  para entrar naquela sala específica.
 
-  To authorize a socket in `join/3`, return `{:ok, socket}`.
-  To refuse authorization in `join/3`, return `{:error, reply}`.
+  Para autorizar um socket em `join/3`, retorne `{:ok, socket}`.
+  Para recusar a autorização em `join/3`, retorne `{:error, reply}`.
 
-  ## Incoming Events
+  ## Eventos de Entrada
 
-  After a client has successfully joined a channel, incoming events from the
-  client are routed through the channel's `handle_in/3` callbacks. Within these
-  callbacks, you can perform any action. Incoming callbacks must return the
-  `socket` to maintain ephemeral state.
+  Depois que um cliente se conectou com sucesso a um canal, os eventos de entrada do
+  cliente são roteados através dos callbacks `handle_in/3` do canal. Dentro desses
+  callbacks, você pode executar qualquer ação. Os callbacks de entrada devem retornar o
+  `socket` para manter o estado efêmero.
 
-  Typically you'll either forward a message to all listeners with
-  `broadcast!/3` or reply directly to a client event for request/response style
-  messaging.
+  Normalmente, você encaminhará uma mensagem para todos os ouvintes com
+  `broadcast!/3` ou responderá diretamente a um evento do cliente para mensagens
+  no estilo de requisição/resposta.
 
-  General message payloads are received as maps:
+  As cargas úteis de mensagens gerais são recebidas como mapas:
 
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
         {:reply, :ok, socket}
       end
 
-  Binary data payloads are passed as a `{:binary, data}` tuple:
+  Cargas úteis de dados binários são passadas como uma tupla `{:binary, data}`:
 
       def handle_in("file_chunk", {:binary, chunk}, socket) do
         ...
@@ -69,23 +69,23 @@ defmodule Phoenix.Channel do
 
   ## Broadcasts
 
-  Here's an example of receiving an incoming `"new_msg"` event from one client,
-  and broadcasting the message to all topic subscribers for this socket.
+  Aqui está um exemplo de receber um evento `"new_msg"` de entrada de um cliente,
+  e transmitir a mensagem para todos os assinantes do tópico deste socket.
 
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast!(socket, "new_msg", %{uid: uid, body: body})
         {:noreply, socket}
       end
 
-  ## Replies
+  ## Respostas
 
-  Replies are useful for acknowledging a client's message or responding with
-  the results of an operation. A reply is sent only to the client connected to
-  the current channel process. Behind the scenes, they include the client
-  message `ref`, which allows the client to correlate the reply it receives
-  with the message it sent.
+  Respostas são úteis para confirmar a mensagem de um cliente ou responder com
+  os resultados de uma operação. Uma resposta é enviada apenas para o cliente conectado ao
+  processo atual do canal. Nos bastidores, elas incluem a `ref` da mensagem do cliente,
+  o que permite ao cliente correlacionar a resposta que recebe
+  com a mensagem que enviou.
 
-  For example, imagine creating a resource and replying with the created record:
+  Por exemplo, imagine criar um recurso e responder com o registro criado:
 
       def handle_in("create:post", attrs, socket) do
         changeset = Post.changeset(%Post{}, attrs)
@@ -100,7 +100,7 @@ defmodule Phoenix.Channel do
         end
       end
 
-  Or you may just want to confirm that the operation succeeded:
+  Ou você pode simplesmente querer confirmar que a operação foi bem-sucedida:
 
       def handle_in("create:post", attrs, socket) do
         changeset = Post.changeset(%Post{}, attrs)
@@ -113,31 +113,31 @@ defmodule Phoenix.Channel do
         end
       end
 
-  Binary data is also supported with replies via a `{:binary, data}` tuple:
+  Dados binários também são suportados com respostas através de uma tupla `{:binary, data}`:
 
       {:reply, {:ok, {:binary, bin}}, socket}
 
-  If you don't want to send a reply to the client, you can return:
+  Se você não quiser enviar uma resposta ao cliente, pode retornar:
 
       {:noreply, socket}
 
-  One situation when you might do this is if you need to reply later; see
+  Uma situação em que você pode fazer isso é se precisar responder mais tarde; veja
   `reply/2`.
 
   ## Pushes
 
-  Calling `push/3` allows you to send a message to the client which is not a
-  reply to a specific client message. Because it is not a reply, a pushed
-  message does not contain a client message `ref`; there is no prior client
-  message to relate it to.
+  Chamar `push/3` permite que você envie uma mensagem ao cliente que não é uma
+  resposta a uma mensagem específica do cliente. Como não é uma resposta, uma mensagem
+  enviada por push não contém uma `ref` da mensagem do cliente; não há mensagem prévia
+  do cliente à qual relacioná-la.
 
-  Possible use cases include notifying a client that:
-  - You've auto-saved the user's document
-  - The user's game is ending soon
-  - The IoT device's settings should be updated
+  Possíveis casos de uso incluem notificar um cliente que:
+  - Você salvou automaticamente o documento do usuário
+  - O jogo do usuário está terminando em breve
+  - As configurações do dispositivo IoT devem ser atualizadas
 
-  For example, you could `push/3` a message to the client in `handle_info/3`
-  after receiving a `PubSub` message relevant to them.
+  Por exemplo, você poderia usar `push/3` para enviar uma mensagem ao cliente em `handle_info/3`
+  após receber uma mensagem `PubSub` relevante para ele.
 
       alias Phoenix.Socket.Broadcast
       def handle_info(%Broadcast{topic: _, event: event, payload: payload}, socket) do
@@ -145,34 +145,33 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  Push data can be given in the form of a map or a tagged `{:binary, data}`
-  tuple:
+  Os dados de push podem ser fornecidos na forma de um mapa ou uma tupla marcada `{:binary, data}`:
 
-      # client asks for their current rank. reply contains it, and client
-      # is also pushed a leader board and a badge image
+      # o cliente pergunta sua classificação atual. a resposta contém isso, e o cliente
+      # também recebe um quadro de líderes e uma imagem de distintivo
       def handle_in("current_rank", _, socket) do
         push(socket, "leaders", %{leaders: Game.get_leaders(socket.assigns.game_id)})
         push(socket, "badge", {:binary, File.read!(socket.assigns.badge_path)})
         {:reply, %{val: Game.get_rank(socket.assigns[:user])}, socket}
       end
 
-  Note that in this example, `push/3` is called from `handle_in/3`; in this way
-  you can essentially reply N times to a single message from the client. See
-  `reply/2` for why this may be desirable.
+  Observe que, neste exemplo, `push/3` é chamado a partir de `handle_in/3`; desta forma,
+  você pode essencialmente responder N vezes a uma única mensagem do cliente. Veja
+  `reply/2` para entender por que isso pode ser desejável.
 
-  ## Intercepting Outgoing Events
+  ## Interceptando Eventos de Saída
 
-  When an event is broadcasted with `broadcast/3`, each channel subscriber can
-  choose to intercept the event and have their `handle_out/3` callback triggered.
-  This allows the event's payload to be customized on a socket by socket basis
-  to append extra information, or conditionally filter the message from being
-  delivered. If the event is not intercepted with `Phoenix.Channel.intercept/1`,
-  then the message is pushed directly to the client:
+  Quando um evento é transmitido com `broadcast/3`, cada assinante do canal pode
+  optar por interceptar o evento e ter seu callback `handle_out/3` acionado.
+  Isso permite que a carga útil do evento seja personalizada em uma base socket por socket
+  para anexar informações extras, ou filtrar condicionalmente a mensagem de ser
+  entregue. Se o evento não for interceptado com `Phoenix.Channel.intercept/1`,
+  então a mensagem é enviada diretamente para o cliente:
 
       intercept ["new_msg", "user_joined"]
 
-      # for every socket subscribing to this topic, append an `is_editable`
-      # value for client metadata.
+      # para cada socket assinando este tópico, anexe um valor `is_editable`
+      # para metadados do cliente.
       def handle_out("new_msg", msg, socket) do
         push(socket, "new_msg", Map.merge(msg,
           %{is_editable: User.can_edit_message?(socket.assigns[:user], msg)}
@@ -180,8 +179,8 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-      # do not send broadcasted `"user_joined"` events if this socket's user
-      # is ignoring the user who joined.
+      # não envie eventos `"user_joined"` transmitidos se o usuário deste socket
+      # estiver ignorando o usuário que entrou.
       def handle_out("user_joined", msg, socket) do
         unless User.ignoring?(socket.assigns[:user], msg.user_id) do
           push(socket, "user_joined", msg)
@@ -189,14 +188,14 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  ## Broadcasting to an external topic
+  ## Transmitindo para um tópico externo
 
-  In some cases, you will want to broadcast messages without the context of
-  a `socket`. This could be for broadcasting from within your channel to an
-  external topic, or broadcasting from elsewhere in your application like a
-  controller or another process. Such can be done via your endpoint:
+  Em alguns casos, você vai querer transmitir mensagens sem o contexto de
+  um `socket`. Isso poderia ser para transmitir de dentro do seu canal para um
+  tópico externo, ou transmitir de outro lugar em sua aplicação como um
+  controlador ou outro processo. Isso pode ser feito através do seu endpoint:
 
-      # within channel
+      # dentro do canal
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
         broadcast_from!(socket, "new_msg", %{uid: uid, body: body})
@@ -205,7 +204,7 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-      # within controller
+      # dentro do controlador
       def create(conn, params) do
         ...
         MyAppWeb.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
@@ -213,61 +212,61 @@ defmodule Phoenix.Channel do
         redirect(conn, to: "/")
       end
 
-  ## Terminate
+  ## Terminar
 
-  On termination, the channel callback `terminate/2` will be invoked with
-  the error reason and the socket.
+  Na terminação, o callback `terminate/2` do canal será invocado com
+  o motivo do erro e o socket.
 
-  If we are terminating because the client left, the reason will be
-  `{:shutdown, :left}`. Similarly, if we are terminating because the
-  client connection was closed, the reason will be `{:shutdown, :closed}`.
+  Se estivermos terminando porque o cliente saiu, o motivo será
+  `{:shutdown, :left}`. De forma similar, se estivermos terminando porque a
+  conexão do cliente foi fechada, o motivo será `{:shutdown, :closed}`.
 
-  If any of the callbacks return a `:stop` tuple, it will also
-  trigger terminate with the reason given in the tuple.
+  Se qualquer dos callbacks retornar uma tupla `:stop`, isso também
+  acionará o término com o motivo fornecido na tupla.
 
-  `terminate/2`, however, won't be invoked in case of errors nor in
-  case of exits. This is the same behaviour as you find in Elixir
-  abstractions like `GenServer` and others. Similar to `GenServer`,
-  it would also be possible to `:trap_exit` to guarantee that `terminate/2`
-  is invoked. This practice is not encouraged though.
+  No entanto, `terminate/2` não será invocado em caso de erros nem em
+  caso de saídas. Este é o mesmo comportamento que você encontra em abstrações
+  Elixir como `GenServer` e outros. Semelhante ao `GenServer`,
+  também seria possível usar `:trap_exit` para garantir que `terminate/2`
+  seja invocado. No entanto, essa prática não é encorajada.
 
-  Generally speaking, if you want to clean something up, it is better to
-  monitor your channel process and do the clean up from another process.
-  All channel callbacks, including `join/3`, are called from within the
-  channel process. Therefore, `self()` in any of them returns the PID to
-  be monitored.
+  De maneira geral, se você quiser limpar algo, é melhor
+  monitorar seu processo de canal e fazer a limpeza a partir de outro processo.
+  Todos os callbacks de canal, incluindo `join/3`, são chamados de dentro do
+  processo do canal. Portanto, `self()` em qualquer um deles retorna o PID a
+  ser monitorado.
 
-  ## Exit reasons when stopping a channel
+  ## Motivos de saída ao parar um canal
 
-  When the channel callbacks return a `:stop` tuple, such as:
+  Quando os callbacks do canal retornam uma tupla `:stop`, como:
 
       {:stop, :shutdown, socket}
       {:stop, {:error, :enoent}, socket}
 
-  the second argument is the exit reason, which follows the same behaviour as
-  standard `GenServer` exits.
+  o segundo argumento é o motivo da saída, que segue o mesmo comportamento que
+  saídas padrão do `GenServer`.
 
-  You have three options to choose from when shutting down a channel:
+  Você tem três opções para escolher ao encerrar um canal:
 
-    * `:normal` - in such cases, the exit won't be logged and linked processes
-      do not exit
+    * `:normal` - nestes casos, a saída não será registrada e processos vinculados
+      não são encerrados
 
-    * `:shutdown` or `{:shutdown, term}` - in such cases, the exit won't be
-      logged and linked processes exit with the same reason unless they're
-      trapping exits
+    * `:shutdown` ou `{:shutdown, term}` - nestes casos, a saída não será
+      registrada e processos vinculados são encerrados com o mesmo motivo, a menos que estejam
+      capturando saídas
 
-    * any other term - in such cases, the exit will be logged and linked
-      processes exit with the same reason unless they're trapping exits
+    * qualquer outro termo - nestes casos, a saída será registrada e processos vinculados
+      são encerrados com o mesmo motivo, a menos que estejam capturando saídas
 
-  ## Subscribing to external topics
+  ## Assinando tópicos externos
 
-  Sometimes you may need to programmatically subscribe a socket to external
-  topics in addition to the internal `socket.topic`. For example,
-  imagine you have a bidding system where a remote client dynamically sets
-  preferences on products they want to receive bidding notifications on.
-  Instead of requiring a unique channel process and topic per
-  preference, a more efficient and simple approach would be to subscribe a
-  single channel to relevant notifications via your endpoint. For example:
+  Às vezes, você pode precisar programaticamente assinar um socket a tópicos
+  externos, além do `socket.topic` interno. Por exemplo,
+  imagine que você tem um sistema de licitação onde um cliente remoto define dinamicamente
+  preferências em produtos sobre os quais deseja receber notificações de licitação.
+  Em vez de exigir um processo de canal único e um tópico por
+  preferência, uma abordagem mais eficiente e simples seria assinar um
+  único canal para notificações relevantes através do seu endpoint. Por exemplo:
 
       defmodule MyAppWeb.Endpoint.NotificationChannel do
         use Phoenix.Channel
@@ -301,10 +300,10 @@ defmodule Phoenix.Channel do
         end
       end
 
-  Note: the caller must be responsible for preventing duplicate subscriptions.
-  After calling `subscribe/1` from your endpoint, the same flow applies to
-  handling regular Elixir messages within your channel. Most often, you'll
-  simply relay the `%Phoenix.Socket.Broadcast{}` event and payload:
+  Observação: o chamador deve ser responsável por evitar assinaturas duplicadas.
+  Após chamar `subscribe/1` do seu endpoint, o mesmo fluxo se aplica a
+  lidar com mensagens Elixir regulares dentro do seu canal. Na maioria das vezes, você
+  simplesmente retransmitirá o evento e a carga útil `%Phoenix.Socket.Broadcast{}`:
 
       alias Phoenix.Socket.Broadcast
       def handle_info(%Broadcast{topic: _, event: event, payload: payload}, socket) do
@@ -312,39 +311,39 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  ## Hibernation
+  ## Hibernação
 
-  From Erlang/OTP 20, channels automatically hibernate to save memory
-  after 15_000 milliseconds of inactivity. This can be customized by
-  passing the `:hibernate_after` option to `use Phoenix.Channel`:
+  A partir do Erlang/OTP 20, os canais hibernam automaticamente para economizar memória
+  após 15.000 milissegundos de inatividade. Isso pode ser personalizado
+  passando a opção `:hibernate_after` para `use Phoenix.Channel`:
 
       use Phoenix.Channel, hibernate_after: 60_000
 
-  You can also set it to `:infinity` to fully disable it.
+  Você também pode definir como `:infinity` para desativá-lo completamente.
 
-  ## Shutdown
+  ## Desligamento
 
-  You can configure the shutdown behavior of each channel used when your
-  application is shutting down by setting the `:shutdown` value on use:
+  Você pode configurar o comportamento de desligamento de cada canal usado quando sua
+  aplicação está sendo encerrada, definindo o valor `:shutdown` no uso:
 
       use Phoenix.Channel, shutdown: 5_000
 
-  It defaults to 5_000. The supported values are described under the
-  in the `Supervisor` module docs.
+  O padrão é 5_000. Os valores suportados são descritos
+  na documentação do módulo `Supervisor`.
 
   ## Logging
 
-  By default, channel `"join"` and `"handle_in"` events are logged, using
-  the level `:info` and `:debug`, respectively. You can change the level used
-  for each event, or disable logs, per event type by setting the `:log_join`
-  and `:log_handle_in` options when using `Phoenix.Channel`. For example, the
-  following configuration logs join events as `:info`, but disables logging for
-  incoming events:
+  Por padrão, os eventos `"join"` e `"handle_in"` do canal são logados, usando
+  os níveis `:info` e `:debug`, respectivamente. Você pode mudar o nível usado
+  para cada evento, ou desabilitar logs, por tipo de evento, definindo as opções `:log_join`
+  e `:log_handle_in` ao usar `Phoenix.Channel`. Por exemplo, a
+  configuração a seguir registra eventos de join como `:info`, mas desativa o logging para
+  eventos de entrada:
 
       use Phoenix.Channel, log_join: :info, log_handle_in: false
 
-  Note that changing an event type's level doesn't affect what is logged,
-  unless you set it to `false`, it affects the associated level.
+  Observe que mudar o nível de um tipo de evento não afeta o que é registrado,
+  a menos que você o defina como `false`, isso afeta o nível associado.
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
@@ -355,15 +354,15 @@ defmodule Phoenix.Channel do
           {transport_pid :: Pid, serializer :: module, topic :: binary, ref :: binary,
            join_ref :: binary}
 
-  @doc """
-  Handle channel joins by `topic`.
+@doc """
+  Manipula entradas em canais por `topic`.
 
-  To authorize a socket, return `{:ok, socket}` or `{:ok, reply, socket}`. To
-  refuse authorization, return `{:error, reason}`.
+  Para autorizar um socket, retorne `{:ok, socket}` ou `{:ok, reply, socket}`. Para
+  recusar autorização, retorne `{:error, reason}`.
 
-  Payloads are serialized before sending with the configured serializer.
+  Os payloads são serializados antes do envio com o serializador configurado.
 
-  ## Example
+  ## Exemplo
 
       def join("room:lobby", payload, socket) do
         if authorized?(payload) do
@@ -379,12 +378,12 @@ defmodule Phoenix.Channel do
               | {:ok, reply :: payload, Socket.t()}
               | {:error, reason :: map}
 
-  @doc """
-  Handle incoming `event`s.
+@doc """
+  Manipula `event`os de entrada.
 
-  Payloads are serialized before sending with the configured serializer.
+  Os payloads são serializados antes do envio com o serializador configurado.
 
-  ## Example
+  ## Exemplo
 
       def handle_in("ping", payload, socket) do
         {:reply, {:ok, payload}, socket}
@@ -397,10 +396,10 @@ defmodule Phoenix.Channel do
               | {:stop, reason :: term, Socket.t()}
               | {:stop, reason :: term, reply, Socket.t()}
 
-  @doc """
-  Intercepts outgoing `event`s.
+ @doc """
+  Intercepta `event`os de saída.
 
-  See `intercept/1`.
+  Veja `intercept/1`.
   """
   @callback handle_out(event :: String.t(), payload :: payload, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
@@ -408,18 +407,18 @@ defmodule Phoenix.Channel do
               | {:stop, reason :: term, Socket.t()}
 
   @doc """
-  Handle regular Elixir process messages.
+  Manipula mensagens regulares de processos Elixir.
 
-  See `c:GenServer.handle_info/2`.
+  Veja `c:GenServer.handle_info/2`.
   """
   @callback handle_info(msg :: term, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
               | {:stop, reason :: term, Socket.t()}
 
   @doc """
-  Handle regular GenServer call messages.
+  Manipula mensagens regulares de chamada GenServer.
 
-  See `c:GenServer.handle_call/3`.
+  Veja `c:GenServer.handle_call/3`.
   """
   @callback handle_call(msg :: term, from :: {pid, tag :: term}, socket :: Socket.t()) ::
               {:reply, response :: term, Socket.t()}
@@ -427,9 +426,9 @@ defmodule Phoenix.Channel do
               | {:stop, reason :: term, Socket.t()}
 
   @doc """
-  Handle regular GenServer cast messages.
+  Manipula mensagens regulares de cast GenServer.
 
-  See `c:GenServer.handle_cast/2`.
+  Veja `c:GenServer.handle_cast/2`.
   """
   @callback handle_cast(msg :: term, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
@@ -442,9 +441,9 @@ defmodule Phoenix.Channel do
             when old_vsn: term | {:down, term}
 
   @doc """
-  Invoked when the channel process is about to exit.
+  Invocado quando o processo do canal está prestes a encerrar.
 
-  See `c:GenServer.terminate/2`.
+  Veja `c:GenServer.terminate/2`.
   """
   @callback terminate(
               reason :: :normal | :shutdown | {:shutdown, :left | :closed | term},
@@ -503,18 +502,18 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Defines which Channel events to intercept for `handle_out/3` callbacks.
+  Define quais eventos de Canal interceptar para callbacks `handle_out/3`.
 
-  By default, broadcasted events are pushed directly to the client, but
-  intercepting events gives your channel a chance to customize the event
-  for the client to append extra information or filter the message from being
-  delivered.
+  Por padrão, eventos transmitidos são enviados diretamente ao cliente, mas
+  interceptar eventos dá ao seu canal a oportunidade de personalizar o evento
+  para o cliente, anexando informações extras ou filtrando a mensagem para que
+  não seja entregue.
 
-  *Note*: intercepting events can introduce significantly more overhead if a
-  large number of subscribers must customize a message since the broadcast will
-  be encoded N times instead of a single shared encoding across all subscribers.
+  *Nota*: interceptar eventos pode introduzir uma sobrecarga significativamente maior se um
+  grande número de assinantes precisar personalizar uma mensagem, já que a transmissão será
+  codificada N vezes em vez de uma única codificação compartilhada entre todos os assinantes.
 
-  ## Examples
+  ## Exemplos
 
       intercept ["new_msg"]
 
@@ -525,7 +524,7 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  `handle_out/3` callbacks must return one of:
+  Callbacks `handle_out/3` devem retornar um dos seguintes:
 
       {:noreply, Socket.t} |
       {:noreply, Socket.t, timeout | :hibernate} |
@@ -555,12 +554,12 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Broadcast an event to all subscribers of the socket topic.
+  Transmite um evento para todos os assinantes do tópico do socket.
 
-  The event's message must be a serializable map or a tagged `{:binary, data}`
-  tuple where `data` is binary data.
+  A mensagem do evento deve ser um mapa serializável ou uma tupla marcada `{:binary, data}`
+  onde `data` é um dado binário.
 
-  ## Examples
+  ## Exemplos
 
       iex> broadcast(socket, "new_message", %{id: 1, content: "hello"})
       :ok
@@ -575,7 +574,7 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Same as `broadcast/3`, but raises if broadcast fails.
+  O mesmo que `broadcast/3`, mas lança uma exceção se o broadcast falhar.
   """
   def broadcast!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
@@ -583,13 +582,13 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Broadcast event from pid to all subscribers of the socket topic.
+  Transmite evento de um pid para todos os assinantes do tópico do socket.
 
-  The channel that owns the socket will not receive the published
-  message. The event's message must be a serializable map or a tagged
-  `{:binary, data}` tuple where `data` is binary data.
+  O canal que possui o socket não receberá a mensagem publicada.
+  A mensagem do evento deve ser um mapa serializável ou uma tupla marcada
+  `{:binary, data}` onde `data` é um dado binário.
 
-  ## Examples
+  ## Exemplos
 
       iex> broadcast_from(socket, "new_message", %{id: 1, content: "hello"})
       :ok
@@ -606,7 +605,7 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Same as `broadcast_from/3`, but raises if broadcast fails.
+  O mesmo que `broadcast_from/3`, mas lança uma exceção se o broadcast falhar.
   """
   def broadcast_from!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} =
@@ -616,20 +615,20 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Sends an event directly to the connected client without requiring a prior
-  message from the client.
+  Envia um evento diretamente ao cliente conectado sem exigir uma mensagem
+  prévia do cliente.
 
-  The event's message must be a serializable map or a tagged `{:binary, data}`
-  tuple where `data` is binary data.
+  A mensagem do evento deve ser um mapa serializável ou uma tupla marcada `{:binary, data}`
+  onde `data` é um dado binário.
 
-  Note that unlike some in client libraries, this server-side `push/3` does not
-  return a reference. If you need to get a reply from the client and to
-  correlate that reply with the message you pushed, you'll need to include a
-  unique identifier in the message, track it in the Channel's state, have the
-  client include it in its reply, and examine the ref when the reply comes to
+  Observe que, diferentemente de algumas bibliotecas de cliente, este `push/3` do lado do servidor não
+  retorna uma referência. Se você precisar obter uma resposta do cliente e
+  correlacionar essa resposta com a mensagem que você enviou, precisará incluir um
+  identificador único na mensagem, rastreá-lo no estado do Canal, fazer com que o
+  cliente o inclua em sua resposta e examinar a referência quando a resposta chegar a
   `handle_in/3`.
 
-  ## Examples
+  ## Exemplos
 
       iex> push(socket, "new_message", %{id: 1, content: "hello"})
       :ok
@@ -643,34 +642,34 @@ defmodule Phoenix.Channel do
     Server.push(transport_pid, socket.join_ref, topic, event, message, socket.serializer)
   end
 
-  @doc """
-  Replies asynchronously to a socket push.
+ @doc """
+  Responde de forma assíncrona a um push do socket.
 
-  The usual way of replying to a client's message is to return a tuple from `handle_in/3`
-  like:
+  A forma usual de responder à mensagem de um cliente é retornar uma tupla de `handle_in/3`
+  como:
 
       {:reply, {status, payload}, socket}
 
-  But sometimes you need to reply to a push asynchronously - that is, after
-  your `handle_in/3` callback completes. For example, you might need to perform
-  work in another process and reply when it's finished.
+  Mas às vezes você precisa responder a um push assincronamente - ou seja, depois que
+  seu callback `handle_in/3` é concluído. Por exemplo, você pode precisar realizar
+  trabalho em outro processo e responder quando estiver finalizado.
 
-  You can do this by generating a reference to the socket with `socket_ref/1`
-  and calling `reply/2` with that ref when you're ready to reply.
+  Você pode fazer isso gerando uma referência ao socket com `socket_ref/1`
+  e chamando `reply/2` com essa referência quando estiver pronto para responder.
 
-  *Note*: A `socket_ref` is required so the `socket` itself is not leaked
-  outside the channel. The `socket` holds information such as assigns and
-  transport configuration, so it's important to not copy this information
-  outside of the channel that owns it.
+  *Nota*: Um `socket_ref` é necessário para que o próprio `socket` não seja vazado
+  para fora do canal. O `socket` contém informações como atribuições e
+  configuração de transporte, então é importante não copiar essas informações
+  para fora do canal que as possui.
 
-  Technically, `reply/2` will allow you to reply multiple times to the same
-  client message, and each reply will include the client message `ref`. But the
-  client may expect only one reply; in that case, `push/3` would be preferable
-  for the additional messages.
+  Tecnicamente, `reply/2` permitirá que você responda várias vezes à mesma
+  mensagem do cliente, e cada resposta incluirá a `ref` da mensagem do cliente. Mas o
+  cliente pode esperar apenas uma resposta; nesse caso, `push/3` seria preferível
+  para as mensagens adicionais.
 
-  Payloads are serialized before sending with the configured serializer.
+  Os payloads são serializados antes do envio com o serializador configurado.
 
-  ## Examples
+  ## Exemplos
 
       def handle_in("work", payload, socket) do
         Worker.perform(payload, socket_ref(socket))
@@ -693,9 +692,9 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Generates a `socket_ref` for an async reply.
+  Gera um `socket_ref` para uma resposta assíncrona.
 
-  See `reply/2` for example usage.
+  Veja `reply/2` para um exemplo de uso.
   """
   @spec socket_ref(Socket.t()) :: socket_ref
   def socket_ref(%Socket{joined: true, ref: ref} = socket) when not is_nil(ref) do
