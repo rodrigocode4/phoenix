@@ -1,8 +1,8 @@
 defmodule Phoenix do
   @moduledoc """
-  This is the documentation for the Phoenix project.
+  Este é o documento para o projeto Phoenix.
 
-  To get started, see our [overview guides](overview.html).
+  Para começar, consulte seu [guia de overview](overview.html).
   """
   use Application
 
@@ -32,10 +32,10 @@ defmodule Phoenix do
   end
 
   @doc """
-  Returns the configured JSON encoding library for Phoenix.
+  Retorna a biblioteca de codificação JSON configurada para o Phoenix.
 
-  To customize the JSON library, including the following
-  in your `config/config.exs`:
+  Para personalizar a biblioteca JSON, inclua o seguinte
+  no seu `config/config.exs`:
 
       config :phoenix, :json_library, AlternativeJsonLibrary
 
@@ -45,14 +45,14 @@ defmodule Phoenix do
   end
 
   @doc """
-  Returns the `:plug_init_mode` that controls when plugs are
-  initialized.
+  Retorna o `:plug_init_mode` que controla quando os plugs são
+  inicializados.
 
-  We recommend to set it to `:runtime` in development for
-  compilation time improvements. It must be `:compile` in
-  production (the default).
+  Recomendamos configurá-lo como `:runtime` em desenvolvimento para
+  melhorias no tempo de compilação. Deve ser `:compile` em
+  produção (o padrão).
 
-  This option is passed as the `:init_mode` to `Plug.Builder.compile/3`.
+  Esta opção é passada como `:init_mode` para `Plug.Builder.compile/3`.
   """
   def plug_init_mode do
     Application.get_env(:phoenix, :plug_init_mode, :compile)
