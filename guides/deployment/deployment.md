@@ -1,24 +1,24 @@
-# Introduction to Deployment
+# Introdução ao Deployment
 
-Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](up_and_running.html) to create a basic application to work with.
+Uma vez que temos uma aplicação funcionando, estamos prontos para fazer o deployment. Se você ainda não terminou sua própria aplicação, não se preocupe. Basta seguir o [Guia de Primeiros Passos](up_and_running.html) para criar uma aplicação básica para trabalhar.
 
-When preparing an application for deployment, there are three main steps:
+Ao preparar uma aplicação para deployment, existem três etapas principais:
 
-  * Handling of your application secrets
-  * Compiling your application assets
-  * Starting your server in production
+  * Gerenciamento dos segredos da sua aplicação
+  * Compilação dos assets da sua aplicação
+  * Inicialização do seu servidor em produção
 
-In this guide, we will learn how to get the production environment running locally. You can use the same techniques in this guide to run your application in production, but depending on your deployment infrastructure, extra steps will be necessary.
+Neste guia, aprenderemos como configurar o ambiente de produção localmente. Você pode usar as mesmas técnicas deste guia para executar sua aplicação em produção, mas dependendo da sua infraestrutura de deployment, etapas adicionais serão necessárias.
 
-As an example of deploying to other infrastructures, we also discuss four different approaches in our guides: using [Elixir's releases](releases.html) with `mix release`, [using Gigalixir](gigalixir.html), [using Fly](fly.html), and [using Heroku](heroku.html). We've also included links to deploying Phoenix on other platforms under [Community Deployment Guides](#community-deployment-guides). Finally, the release guide has a sample Dockerfile you can use if you prefer to deploy with container technologies.
+Como exemplos de deployment em outras infraestruturas, também discutimos quatro abordagens diferentes em nossos guias: usando [releases do Elixir](releases.html) com `mix release`, [usando Gigalixir](gigalixir.html), [usando Fly](fly.html) e [usando Heroku](heroku.html). Também incluímos links para deployment do Phoenix em outras plataformas na seção [Guias de Deployment da Comunidade](#guias-de-deployment-da-comunidade). Finalmente, o guia de release possui um exemplo de Dockerfile que você pode usar se preferir fazer o deployment com tecnologias de contêineres.
 
-Let's explore those steps above one by one.
+Vamos explorar essas etapas uma por uma.
 
-## Handling of your application secrets
+## Gerenciamento dos segredos da sua aplicação
 
-All Phoenix applications have data that must be kept secure, for example, the username and password for your production database, and the secret Phoenix uses to sign and encrypt important information. The general recommendation is to keep those in environment variables and load them into your application. This is done in `config/runtime.exs` (formerly `config/prod.secret.exs` or `config/releases.exs`), which is responsible for loading secrets and configuration from environment variables.
+Todas as aplicações Phoenix têm dados que devem ser mantidos seguros, por exemplo, o nome de usuário e senha do seu banco de dados de produção, e o segredo que o Phoenix usa para assinar e criptografar informações importantes. A recomendação geral é manter esses dados em variáveis de ambiente e carregá-los em sua aplicação. Isso é feito no arquivo `config/runtime.exs` (anteriormente `config/prod.secret.exs` ou `config/releases.exs`), que é responsável por carregar segredos e configurações das variáveis de ambiente.
 
-Therefore, you need to make sure the proper relevant variables are set in production:
+Portanto, você precisa garantir que as variáveis relevantes estejam configuradas em produção:
 
 ```console
 $ mix phx.gen.secret
@@ -27,33 +27,33 @@ $ export SECRET_KEY_BASE=REALLY_LONG_SECRET
 $ export DATABASE_URL=ecto://USER:PASS@HOST/database
 ```
 
-Do not copy those values directly, set `SECRET_KEY_BASE` according to the result of `mix phx.gen.secret` and `DATABASE_URL` according to your database address.
+Não copie esses valores diretamente, configure `SECRET_KEY_BASE` de acordo com o resultado de `mix phx.gen.secret` e `DATABASE_URL` de acordo com o endereço do seu banco de dados.
 
-If for some reason you do not want to rely on environment variables, you can hard code the secrets in your `config/runtime.exs` but make sure not to check the file into your version control system.
+Se por algum motivo você não quiser depender de variáveis de ambiente, você pode codificar os segredos diretamente no seu `config/runtime.exs`, mas certifique-se de não incluir o arquivo no seu sistema de controle de versão.
 
-With your secret information properly secured, it is time to configure assets!
+Com suas informações secretas devidamente protegidas, é hora de configurar os assets!
 
-Before taking this step, we need to do one bit of preparation. Since we will be readying everything for production, we need to do some setup in that environment by getting our dependencies and compiling.
+Antes de dar este passo, precisamos fazer um pouco de preparação. Como vamos preparar tudo para produção, precisamos fazer algumas configurações nesse ambiente, obtendo nossas dependências e compilando.
 
 ```console
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 ```
 
-## Compiling your application assets
+## Compilando os assets da sua aplicação
 
-This step is required only if you have compilable assets like JavaScript and stylesheets. By default, Phoenix uses `esbuild` but everything is encapsulated in a single `mix assets.deploy` task defined in your `mix.exs`:
+Esta etapa é necessária apenas se você tiver assets compiláveis como JavaScript e folhas de estilo. Por padrão, o Phoenix usa `esbuild`, mas tudo está encapsulado em uma única tarefa `mix assets.deploy` definida no seu `mix.exs`:
 
 ```console
 $ MIX_ENV=prod mix assets.deploy
 Check your digested files at "priv/static".
 ```
 
-And that is it! The Mix task by default builds the assets and then generates digests with a cache manifest file so Phoenix can quickly serve assets in production.
+E é isso! A tarefa Mix, por padrão, compila os assets e então gera digests com um arquivo de manifesto de cache para que o Phoenix possa servir assets rapidamente em produção.
 
-> Note: if you run the task above in your local machine, it will generate many digested assets in `priv/static`. You can prune them by running `mix phx.digest.clean --all`.
+> Nota: se você executar a tarefa acima em sua máquina local, ela gerará muitos assets com digest em `priv/static`. Você pode limpá-los executando `mix phx.digest.clean --all`.
 
-Keep in mind that, if you by any chance forget to run the steps above, Phoenix will show an error message:
+Tenha em mente que, se por acaso você esquecer de executar as etapas acima, o Phoenix mostrará uma mensagem de erro:
 
 ```console
 $ PORT=4001 MIX_ENV=prod mix phx.server
@@ -61,60 +61,60 @@ $ PORT=4001 MIX_ENV=prod mix phx.server
 10:50:18.735 [error] Could not find static manifest at "my_app/_build/prod/lib/foo/priv/static/cache_manifest.json". Run "mix phx.digest" after building your static files or remove the configuration from "config/prod.exs".
 ```
 
-The error message is quite clear: it says Phoenix could not find a static manifest. Just run the commands above to fix it or, if you are not serving or don't care about assets at all, you can just remove the `cache_static_manifest` configuration from your config.
+A mensagem de erro é bastante clara: diz que o Phoenix não conseguiu encontrar um manifesto estático. Basta executar os comandos acima para corrigi-lo ou, se você não está servindo ou não se importa com os assets, você pode simplesmente remover a configuração `cache_static_manifest` do seu arquivo de configuração.
 
-## Starting your server in production
+## Iniciando seu servidor em produção
 
-To run Phoenix in production, we need to set the `PORT` and `MIX_ENV` environment variables when invoking `mix phx.server`:
+Para executar o Phoenix em produção, precisamos definir as variáveis de ambiente `PORT` e `MIX_ENV` ao invocar `mix phx.server`:
 
 ```console
 $ PORT=4001 MIX_ENV=prod mix phx.server
 10:59:19.136 [info] Running MyAppWeb.Endpoint with Cowboy on http://example.com
 ```
 
-To run in detached mode so that the Phoenix server does not stop and continues to run even if you close the terminal:
+Para executar em modo desanexado, de modo que o servidor Phoenix não pare e continue em execução mesmo se você fechar o terminal:
 
 ```console
 $ PORT=4001 MIX_ENV=prod elixir --erl "-detached" -S mix phx.server
 ```
 
-In case you get an error message, please read it carefully, and open up a bug report if it is still not clear how to address it.
+Caso você receba uma mensagem de erro, por favor, leia-a cuidadosamente e abra um relatório de bug se ainda não estiver claro como resolvê-lo.
 
-You can also run your application inside an interactive shell:
+Você também pode executar sua aplicação dentro de um shell interativo:
 
 ```console
 $ PORT=4001 MIX_ENV=prod iex -S mix phx.server
 10:59:19.136 [info] Running MyAppWeb.Endpoint with Cowboy on http://example.com
 ```
 
-## Putting it all together
+## Juntando tudo
 
-The previous sections give an overview about the main steps required to deploy your Phoenix application. In practice, you will end-up adding steps of your own as well. For example, if you are using a database, you will also want to run `mix ecto.migrate` before starting the server to ensure your database is up to date.
+As seções anteriores fornecem uma visão geral sobre as principais etapas necessárias para fazer o deployment da sua aplicação Phoenix. Na prática, você acabará adicionando etapas próprias também. Por exemplo, se você estiver usando um banco de dados, também vai querer executar `mix ecto.migrate` antes de iniciar o servidor para garantir que seu banco de dados esteja atualizado.
 
-Overall, here is a script you can use as a starting point:
+No geral, aqui está um script que você pode usar como ponto de partida:
 
 ```console
-# Initial setup
+# Configuração inicial
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
-# Compile assets
+# Compilação de assets
 $ MIX_ENV=prod mix assets.deploy
 
-# Custom tasks (like DB migrations)
+# Tarefas personalizadas (como migrações de banco de dados)
 $ MIX_ENV=prod mix ecto.migrate
 
-# Finally run the server
+# Finalmente, execute o servidor
 $ PORT=4001 MIX_ENV=prod mix phx.server
 ```
 
-And that's it. Next, you can use one of our official guides to deploy:
+E é isso. Em seguida, você pode usar um dos nossos guias oficiais para fazer o deployment:
 
-  * [with Elixir's releases](releases.html)
-  * [to Gigalixir](gigalixir.html), an Elixir-centric Platform as a Service (PaaS)
-  * [to Fly.io](fly.html), a PaaS that deploys your servers close to your users with built-in distribution support
-  * and [to Heroku](heroku.html), one of the most popular PaaS.
+  * [com releases do Elixir](releases.html)
+  * [para o Gigalixir](gigalixir.html), uma Plataforma como Serviço (PaaS) centrada em Elixir
+  * [para o Fly.io](fly.html), um PaaS que implanta seus servidores próximos aos seus usuários com suporte integrado para distribuição
+  * e [para o Heroku](heroku.html), um dos PaaS mais populares.
 
-## Community Deployment Guides
+## Guias de Deployment da Comunidade
 
-  * [Render](https://render.com) has first class support for Phoenix applications. There are guides for hosting Phoenix with [Mix releases](https://render.com/docs/deploy-phoenix), [Distillery](https://render.com/docs/deploy-phoenix-distillery), and as a [Distributed Elixir Cluster](https://render.com/docs/deploy-elixir-cluster).
+  * [Render](https://render.com) tem suporte de primeira classe para aplicações Phoenix. Existem guias para hospedar Phoenix com [Mix releases](https://render.com/docs/deploy-phoenix), [Distillery](https://render.com/docs/deploy-phoenix-distillery) e como um [Cluster Elixir Distribuído](https://render.com/docs/deploy-elixir-cluster).

@@ -1,74 +1,74 @@
-# File Uploads
+# Upload de Arquivos
 
-One common task for web applications is uploading files. These files might be images, videos, PDFs, or files of any other type. In order to upload files through an HTML interface, we need a `file` input tag in a multipart form.
+Uma tarefa comum para aplicações web é o upload de arquivos. Esses arquivos podem ser imagens, vídeos, PDFs ou arquivos de qualquer outro tipo. Para fazer upload de arquivos através de uma interface HTML, precisamos de uma tag de input `file` em um formulário multipart.
 
-> #### Looking for the LiveView Uploads guide? {: .neutral}
+> #### Procurando pelo guia de Uploads do LiveView? {: .neutral}
 >
-> This guide explains multipart HTTP file uploads via `Plug.Upload`.
-> For more information about LiveView file uploads, including direct-to-cloud external uploads on
-> the client, refer to the [LiveView Uploads guide](https://hexdocs.pm/phoenix_live_view/uploads.html).
+> Este guia explica uploads de arquivos HTTP multipart via `Plug.Upload`.
+> Para mais informações sobre uploads de arquivos do LiveView, incluindo uploads externos direto para a nuvem no
+> cliente, consulte o [guia de Uploads do LiveView](https://hexdocs.pm/phoenix_live_view/uploads.html).
 
-Plug provides a `Plug.Upload` struct to hold the data from the `file` input. A `Plug.Upload` struct will automatically appear in your request parameters if a user has selected a file when they submit the form.
+O Plug fornece uma struct `Plug.Upload` para conter os dados do input `file`. Uma struct `Plug.Upload` aparecerá automaticamente em seus parâmetros de requisição se um usuário tiver selecionado um arquivo ao enviar o formulário.
 
-In this guide you will do the following:
+Neste guia, você fará o seguinte:
 
-  1.  Configure a multipart form
+  1.  Configurar um formulário multipart
 
-  2. Add a file input element to the form
+  2. Adicionar um elemento de input de arquivo ao formulário
 
-  3. Verify your upload params
+  3. Verificar seus parâmetros de upload
 
-  4. Manage your uploaded files
+  4. Gerenciar seus arquivos enviados
 
-In the [`Contexts guide`](contexts.md), we generated an HTML resource for products. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please refer to that guide for instructions on generating the product resource you will be using here.
+No [`guia de Contextos`](contexts.md), geramos um recurso HTML para produtos. Podemos reutilizar o formulário que geramos lá para demonstrar como os uploads de arquivos funcionam no Phoenix. Consulte esse guia para obter instruções sobre como gerar o recurso de produto que você usará aqui.
 
-### Configure a multipart form
+### Configurar um formulário multipart
 
-The first thing you need to do is change your form into a multipart form. The `HelloWeb.CoreComponents` `simple_form/1` component accepts a `multipart` attribute where you can specify this.
+A primeira coisa que você precisa fazer é transformar seu formulário em um formulário multipart. O componente `simple_form/1` do `HelloWeb.CoreComponents` aceita um atributo `multipart` onde você pode especificar isso.
 
-Here is the form from `lib/hello_web/controllers/product_html/product_form.html.heex` with that change in place:
+Aqui está o formulário de `lib/hello_web/controllers/product_html/product_form.html.heex` com essa alteração:
 
 ```heex
 <.simple_form :let={f} for={@changeset} action={@action} multipart>
 . . .
 ```
 
-### Add a file input
+### Adicionar um input de arquivo
 
-Once you have a multipart form, you need a `file` input. Here's how you would do that, also in `product_form.html.heex`:
+Uma vez que você tenha um formulário multipart, você precisa de um input `file`. Veja como você faria isso, também em `product_form.html.heex`:
 
 ```heex
 . . .
-  <.input field={f[:photo]} type="file" label="Photo" />
+  <.input field={f[:photo]} type="file" label="Foto" />
 
   <:actions>
-    <.button>Save Product</.button>
+    <.button>Salvar Produto</.button>
   </:actions>
 </.simple_form>
 ```
 
-When rendered, here is the HTML for the default `HelloWeb.CoreComponents` `input/1` component:
+Quando renderizado, aqui está o HTML para o componente padrão `input/1` do `HelloWeb.CoreComponents`:
 
 ```html
 <div>
-  <label for="product_photo" class="block text-sm...">Photo</label>
+  <label for="product_photo" class="block text-sm...">Foto</label>
   <input type="file" name="product[photo]" id="product_photo" class="mt-2 block w-full...">
 </div>
 ```
 
-Note the `name` attribute of your `file` input. This will create the `"photo"` key in the `product_params` map which will be available in your controller action.
+Observe o atributo `name` do seu input `file`. Isso criará a chave `"photo"` no mapa `product_params` que estará disponível na ação do seu controlador.
 
-This is all from the form side. Now when users submit the form, a `POST` request will route to your `HelloWeb.ProductController` `create/2` action.
+Isso é tudo do lado do formulário. Agora, quando os usuários enviarem o formulário, uma requisição `POST` será roteada para a ação `create/2` do seu `HelloWeb.ProductController`.
 
-> #### Should I add photo to my Ecto schema? {: .neutral}
+> #### Devo adicionar a foto ao meu schema Ecto? {: .neutral}
 >
-> The photo input does not need to be part of your schema for it to come across in the `product_params`. If you want to persist any properties of the photo in a database, however, you would need to add it to your `Hello.Product` schema.
+> O input de foto não precisa fazer parte do seu schema para aparecer nos `product_params`. No entanto, se você quiser persistir quaisquer propriedades da foto em um banco de dados, você precisaria adicioná-la ao seu schema `Hello.Product`.
 
-### Verify your upload params
+### Verificar seus parâmetros de upload
 
-Since you generated an HTML resource, you can now start your server with `mix phx.server`, visit [http://localhost:4000/products/new](http://localhost:4000/products/new), and create a new product with a photo.
+Uma vez que você gerou um recurso HTML, agora você pode iniciar seu servidor com `mix phx.server`, visitar [http://localhost:4000/products/new](http://localhost:4000/products/new) e criar um novo produto com uma foto.
 
-Before you begin, add `IO.inspect product_params` to the top of your `ProductController.create/2` action in `lib/hello_web/controllers/product_controller.ex`. This will show the `product_params` in your development log so you can get a better sense of what's happening.
+Antes de começar, adicione `IO.inspect product_params` no topo da sua ação `ProductController.create/2` em `lib/hello_web/controllers/product_controller.ex`. Isso mostrará os `product_params` em seu log de desenvolvimento para que você possa ter uma ideia melhor do que está acontecendo.
 
 ```elixir
 . . .
@@ -77,42 +77,42 @@ Before you begin, add `IO.inspect product_params` to the top of your `ProductCon
 . . .
 ```
 
-When you do that, this is what your `product_params` will output in the log:
+Quando você fizer isso, isso é o que seus `product_params` irão gerar no log:
 
 ```elixir
 %{"title" => "Metaprogramming Elixir", "description" => "Write Less Code, Get More Done (and Have Fun!)", "price" => "15.000000", "views" => "0",
 "photo" => %Plug.Upload{content_type: "image/png", filename: "meta-cover.png", path: "/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/multipart-558399-917557-1"}}
 ```
 
-You have a `"photo"` key which maps to the pre-populated `Plug.Upload` struct representing your uploaded photo.
+Você tem uma chave `"photo"` que mapeia para a struct `Plug.Upload` pré-populada representando sua foto enviada.
 
-To make this easier to read, focus on the struct itself:
+Para facilitar a leitura, concentre-se na própria struct:
 
 ```elixir
 %Plug.Upload{content_type: "image/png", filename: "meta-cover.png", path: "/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/multipart-558399-917557-1"}
 ```
 
-`Plug.Upload` provides the file's content type, original filename, and path to the temporary file which Plug created for you. In this case, `"/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/"` is the directory created by Plug in which to put uploaded files. The directory will persist across requests. `"multipart-558399-917557-1"` is the name Plug gave to your uploaded file. If you had multiple `file` inputs and if the user selected photos for all of them, you would have multiple files scattered in temporary directories. Plug will make sure all the filenames are unique.
+`Plug.Upload` fornece o tipo de conteúdo do arquivo, o nome original do arquivo e o caminho para o arquivo temporário que o Plug criou para você. Neste caso, `"/var/folders/_6/xbsnn7tx6g9dblyx149nrvbw0000gn/T//plug-1434/"` é o diretório criado pelo Plug para colocar os arquivos enviados. O diretório persistirá entre requisições. `"multipart-558399-917557-1"` é o nome que o Plug deu ao seu arquivo enviado. Se você tivesse vários inputs `file` e se o usuário tivesse selecionado fotos para todos eles, você teria vários arquivos espalhados em diretórios temporários. O Plug garantirá que todos os nomes de arquivo sejam únicos.
 
-> #### Plug.Upload files are temporary {: .info}
+> #### Arquivos Plug.Upload são temporários {: .info}
 >
-> Plug removes uploads from its directory as the request completes. If you need to do anything with this file, you need to do it before then (or [give it away](`Plug.Upload.give_away/3`), but that is outside the scope of this guide).
+> O Plug remove os uploads de seu diretório conforme a requisição é concluída. Se você precisar fazer qualquer coisa com este arquivo, você precisa fazê-lo antes disso (ou [entregá-lo](`Plug.Upload.give_away/3`), mas isso está fora do escopo deste guia).
 
-### Manage your uploaded files
+### Gerenciar seus arquivos enviados
 
-Once you have the `Plug.Upload` struct available in your controller, you can perform any operation on it you want. For example, you may want to do one or more of the following:
+Uma vez que você tenha a struct `Plug.Upload` disponível em seu controlador, você pode realizar qualquer operação que desejar sobre ela. Por exemplo, você pode querer fazer uma ou mais das seguintes coisas:
 
-* Check to make sure the file exists with `File.exists?/1`
+* Verificar se o arquivo existe com `File.exists?/1`
 
-* Copy the file somewhere else on the filesystem with `File.cp/2`
+* Copiar o arquivo para outro lugar no sistema de arquivos com `File.cp/2`
 
-* Give the file away to another Elixir process with `Plug.Upload.give_away/3`
+* Entregar o arquivo para outro processo Elixir com `Plug.Upload.give_away/3`
 
-* Send it to S3 with an external library
+* Enviá-lo para o S3 com uma biblioteca externa
 
-* Send it back to the client with `Plug.Conn.send_file/5`
+* Enviá-lo de volta para o cliente com `Plug.Conn.send_file/5`
 
-In a production system, you may want to copy the file to a root directory, such as `/media`. When doing so, it is important to guarantee the names are unique. For instance, if you are allowing users to upload product cover images, you could use the product id to generate a unique name:
+Em um sistema de produção, você pode querer copiar o arquivo para um diretório raiz, como `/media`. Ao fazer isso, é importante garantir que os nomes sejam únicos. Por exemplo, se você está permitindo que os usuários façam upload de imagens de capa de produtos, você poderia usar o id do produto para gerar um nome único:
 
 ```elixir
 if upload = product_params["photo"] do
@@ -121,23 +121,23 @@ if upload = product_params["photo"] do
 end
 ```
 
-Then a `Plug.Static` plug could be added in your `lib/my_app_web/endpoint.ex` to serve the files at `"/media"`:
+Em seguida, um plug `Plug.Static` poderia ser adicionado em seu `lib/my_app_web/endpoint.ex` para servir os arquivos em `"/media"`:
 
 ```elixir
 plug Plug.Static, at: "/uploads", from: "/media"
 ```
 
-The uploaded file can now be accessed from your browsers using a path such as `"/uploads/1-cover.jpg"`. In practice, there are other concerns you want to handle when uploading files, such validating extensions, encoding names, and so on. Many times, using a library that already handles such cases is preferred.
+O arquivo enviado agora pode ser acessado de seus navegadores usando um caminho como `"/uploads/1-cover.jpg"`. Na prática, existem outras preocupações que você deseja lidar ao fazer upload de arquivos, como validar extensões, codificar nomes e assim por diante. Muitas vezes, usar uma biblioteca que já lida com esses casos é preferível.
 
-Finally, notice that when there is no data from the `file` input, you get neither the `"photo"` key nor a `Plug.Upload` struct. Here are the `product_params` from the log.
+Finalmente, observe que quando não há dados do input `file`, você não obtém nem a chave `"photo"` nem uma struct `Plug.Upload`. Aqui estão os `product_params` do log.
 
 ```elixir
 %{"title" => "Metaprogramming Elixir", "description" => "Write Less Code, Get More Done (and Have Fun!)", "price" => "15.000000", "views" => "0"}
 ```
 
-## Configuring upload limits
+## Configurando limites de upload
 
-The conversion from the data being sent by the form to an actual `Plug.Upload` is done by the `Plug.Parsers` plug which you can find inside `HelloWeb.Endpoint`:
+A conversão dos dados enviados pelo formulário para um `Plug.Upload` real é feita pelo plug `Plug.Parsers` que você pode encontrar dentro de `HelloWeb.Endpoint`:
 
 ```elixir
 # lib/hello_web/endpoint.ex
@@ -147,12 +147,12 @@ plug Plug.Parsers,
   json_decoder: Phoenix.json_library()
 ```
 
-Besides the options above, `Plug.Parsers` accepts other options to control data upload:
+Além das opções acima, `Plug.Parsers` aceita outras opções para controlar o upload de dados:
 
-  * `:length` - sets the max body length to read, defaults to `8_000_000` bytes
-  * `:read_length` - set the amount of bytes to read at one time, defaults to `1_000_000` bytes
-  * `:read_timeout` - set the timeout for each chunk received, defaults to `15_000` ms
+  * `:length` - define o comprimento máximo do corpo a ser lido, o padrão é `8_000_000` bytes
+  * `:read_length` - define a quantidade de bytes a serem lidos de uma vez, o padrão é `1_000_000` bytes
+  * `:read_timeout` - define o tempo limite para cada pedaço recebido, o padrão é `15_000` ms
 
-The first option configures the maximum data allowed. The remaining ones configure how much data we expect to read and its frequency. If the client cannot push data fast enough, the connection will be terminated. Phoenix ships with reasonable defaults but you may want to customize it under special circumstances, for example, if you are expecting really slow clients to send large chunks of data.
+A primeira opção configura o máximo de dados permitidos. As restantes configuram quanto dados esperamos ler e sua frequência. Se o cliente não conseguir enviar dados rápido o suficiente, a conexão será encerrada. Phoenix vem com padrões razoáveis, mas você pode querer personalizá-los em circunstâncias especiais, por exemplo, se você está esperando clientes realmente lentos para enviar grandes pedaços de dados.
 
-It is also worth pointing out those limits are important as a security mechanism. For example, if you don't set a limit for data upload, attackers could open up thousands of connections to your application and send one byte every 2 minutes, which would take very long to complete while using up all connections to your server. The limits above expect at least a reasonable amount of progress, making attackers' lives a bit harder.
+Também vale a pena apontar que esses limites são importantes como um mecanismo de segurança. Por exemplo, se você não definir um limite para o upload de dados, os atacantes poderiam abrir milhares de conexões para sua aplicação e enviar um byte a cada 2 minutos, o que levaria muito tempo para completar enquanto usa todas as conexões para o seu servidor. Os limites acima esperam pelo menos uma quantidade razoável de progresso, tornando a vida dos atacantes um pouco mais difícil.

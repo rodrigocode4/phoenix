@@ -1,56 +1,56 @@
-# Installation
+# Instalação
 
-In order to build a Phoenix application, we will need a few dependencies installed in our Operating System:
+Para construir uma aplicação Phoenix, precisamos de algumas dependências instaladas em nosso Sistema Operacional:
 
-  * the Erlang VM and the Elixir programming language
-  * a database - Phoenix recommends PostgreSQL, but you can pick others or not use a database at all
-  * and other optional packages.
+  * a máquina virtual Erlang e a linguagem de programação Elixir
+  * um banco de dados - Phoenix recomenda PostgreSQL, mas você pode escolher outros ou nem mesmo usar um banco de dados
+  * e outros pacotes opcionais.
 
-Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
+Por favor, dê uma olhada nesta lista e certifique-se de instalar tudo o que for necessário para o seu sistema. Ter dependências instaladas com antecedência pode evitar problemas frustrantes posteriormente.
 
-## Elixir 1.14 or later
+## Elixir 1.15 ou posterior
 
-Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
+Phoenix é escrito em Elixir, e nosso código de aplicação também será escrito em Elixir. Não iremos muito longe em uma aplicação Phoenix sem ele! O site do Elixir mantém uma excelente [Página de Instalação](https://elixir-lang.org/install.html) para ajudar.
 
-## Erlang 24 or later
+## Erlang 24 ou posterior
 
-Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. Without Erlang, Elixir code has no virtual machine to run on, so we need to install Erlang as well.
+O código Elixir é compilado para byte code Erlang para executar na máquina virtual Erlang. Sem Erlang, o código Elixir não tem uma máquina virtual para executar, então precisamos instalar o Erlang também.
 
-When we install Elixir using instructions from the Elixir [Installation Page](https://elixir-lang.org/install.html), we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](https://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
+Quando instalamos o Elixir usando as instruções da [Página de Instalação](https://elixir-lang.org/install.html) do Elixir, geralmente também obtemos o Erlang. Se o Erlang não foi instalado junto com o Elixir, consulte a seção [Instruções do Erlang](https://elixir-lang.org/install.html#installing-erlang) na Página de Instalação do Elixir para obter instruções.
 
 ## Phoenix
 
-To check that we are on Elixir 1.14 and Erlang 24 or later, run:
+Para verificar se estamos no Elixir 1.15 e Erlang 24 ou posterior, execute:
 
 ```console
 elixir -v
 Erlang/OTP 24 [erts-12.0] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Elixir 1.14.0
+Elixir 1.15.0
 ```
 
-Once we have Elixir and Erlang, we are ready to install the Phoenix application generator:
+Uma vez que temos Elixir e Erlang, estamos prontos para instalar o gerador de aplicações Phoenix:
 
 ```console
 $ mix archive.install hex phx_new
 ```
 
-The `phx.new` generator is now available to generate new applications in the next guide, called [Up and Running](up_and_running.html). The flags mentioned below are command line options to the generator; see all available options by calling `mix help phx.new`.
+O gerador `phx.new` agora está disponível para gerar novas aplicações no próximo guia, chamado [Up and Running](up_and_running.html). As flags mencionadas abaixo são opções de linha de comando para o gerador; veja todas as opções disponíveis chamando `mix help phx.new`.
 
 ## PostgreSQL
 
-PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL, MSSQL, or SQLite3 by passing the `--database` flag when creating a new application.
+PostgreSQL é um servidor de banco de dados relacional. O Phoenix configura aplicações para usá-lo por padrão, mas podemos mudar para MySQL, MSSQL ou SQLite3 passando a flag `--database` ao criar uma nova aplicação.
 
-In order to talk to databases, Phoenix applications use another Elixir package, called [Ecto](https://github.com/elixir-ecto/ecto). If you don't plan to use databases in your application, you can pass the `--no-ecto` flag.
+Para se comunicar com bancos de dados, as aplicações Phoenix usam outro pacote Elixir, chamado [Ecto](https://github.com/elixir-ecto/ecto). Se você não planeja usar bancos de dados em sua aplicação, pode passar a flag `--no-ecto`.
 
-However, if you are just getting started with Phoenix, we recommend you to install PostgreSQL and make sure it is running. The PostgreSQL wiki has [installation guides](https://wiki.postgresql.org/wiki/Detailed_installation_guides) for a number of different systems.
+No entanto, se você está apenas começando com Phoenix, recomendamos que instale o PostgreSQL e certifique-se de que ele esteja rodando. O wiki do PostgreSQL possui [guias de instalação](https://wiki.postgresql.org/wiki/Detailed_installation_guides) para vários sistemas diferentes.
 
-## inotify-tools (for Linux users)
+## inotify-tools (para usuários Linux)
 
-Phoenix provides a very handy feature called Live Reloading. As you change your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
+Phoenix fornece um recurso muito útil chamado Live Reloading. Conforme você altera suas views ou seus assets, ele recarrega automaticamente a página no navegador. Para que essa funcionalidade funcione, você precisa de um observador de sistema de arquivos.
 
-macOS and Windows users already have a filesystem watcher, but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
+Usuários de macOS e Windows já possuem um observador de sistema de arquivos, mas usuários de Linux devem instalar o inotify-tools. Consulte o [wiki do inotify-tools](https://github.com/rvoicilas/inotify-tools/wiki) para instruções de instalação específicas da distribuição.
 
-## Summary
+## Resumo
 
-At the end of this section, you must have installed Elixir, Hex, Phoenix, and PostgreSQL. Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html).
+Ao final desta seção, você deve ter instalado Elixir, Hex, Phoenix e PostgreSQL. Agora que temos tudo instalado, vamos criar nossa primeira aplicação Phoenix e [colocá-la para funcionar](up_and_running.html).

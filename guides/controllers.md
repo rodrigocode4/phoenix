@@ -1,14 +1,14 @@
-# Controllers
+# Controladores
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você percorreu os [guias introdutórios](installation.html) e conseguiu [executar](up_and_running.html) uma aplicação Phoenix.
 
-> **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
+> **Requisito**: Este guia pressupõe que você percorreu o [guia do ciclo de vida da requisição](request_lifecycle.html).
 
-Phoenix controllers act as intermediary modules. Their functions — called actions — are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before invoking the view layer to render a template or returning a JSON response.
+Os controladores Phoenix atuam como módulos intermediários. Suas funções — chamadas de ações — são invocadas a partir do roteador em resposta às requisições HTTP. As ações, por sua vez, reúnem todos os dados necessários e executam todas as etapas necessárias antes de invocar a camada de visualização para renderizar um template ou retornar uma resposta JSON.
 
-Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide, we might find what we're looking for in Plug itself. Please see the [Plug guide](plug.html) or the [Plug documentation](`Plug`) for more information.
+Os controladores Phoenix também são construídos sobre o pacote Plug e são, eles próprios, plugs. Os controladores fornecem as funções para fazer quase tudo o que precisamos em uma ação. Se nos encontrarmos procurando algo que os controladores Phoenix não fornecem, podemos encontrar o que estamos procurando no próprio Plug. Consulte o [guia do Plug](plug.html) ou a [documentação do Plug](`Plug`) para mais informações.
 
-A newly generated Phoenix app will have a single controller named `PageController`, which can be found at `lib/hello_web/controllers/page_controller.ex` which looks like this:
+Uma aplicação Phoenix recém-gerada terá um único controlador chamado `PageController`, que pode ser encontrado em `lib/hello_web/controllers/page_controller.ex` e que se parece com isto:
 
 ```elixir
 defmodule HelloWeb.PageController do
@@ -20,53 +20,53 @@ defmodule HelloWeb.PageController do
 end
 ```
 
-The first line below the module definition invokes the `__using__/1` macro of the `HelloWeb` module, which imports some useful modules.
+A primeira linha abaixo da definição do módulo invoca a macro `__using__/1` do módulo `HelloWeb`, que importa alguns módulos úteis.
 
-`PageController` gives us the `home` action to display the Phoenix [welcome page] associated with the default route Phoenix defines in the router.
+`PageController` nos fornece a ação `home` para exibir a [página de boas-vindas] do Phoenix associada à rota padrão que o Phoenix define no roteador.
 
-## Actions
+## Ações
 
-Controller actions are just functions. We can name them anything we like as long as they follow Elixir's naming rules. The only requirement we must fulfill is that the action name matches a route defined in the router.
+As ações do controlador são apenas funções. Podemos nomeá-las como quisermos, desde que sigam as regras de nomenclatura do Elixir. O único requisito que devemos cumprir é que o nome da ação corresponda a uma rota definida no roteador.
 
-For example, in `lib/hello_web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from `home`:
+Por exemplo, em `lib/hello_web/router.ex`, poderíamos mudar o nome da ação na rota padrão que o Phoenix nos dá em uma nova aplicação, de `home`:
 
 ```elixir
 get "/", PageController, :home
 ```
 
-to `index`:
+para `index`:
 
 ```elixir
 get "/", PageController, :index
 ```
 
-as long as we change the action name in `PageController` to `index` as well, the [welcome page] will load as before.
+desde que mudemos o nome da ação no `PageController` para `index` também, a [página de boas-vindas] carregará como antes.
 
 ```elixir
 defmodule HelloWeb.PageController do
   ...
 
   def index(conn, _params) do
-    render(conn, :index)
+    render(conn, :home)
   end
 end
 ```
 
-While we can name our actions whatever we like, there are conventions for action names which we should follow whenever possible. We went over these in the [routing guide](routing.html), but we'll take another quick look here.
+Embora possamos nomear nossas ações como quisermos, existem convenções para nomes de ações que devemos seguir sempre que possível. Vimos essas convenções no [guia de roteamento](routing.html), mas daremos outra olhada rápida aqui.
 
-- index   - renders a list of all items of the given resource type
-- show    - renders an individual item by ID
-- new     - renders a form for creating a new item
-- create  - receives parameters for one new item and saves it in a data store
-- edit    - retrieves an individual item by ID and displays it in a form for editing
-- update  - receives parameters for one edited item and saves the item to a data store
-- delete  - receives an ID for an item to be deleted and deletes it from a data store
+- index   - renderiza uma lista de todos os itens do tipo de recurso fornecido
+- show    - renderiza um item individual por ID
+- new     - renderiza um formulário para criar um novo item
+- create  - recebe parâmetros para um novo item e o salva em um armazenamento de dados
+- edit    - recupera um item individual por ID e o exibe em um formulário para edição
+- update  - recebe parâmetros para um item editado e salva o item em um armazenamento de dados
+- delete  - recebe um ID para um item a ser excluído e o exclui de um armazenamento de dados
 
-Each of these actions takes two parameters, which will be provided by Phoenix behind the scenes.
+Cada uma dessas ações recebe dois parâmetros, que serão fornecidos pelo Phoenix nos bastidores.
 
-The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn` comes to Phoenix via Elixir's Plug middleware framework. More detailed information about `conn` can be found in the [Plug.Conn documentation](`Plug.Conn`).
+O primeiro parâmetro é sempre `conn`, uma struct que contém informações sobre a requisição, como o host, elementos do caminho, porta, string de consulta e muito mais. `conn` chega ao Phoenix através do framework middleware Plug do Elixir. Informações mais detalhadas sobre `conn` podem ser encontradas na [documentação do Plug.Conn](`Plug.Conn`).
 
-The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against parameters in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [request life-cycle guide](request_lifecycle.html) when we added a messenger parameter to our `show` route in `lib/hello_web/controllers/hello_controller.ex`.
+O segundo parâmetro é `params`. Não surpreendentemente, este é um mapa que contém quaisquer parâmetros passados na requisição HTTP. É uma boa prática fazer pattern matching nos parâmetros na assinatura da função para fornecer dados em um pacote simples que podemos passar para a renderização. Vimos isso no [guia do ciclo de vida da requisição](request_lifecycle.html) quando adicionamos um parâmetro messenger à nossa rota `show` em `lib/hello_web/controllers/hello_controller.ex`.
 
 ```elixir
 defmodule HelloWeb.HelloController do
@@ -78,23 +78,23 @@ defmodule HelloWeb.HelloController do
 end
 ```
 
-In some cases — often in `index` actions, for instance — we don't care about parameters because our behavior doesn't depend on them. In those cases, we don't use the incoming parameters, and simply prefix the variable name with an underscore, calling it `_params`. This will keep the compiler from complaining about the unused variable while still keeping the correct arity.
+Em alguns casos — frequentemente em ações `index`, por exemplo — não nos importamos com os parâmetros porque nosso comportamento não depende deles. Nesses casos, não usamos os parâmetros de entrada e simplesmente prefixamos o nome da variável com um sublinhado, chamando-a de `_params`. Isso impedirá que o compilador reclame sobre a variável não utilizada, mantendo a aridade correta.
 
-## Rendering
+## Renderização
 
-Controllers can render content in several ways. The simplest is to render some plain text using the [`text/2`] function which Phoenix provides.
+Os controladores podem renderizar conteúdo de várias maneiras. A mais simples é renderizar algum texto simples usando a função [`text/2`] que o Phoenix fornece.
 
-For example, let's rewrite the `show` action from `HelloController` to return text instead. For that, we could do the following.
+Por exemplo, vamos reescrever a ação `show` do `HelloController` para retornar texto em vez disso. Para isso, poderíamos fazer o seguinte.
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
-  text(conn, "From messenger #{messenger}")
+  text(conn, "Do mensageiro #{messenger}")
 end
 ```
 
-Now [`/hello/Frank`] in your browser should display `From messenger Frank` as plain text without any HTML.
+Agora [`/hello/Frank`] em seu navegador deve exibir `Do mensageiro Frank` como texto simples sem qualquer HTML.
 
-A step beyond this is rendering pure JSON with the [`json/2`] function. We need to pass it something that the [Jason library](`Jason`) can decode into JSON, such as a map. (Jason is one of Phoenix's dependencies.)
+Um passo além disso é renderizar JSON puro com a função [`json/2`]. Precisamos passar algo que a [biblioteca Jason](`Jason`) possa decodificar em JSON, como um mapa. (Jason é uma das dependências do Phoenix.)
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
@@ -102,15 +102,15 @@ def show(conn, %{"messenger" => messenger}) do
 end
 ```
 
-If we again visit [`/hello/Frank`] in the browser, we should see a block of JSON with the key `id` mapped to the string `"Frank"`.
+Se visitarmos novamente [`/hello/Frank`] no navegador, deveremos ver um bloco de JSON com a chave `id` mapeada para a string `"Frank"`.
 
 ```json
 {"id": "Frank"}
 ```
 
-The [`json/2`] function is useful for writing APIs and there is also the [`html/2`] function for rendering HTML, but most of the times we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
+A função [`json/2`] é útil para escrever APIs e também existe a função [`html/2`] para renderizar HTML, mas na maioria das vezes usamos as views do Phoenix para construir nossas respostas. Isso é especialmente importante para respostas HTML, já que as Views do Phoenix fornecem benefícios de desempenho e segurança.
 
-Let's rollback our `show` action to what we originally wrote in the [request life-cycle guide](request_lifecycle.html):
+Vamos reverter nossa ação `show` para o que escrevemos originalmente no [guia do ciclo de vida da requisição](request_lifecycle.html):
 
 ```elixir
 defmodule HelloWeb.HelloController do
@@ -122,11 +122,11 @@ defmodule HelloWeb.HelloController do
 end
 ```
 
-In order for the [`render/3`] function to work correctly, the controller and view must share the same root name (in this case `Hello`), and the `HelloHTML` module must include an `embed_templates` definition specifying where its templates live. By default the controller, view module, and templates are collocated together in the same controller directory. In other words, `HelloController` requires `HelloHTML`, and `HelloHTML` requires the existence of the `lib/hello_web/controllers/hello_html/` directory, which must contain the `show.html.heex` template.
+Para que a função [`render/3`] funcione corretamente, o controlador e a view devem compartilhar o mesmo nome raiz (neste caso `Hello`), e o módulo `HelloHTML` deve incluir uma definição `embed_templates` especificando onde seus templates vivem. Por padrão, o controlador, o módulo de visualização e os templates estão localizados juntos no mesmo diretório do controlador. Em outras palavras, `HelloController` requer `HelloHTML`, e `HelloHTML` requer a existência do diretório `lib/hello_web/controllers/hello_html/`, que deve conter o template `show.html.heex`.
 
-[`render/3`] will also pass the value which the `show` action received for `messenger` from the parameters as an assign.
+[`render/3`] também passará o valor que a ação `show` recebeu para `messenger` dos parâmetros como um assign.
 
-If we need to pass values into the template when using `render`, that's easy. We can pass a keyword like we've seen with `messenger: messenger`, or we can use `Plug.Conn.assign/3`, which conveniently returns `conn`.
+Se precisarmos passar valores para o template ao usar `render`, isso é fácil. Podemos passar uma keyword list como já vimos com `messenger: messenger`, ou podemos usar `Plug.Conn.assign/3`, que convenientemente retorna `conn`.
 
 ```elixir
   def show(conn, %{"messenger" => messenger}) do
@@ -136,9 +136,9 @@ If we need to pass values into the template when using `render`, that's easy. We
   end
 ```
 
-Note: Using `Phoenix.Controller` imports `Plug.Conn`, so shortening the call to [`assign/3`] works just fine.
+Nota: Usar `Phoenix.Controller` importa `Plug.Conn`, então abreviar a chamada para [`assign/3`] funciona perfeitamente.
 
-Passing more than one value to our template is as simple as connecting [`assign/3`] functions together:
+Passar mais de um valor para nosso template é tão simples quanto conectar funções [`assign/3`] juntas:
 
 ```elixir
   def show(conn, %{"messenger" => messenger}) do
@@ -149,7 +149,7 @@ Passing more than one value to our template is as simple as connecting [`assign/
   end
 ```
 
-Or you can pass the assigns directly to `render` instead:
+Ou você pode passar os assigns diretamente para `render`:
 
 ```elixir
   def show(conn, %{"messenger" => messenger}) do
@@ -157,17 +157,17 @@ Or you can pass the assigns directly to `render` instead:
   end
 ```
 
-Generally speaking, once all assigns are configured, we invoke the view layer. The view layer (`HelloWeb.HelloHTML`) then renders `show.html` alongside the layout and a response is sent back to the browser.
+De maneira geral, uma vez que todos os assigns estão configurados, invocamos a camada de visualização. A camada de visualização (`HelloWeb.HelloHTML`) então renderiza `show.html` junto com o layout e uma resposta é enviada de volta ao navegador.
 
-[Components and HEEx templates](components.html) have their own guide, so we won't spend much time on them here. What we will look at is how to render different formats from inside a controller action.
+[Componentes e templates HEEx](components.html) têm seu próprio guia, então não vamos gastar muito tempo com eles aqui. O que vamos examinar é como renderizar diferentes formatos de dentro de uma ação do controlador.
 
-## New rendering formats
+## Novos formatos de renderização
 
-Rendering HTML through a template is fine, but what if we need to change the rendering format on the fly? Let's say that sometimes we need HTML, sometimes we need plain text, and sometimes we need JSON. Then what?
+Renderizar HTML através de um template é bom, mas e se precisarmos mudar o formato de renderização dinamicamente? Digamos que às vezes precisamos de HTML, às vezes precisamos de texto simples e às vezes precisamos de JSON. E então?
 
-The view's job is not only to render HTML templates. Views are about data presentation. Given a bag of data, the view's purpose is to present that in a meaningful way given some format, be it HTML, JSON, CSV, or others. Many web apps today return JSON to remote clients, and Phoenix views are *great* for JSON rendering.
+O trabalho da view não é apenas renderizar templates HTML. As views são sobre apresentação de dados. Dado um conjunto de dados, o propósito da view é apresentá-los de maneira significativa dado algum formato, seja HTML, JSON, CSV ou outros. Muitas aplicações web hoje retornam JSON para clientes remotos, e as views do Phoenix são *ótimas* para renderização de JSON.
 
-As an example, let's take `PageController`'s `home` action from a newly generated app. Out of the box, this has the right view `PageHTML`, the embedded templates from (`lib/hello_web/controllers/page_html`), and the right template for rendering HTML (`home.html.heex`.)
+Como exemplo, vamos pegar a ação `home` do `PageController` de uma aplicação recém-gerada. De fábrica, isso tem a view correta `PageHTML`, os templates incorporados de (`lib/hello_web/controllers/page_html`), e o template correto para renderizar HTML (`home.html.heex`.)
 
 ```elixir
 def home(conn, _params) do
@@ -175,38 +175,44 @@ def home(conn, _params) do
 end
 ```
 
-What it doesn't have is a view for rendering JSON. Phoenix Controller hands off to a view module to render templates, and it does so per format. We already have a view for the HTML format, but we need to instruct Phoenix how to render the JSON format as well. By default, you can see which formats your controllers support in `lib/hello_web.ex`:
+O que ela não tem é uma view para renderizar JSON. O Controller do Phoenix entrega a um módulo de view para renderizar templates, e faz isso por formato. Já temos uma view para o formato HTML, mas precisamos instruir o Phoenix sobre como renderizar o formato JSON também. Por padrão, você pode ver quais formatos seus controladores suportam em `lib/hello_web.ex`:
 
 ```elixir
   def controller do
     quote do
       use Phoenix.Controller,
         formats: [:html, :json],
-        layouts: [html: HelloWeb.Layouts]
+        layouts: [html: {HelloWeb.Layouts, :app}]
       ...
     end
   end
 ```
 
-So out of the box Phoenix will look for a `HTML` and `JSON` view modules based on the request format and the controller name. We can also explicitly tell Phoenix in our controller which view(s) to use for each format. For example, what Phoenix does by default can be explicitly set with the following in your controller:
+Então, por padrão, o Phoenix procurará por módulos de view `HTML` e `JSON` baseados no formato da requisição e no nome do controlador. Também podemos explicitamente informar ao Phoenix em nosso controlador qual(is) view(s) usar para cada formato. Por exemplo, o que o Phoenix faz por padrão pode ser explicitamente definido com o seguinte em seu controlador:
+
+```elixir
+plug :put_view, html: {HelloWeb.PageHTML, :app}, json: {HelloWeb.PageJSON, :app}
+```
+
+O nome do layout pode ser omitido, caso em que o nome de layout padrão `:app` é usado, então o acima é equivalente a:
 
 ```elixir
 plug :put_view, html: HelloWeb.PageHTML, json: HelloWeb.PageJSON
 ```
 
-Let's add a `PageJSON` view module at `lib/hello_web/controllers/page_json.ex`:
+Vamos adicionar um módulo de view `PageJSON` em `lib/hello_web/controllers/page_json.ex`:
 
 ```elixir
 defmodule HelloWeb.PageJSON do
   def home(_assigns) do
-    %{message: "this is some JSON"}
+    %{message: "isto é algum JSON"}
   end
 end
 ```
 
-Since the Phoenix View layer is simply a function that the controller renders, passing connection assigns, we can define a regular `home/1` function and return a map to be serialized as JSON.
+Como a camada de View do Phoenix é simplesmente uma função que o controlador renderiza, passando assigns de conexão, podemos definir uma função regular `home/1` e retornar um mapa para ser serializado como JSON.
 
-There are just a few more things we need to do to make this work. Because we want to render both HTML and JSON from the same controller, we need to tell our router that it should accept the `json` format. We do that by adding `json` to the list of accepted formats in the `:browser` pipeline. Let's open up `lib/hello_web/router.ex` and change `plug :accepts` to include `json` as well as `html` like this.
+Há apenas mais algumas coisas que precisamos fazer para que isso funcione. Como queremos renderizar tanto HTML quanto JSON do mesmo controlador, precisamos informar ao nosso roteador que ele deve aceitar o formato `json`. Fazemos isso adicionando `json` à lista de formatos aceitos no pipeline `:browser`. Vamos abrir `lib/hello_web/router.ex` e mudar `plug :accepts` para incluir `json` assim como `html` assim.
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -223,15 +229,15 @@ defmodule HelloWeb.Router do
 ...
 ```
 
-Phoenix allows us to change formats on the fly with the `_format` query string parameter. If we go to [`http://localhost:4000/?_format=json`](http://localhost:4000/?_format=json), we will see `%{"message": "this is some JSON"}`.
+O Phoenix nos permite mudar formatos dinamicamente com o parâmetro de query string `_format`. Se formos para [`http://localhost:4000/?_format=json`](http://localhost:4000/?_format=json), veremos `%{"message": "isto é algum JSON"}`.
 
-In practice, however, applications that need to render both formats typically use two distinct pipelines for each, such as the `pipeline :api` already defined in your router file. To learn more, see [our JSON and APIs guide](json_and_apis.md).
+Na prática, no entanto, aplicações que precisam renderizar ambos os formatos normalmente usam dois pipelines distintos para cada um, como o `pipeline :api` já definido em seu arquivo de roteador. Para saber mais, veja [nosso guia de JSON e APIs](json_and_apis.md).
 
-### Sending responses directly
+### Enviando respostas diretamente
 
-If none of the rendering options above quite fits our needs, we can compose our own using some of the functions that `Plug` gives us. Let's say we want to send a response with a status of "201" and no body whatsoever. We can do that with the `Plug.Conn.send_resp/3` function.
+Se nenhuma das opções de renderização acima se encaixa perfeitamente em nossas necessidades, podemos compor a nossa própria usando algumas das funções que o `Plug` nos fornece. Digamos que queremos enviar uma resposta com um status "201" e sem nenhum corpo. Podemos fazer isso com a função `Plug.Conn.send_resp/3`.
 
-Edit the `home` action of `PageController` in `lib/hello_web/controllers/page_controller.ex` to look like this:
+Edite a ação `home` do `PageController` em `lib/hello_web/controllers/page_controller.ex` para ficar assim:
 
 ```elixir
 def home(conn, _params) do
@@ -239,9 +245,9 @@ def home(conn, _params) do
 end
 ```
 
-Reloading [http://localhost:4000](http://localhost:4000) should show us a completely blank page. The network tab of our browser's developer tools should show a response status of "201" (Created). Some browsers (Safari) will download the response, as the content type is not set.
+Recarregando [http://localhost:4000](http://localhost:4000) deveria mostrar uma página completamente em branco. A aba de rede das ferramentas de desenvolvedor do nosso navegador deve mostrar um status de resposta "201" (Created). Alguns navegadores (Safari) irão baixar a resposta, já que o tipo de conteúdo não está definido.
 
-To be specific about the content type, we can use [`put_resp_content_type/2`] in conjunction with [`send_resp/3`].
+Para ser específico sobre o tipo de conteúdo, podemos usar [`put_resp_content_type/2`] em conjunto com [`send_resp/3`].
 
 ```elixir
 def home(conn, _params) do
@@ -251,13 +257,13 @@ def home(conn, _params) do
 end
 ```
 
-Using `Plug` functions in this way, we can craft just the response we need.
+Usando funções `Plug` desta forma, podemos criar exatamente a resposta que precisamos.
 
-### Setting the content type
+### Definindo o tipo de conteúdo
 
-Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Content-Type Header and providing the appropriate template.
+Análogo ao parâmetro de query string `_format`, podemos renderizar qualquer tipo de formato que quisermos modificando o Cabeçalho HTTP Content-Type e fornecendo o template apropriado.
 
-If we wanted to render an XML version of our `home` action, we might implement the action like this in `lib/hello_web/page_controller.ex`.
+Se quiséssemos renderizar uma versão XML da nossa ação `home`, poderíamos implementar a ação assim em `lib/hello_web/page_controller.ex`.
 
 ```elixir
 def home(conn, _params) do
@@ -267,17 +273,17 @@ def home(conn, _params) do
 end
 ```
 
-We would then need to provide an `home.xml.eex` template which created valid XML, and we would be done.
+Então precisaríamos fornecer um template `home.xml.eex` que criasse XML válido, e estaríamos prontos.
 
-For a list of valid content mime-types, please see the `MIME` library.
+Para uma lista de tipos de conteúdo mime válidos, por favor veja a biblioteca `MIME`.
 
-### Setting the HTTP Status
+### Definindo o Status HTTP
 
-We can also set the HTTP status code of a response similarly to the way we set the content type. The `Plug.Conn` module, imported into all controllers, has a `put_status/2` function to do this.
+Podemos também definir o código de status HTTP de uma resposta de forma semelhante à maneira como definimos o tipo de conteúdo. O módulo `Plug.Conn`, importado em todos os controladores, tem uma função `put_status/2` para fazer isso.
 
-`Plug.Conn.put_status/2` takes `conn` as the first parameter and as the second parameter either an integer or a "friendly name" used as an atom for the status code we want to set. The list of status code atom representations can be found in `Plug.Conn.Status.code/1` documentation.
+`Plug.Conn.put_status/2` leva `conn` como o primeiro parâmetro e como o segundo parâmetro um número inteiro ou um "nome amigável" usado como um átomo para o código de status que queremos definir. A lista de representações de código de status em átomos pode ser encontrada na documentação de `Plug.Conn.Status.code/1`.
 
-Let's change the status in our `PageController` `home` action.
+Vamos mudar o status em nossa ação `home` do `PageController`.
 
 ```elixir
 def home(conn, _params) do
@@ -287,15 +293,15 @@ def home(conn, _params) do
 end
 ```
 
-The status code we provide must be a valid number.
+O código de status que fornecemos deve ser um número válido.
 
-## Redirection
+## Redirecionamento
 
-Often, we need to redirect to a new URL in the middle of a request. A successful `create` action, for instance, will usually redirect to the `show` action for the resource we just created. Alternately, it could redirect to the `index` action to show all the things of that same type. There are plenty of other cases where redirection is useful as well.
+Frequentemente, precisamos redirecionar para uma nova URL no meio de uma requisição. Uma ação `create` bem-sucedida, por exemplo, geralmente redirecionará para a ação `show` do recurso que acabamos de criar. Alternativamente, poderia redirecionar para a ação `index` para mostrar todas as coisas desse mesmo tipo. Há muitos outros casos em que o redirecionamento é útil também.
 
-Whatever the circumstance, Phoenix controllers provide the handy [`redirect/2`] function to make redirection easy. Phoenix differentiates between redirecting to a path within the application and redirecting to a URL — either within our application or external to it.
+Qualquer que seja a circunstância, os controladores Phoenix fornecem a útil função [`redirect/2`] para tornar o redirecionamento fácil. O Phoenix diferencia entre redirecionar para um caminho dentro da aplicação e redirecionar para uma URL — seja dentro da nossa aplicação ou externa a ela.
 
-In order to try out [`redirect/2`], let's create a new route in `lib/hello_web/router.ex`.
+Para experimentar [`redirect/2`], vamos criar uma nova rota em `lib/hello_web/router.ex`.
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -310,7 +316,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-Then we'll change `PageController`'s `home` action of our controller to do nothing but to redirect to our new route.
+Então vamos mudar a ação `home` do nosso `PageController` para não fazer nada além de redirecionar para nossa nova rota.
 
 ```elixir
 defmodule HelloWeb.PageController do
@@ -323,9 +329,9 @@ end
 
 ```
 
-We made use of `Phoenix.VerifiedRoutes.sigil_p/2` to build our redirect path, which is the preferred approach to reference any path within our application. We learned about verified routes in the [routing guide](routing.html).
+Utilizamos `Phoenix.VerifiedRoutes.sigil_p/2` para construir nosso caminho de redirecionamento, que é a abordagem preferida para referenciar qualquer caminho dentro da nossa aplicação. Aprendemos sobre rotas verificadas no [guia de roteamento](routing.html).
 
-Finally, let's define in the same file the action we redirect to, which simply renders the home, but now under a new address:
+Finalmente, vamos definir no mesmo arquivo a ação para a qual redirecionamos, que simplesmente renderiza a home, mas agora sob um novo endereço:
 
 ```elixir
 def redirect_test(conn, _params) do
@@ -333,11 +339,11 @@ def redirect_test(conn, _params) do
 end
 ```
 
-When we reload our [welcome page], we see that we've been redirected to `/redirect_test` which shows the original welcome page. It works!
+Quando recarregamos nossa [página de boas-vindas], vemos que fomos redirecionados para `/redirect_test` que mostra a página de boas-vindas original. Funciona!
 
-If we care to, we can open up our developer tools, click on the network tab, and visit our root route again. We see two main requests for this page - a get to `/` with a status of `302`, and a get to `/redirect_test` with a status of `200`.
+Se quisermos, podemos abrir nossas ferramentas de desenvolvedor, clicar na aba de rede e visitar nossa rota raiz novamente. Vemos duas requisições principais para esta página - um get para `/` com um status de `302`, e um get para `/redirect_test` com um status de `200`.
 
-Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. For security reasons, the `:to` option can only redirect to paths within your application. If you want to redirect to a fully-qualified path or an external URL, you should use `:external` instead:
+Observe que a função de redirecionamento leva `conn` assim como uma string representando um caminho relativo dentro da nossa aplicação. Por razões de segurança, a opção `:to` só pode redirecionar para caminhos dentro da sua aplicação. Se você quiser redirecionar para um caminho totalmente qualificado ou uma URL externa, você deve usar `:external` em vez disso:
 
 ```elixir
 def home(conn, _params) do
@@ -345,54 +351,54 @@ def home(conn, _params) do
 end
 ```
 
-## Flash messages
+## Mensagens Flash
 
-Sometimes we need to communicate with users during the course of an action. Maybe there was an error updating a schema, or maybe we just want to welcome them back to the application. For this, we have flash messages.
+Às vezes precisamos nos comunicar com os usuários durante o curso de uma ação. Talvez tenha havido um erro ao atualizar um esquema, ou talvez apenas queremos dar-lhes as boas-vindas de volta à aplicação. Para isso, temos mensagens flash.
 
-The `Phoenix.Controller` module provides the [`put_flash/3`] to set flash messages as a key-value pair and placing them into a `@flash` assign in the connection. Let's set two flash messages in our `HelloWeb.PageController` to try this out.
+O módulo `Phoenix.Controller` fornece [`put_flash/3`] para definir mensagens flash como um par chave-valor e colocá-las em um assign `@flash` na conexão. Vamos definir duas mensagens flash em nosso `HelloWeb.PageController` para experimentar isso.
 
-To do this we modify the `home` action as follows:
+Para fazer isso, modificamos a ação `home` da seguinte forma:
 
 ```elixir
 defmodule HelloWeb.PageController do
   ...
   def home(conn, _params) do
     conn
-    |> put_flash(:error, "Let's pretend we have an error.")
+    |> put_flash(:error, "Vamos fingir que temos um erro.")
     |> render(:home, layout: false)
   end
 end
 ```
 
-In order to see our flash messages, we need to be able to retrieve them and display them in a template layout. We can do that using [`Phoenix.Flash.get/2`] which takes the flash data and the key we care about. It then returns the value for that key.
+Para ver nossas mensagens flash, precisamos ser capazes de recuperá-las e exibi-las em um layout de template. Podemos fazer isso usando [`Phoenix.Flash.get/2`] que pega os dados flash e a chave que nos interessa. Em seguida, retorna o valor para essa chave.
 
-For our convenience, a `flash_group` component is already available and added to the beginning of our [welcome page]
+Para nossa conveniência, um componente `flash_group` já está disponível e adicionado ao início da nossa [página de boas-vindas]
 
 ```heex
 <.flash_group flash={@flash} />
 ```
 
-When we reload the [welcome page], our message should appear in the top right corner of the page.
+Quando recarregamos a [página de boas-vindas], nossa mensagem deve aparecer no canto superior direito da página.
 
-The flash functionality is handy when mixed with redirects. Perhaps you want to redirect to a page with some extra information. If we reuse the redirect action from the previous section, we can do:
+A funcionalidade flash é útil quando misturada com redirecionamentos. Talvez você queira redirecionar para uma página com algumas informações extras. Se reutilizarmos a ação de redirecionamento da seção anterior, podemos fazer:
 
 ```elixir
   def home(conn, _params) do
     conn
-    |> put_flash(:error, "Let's pretend we have an error.")
+    |> put_flash(:error, "Vamos fingir que temos um erro.")
     |> redirect(to: ~p"/redirect_test")
   end
 ```
 
-Now if you reload the [welcome page], you will be redirected and the flash message will be shown once more.
+Agora, se você recarregar a [página de boas-vindas], você será redirecionado e a mensagem flash será mostrada mais uma vez.
 
-Besides [`put_flash/3`], the `Phoenix.Controller` module has another useful function worth knowing about. [`clear_flash/1`] takes only `conn` and removes any flash messages which might be stored in the session.
+Além de [`put_flash/3`], o módulo `Phoenix.Controller` tem outra função útil que vale a pena conhecer. [`clear_flash/1`] pega apenas `conn` e remove quaisquer mensagens flash que possam estar armazenadas na sessão.
 
-Phoenix does not enforce which keys are stored in the flash. As long as we are internally consistent, all will be well. `:info` and `:error`, however, are common and are handled by default in our templates.
+O Phoenix não impõe quais chaves são armazenadas no flash. Desde que sejamos internamente consistentes, tudo estará bem. `:info` e `:error`, no entanto, são comuns e são tratados por padrão em nossos templates.
 
-## Error pages
+## Páginas de erro
 
-Phoenix has two views called `ErrorHTML` and `ErrorJSON` which live in `lib/hello_web/controllers/`. The purpose of these views is to handle errors in a general way for incoming HTML or JSON requests. Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [Custom Error Pages How-To](custom_error_pages.html) for more information.
+O Phoenix tem duas views chamadas `ErrorHTML` e `ErrorJSON` que vivem em `lib/hello_web/controllers/`. O propósito dessas views é lidar com erros de maneira geral para requisições HTML ou JSON de entrada. Semelhante às views que construímos neste guia, as views de erro podem retornar tanto respostas HTML quanto JSON. Veja o [How-To de Páginas de Erro Personalizadas](custom_error_pages.html) para mais informações.
 
 [`render/4`]: `Phoenix.Template.render/4`
 [`/hello/Frank`]:  http://localhost:4000/hello/Frank
@@ -408,4 +414,4 @@ Phoenix has two views called `ErrorHTML` and `ErrorJSON` which live in `lib/hell
 [`render/3`]: `Phoenix.Controller.render/3`
 [`send_resp/3`]: `Plug.Conn.send_resp/3`
 [`text/2`]: `Phoenix.Controller.text/2`
-[welcome page]: http://localhost:4000/
+[página de boas-vindas]: http://localhost:4000/

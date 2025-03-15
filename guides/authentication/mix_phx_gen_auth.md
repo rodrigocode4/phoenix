@@ -1,128 +1,128 @@
 # mix phx.gen.auth
 
-The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
+O comando `mix phx.gen.auth` gera um sistema de autenticação flexível e pré-construído para sua aplicação Phoenix. Este gerador permite que você rapidamente supere a tarefa de adicionar autenticação ao seu código e mantenha o foco no problema do mundo real que sua aplicação está tentando resolver.
 
-## Getting started
+## Primeiros passos
 
-> Before running this command, consider committing your work as it generates multiple files.
+> Antes de executar este comando, considere fazer um commit do seu trabalho, pois ele gera múltiplos arquivos.
 
-Let's start by running the following command from the root of our app (or `apps/my_app_web` in an umbrella app):
+Vamos começar executando o seguinte comando a partir da raiz da nossa aplicação (ou `apps/my_app_web` em uma aplicação guarda-chuva):
 
 ```console
 $ mix phx.gen.auth Accounts User users
 
-An authentication system can be created in two different ways:
-- Using Phoenix.LiveView (default)
-- Using Phoenix.Controller only
+Um sistema de autenticação pode ser criado de duas maneiras diferentes:
+- Usando Phoenix.LiveView (padrão)
+- Usando apenas Phoenix.Controller
 
-Do you want to create a LiveView based authentication system? [Y/n] Y
+Você deseja criar um sistema de autenticação baseado em LiveView? [Y/n] Y
 ```
 
-The authentication generators support Phoenix LiveView, for enhanced UX, so we'll answer `Y` here. You may also answer `n` for a controller based authentication system.
+Os geradores de autenticação suportam Phoenix LiveView, para uma melhor experiência do usuário, então responderemos `Y` aqui. Você também pode responder `n` para um sistema de autenticação baseado em controllers.
 
-Either approach will create an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module, which is used for generating database table names and route paths. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema, and it generates many more context functions.
+Qualquer abordagem criará um contexto `Accounts` com um módulo de esquema `Accounts.User`. O argumento final é a versão plural do módulo de esquema, que é usado para gerar nomes de tabelas de banco de dados e caminhos de rota. O gerador `mix phx.gen.auth` é semelhante ao `mix phx.gen.html`, exceto por não aceitar uma lista de campos adicionais para adicionar ao esquema, e por gerar muito mais funções de contexto.
 
-Since this generator installed additional dependencies in `mix.exs`, let's fetch those:
+Como este gerador instalou dependências adicionais em `mix.exs`, vamos buscá-las:
 
 ```console
 $ mix deps.get
 ```
 
-Now we need to verify the database connection details for the development and test environments in `config/` so the migrator and tests can run properly. Then run the following to create the database:
+Agora precisamos verificar os detalhes de conexão do banco de dados para os ambientes de desenvolvimento e teste em `config/` para que o migrador e os testes possam ser executados corretamente. Em seguida, execute o seguinte para criar o banco de dados:
 
 ```console
 $ mix ecto.setup
 ```
 
-Let's run the tests to make sure our new authentication system works as expected.
+Vamos executar os testes para garantir que nosso novo sistema de autenticação funcione como esperado.
 
 ```console
 $ mix test
 ```
 
-And finally, let's start our Phoenix server and try it out.
+E finalmente, vamos iniciar nosso servidor Phoenix e testá-lo.
 
 ```console
 $ mix phx.server
 ```
 
-## Developer responsibilities
+## Responsabilidades do desenvolvedor
 
-Since Phoenix generates this code into your application instead of building these modules into Phoenix itself, you now have complete freedom to modify the authentication system, so it works best with your use case. The one caveat with using a generated authentication system is it will not be updated after it's been generated. Therefore, as improvements are made to the output of `mix phx.gen.auth`, it becomes your responsibility to determine if these changes need to be ported into your application. Security-related and other important improvements will be explicitly and clearly marked in the `CHANGELOG.md` file and upgrade notes.
+Como o Phoenix gera este código em sua aplicação em vez de incorporar esses módulos no próprio Phoenix, você agora tem total liberdade para modificar o sistema de autenticação, para que funcione melhor com seu caso de uso. A única ressalva ao usar um sistema de autenticação gerado é que ele não será atualizado após ser gerado. Portanto, à medida que melhorias são feitas na saída do `mix phx.gen.auth`, torna-se sua responsabilidade determinar se essas mudanças precisam ser portadas para sua aplicação. Melhorias relacionadas à segurança e outras melhorias importantes serão explícita e claramente marcadas no arquivo `CHANGELOG.md` e nas notas de atualização.
 
-## Generated code
+## Código gerado
 
-The following are notes about the generated authentication system.
+A seguir estão as notas sobre o sistema de autenticação gerado.
 
-### Password hashing
+### Hashing de senha
 
-The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2` for Windows systems. Both systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
+O mecanismo de hashing de senha usa por padrão `bcrypt` para sistemas Unix e `pbkdf2` para sistemas Windows. Ambos os sistemas usam a [interface Comeonin](https://hexdocs.pm/comeonin/).
 
-The password hashing mechanism can be overridden with the `--hashing-lib` option. The following values are supported:
+O mecanismo de hashing de senha pode ser substituído com a opção `--hashing-lib`. Os seguintes valores são suportados:
 
   * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
   * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
   * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
 
-We recommend developers to consider using `argon2`, which is the most robust of all 3. The downside is that `argon2` is quite CPU and memory intensive, and you will need more powerful instances to run your applications on.
+Recomendamos que os desenvolvedores considerem usar `argon2`, que é o mais robusto dos 3. A desvantagem é que o `argon2` é bastante intensivo em CPU e memória, e você precisará de instâncias mais poderosas para executar suas aplicações.
 
-For more information about choosing these libraries, see the [Comeonin project](https://github.com/riverrun/comeonin).
+Para mais informações sobre a escolha dessas bibliotecas, consulte o [projeto Comeonin](https://github.com/riverrun/comeonin).
 
-### Forbidding access
+### Proibindo acesso
 
-The generated code ships with an authentication module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named Demo which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `DemoWeb.UserAuth` with plugs such as:
+O código gerado vem com um módulo de autenticação com vários plugs que buscam o usuário atual, exigem autenticação e assim por diante. Por exemplo, em um aplicativo chamado Demo que teve `mix phx.gen.auth Accounts User users` executado nele, você encontrará um módulo chamado `DemoWeb.UserAuth` com plugs como:
 
-  * `fetch_current_user` - fetches the current user information if available
-  * `require_authenticated_user` - must be invoked after `fetch_current_user` and requires that a current user exists and is authenticated
-  * `redirect_if_user_is_authenticated` - used for the few pages that must not be available to authenticated users
+  * `fetch_current_user` - busca as informações do usuário atual, se disponíveis
+  * `require_authenticated_user` - deve ser invocado após `fetch_current_user` e requer que um usuário atual exista e esteja autenticado
+  * `redirect_if_user_is_authenticated` - usado para as poucas páginas que não devem estar disponíveis para usuários autenticados
 
-### Confirmation
+### Confirmação
 
-The generated functionality ships with an account confirmation mechanism, where users have to confirm their account, typically by email. However, the generated code does not forbid users from using the application if their accounts have not yet been confirmed. You can add this functionality by customizing the `require_authenticated_user` in the `Auth` module to check for the `confirmed_at` field (and any other property you desire).
+A funcionalidade gerada vem com um mecanismo de confirmação de conta, onde os usuários têm que confirmar sua conta, normalmente por e-mail. No entanto, o código gerado não proíbe os usuários de usar a aplicação se suas contas ainda não foram confirmadas. Você pode adicionar essa funcionalidade personalizando o `require_authenticated_user` no módulo `Auth` para verificar o campo `confirmed_at` (e qualquer outra propriedade que desejar).
 
-### Notifiers
+### Notificadores
 
-The generated code is not integrated with any system to send SMSes or emails for confirming accounts, resetting passwords, etc. Instead, it simply logs a message to the terminal. It is your responsibility to integrate with the proper system after generation.
+O código gerado não está integrado a nenhum sistema para enviar SMSs ou e-mails para confirmar contas, redefinir senhas, etc. Em vez disso, ele simplesmente registra uma mensagem no terminal. É sua responsabilidade integrar-se ao sistema adequado após a geração.
 
-Note that if you generated your Phoenix project with `mix phx.new`, your project is configured to use [Swoosh](https://hexdocs.pm/swoosh/Swoosh.html) mailer by default. To view notifier emails during development with Swoosh, navigate to `/dev/mailbox`.
+Observe que se você gerou seu projeto Phoenix com `mix phx.new`, seu projeto está configurado para usar o mailer [Swoosh](https://hexdocs.pm/swoosh/Swoosh.html) por padrão. Para visualizar e-mails do notificador durante o desenvolvimento com Swoosh, navegue até `/dev/mailbox`.
 
-### Tracking sessions
+### Rastreamento de sessões
 
-All sessions and tokens are tracked in a separate table. This allows you to track how many sessions are active for each account. You could even expose this information to users if desired.
+Todas as sessões e tokens são rastreados em uma tabela separada. Isso permite que você acompanhe quantas sessões estão ativas para cada conta. Você poderia até mesmo expor essas informações aos usuários, se desejar.
 
-Note that whenever the password changes (either via reset password or directly), all tokens are deleted, and the user has to log in again on all devices.
+Observe que sempre que a senha é alterada (seja por meio de redefinição de senha ou diretamente), todos os tokens são excluídos e o usuário precisa fazer login novamente em todos os dispositivos.
 
-### User Enumeration attacks
+### Ataques de enumeração de usuários
 
-A user enumeration attack allows someone to check if an email is registered in the application. The generated authentication code does not attempt to protect from such checks. For instance, when you register an account, if the email is already registered, the code will notify the user the email is already registered.
+Um ataque de enumeração de usuários permite que alguém verifique se um e-mail está registrado na aplicação. O código de autenticação gerado não tenta proteger contra tais verificações. Por exemplo, quando você registra uma conta, se o e-mail já estiver registrado, o código notificará o usuário de que o e-mail já está registrado.
 
-If your application is sensitive to enumeration attacks, you need to implement your own workflows, which tends to be very different from most applications, as you need to carefully balance security and user experience.
+Se sua aplicação é sensível a ataques de enumeração, você precisa implementar seus próprios fluxos de trabalho, que tendem a ser muito diferentes da maioria das aplicações, já que você precisa equilibrar cuidadosamente segurança e experiência do usuário.
 
-Furthermore, if you are concerned about enumeration attacks, beware of timing attacks too. For example, registering a new account typically involves additional work (such as writing to the database, sending emails, etc) compared to when an account already exists. Someone could measure the time taken to execute those additional tasks to enumerate emails. This applies to all endpoints (registration, confirmation, password recovery, etc.) that may send email, in-app notifications, etc.
+Além disso, se você está preocupado com ataques de enumeração, tenha cuidado também com ataques de tempo. Por exemplo, registrar uma nova conta normalmente envolve trabalho adicional (como escrever no banco de dados, enviar e-mails, etc.) em comparação com quando uma conta já existe. Alguém poderia medir o tempo necessário para executar essas tarefas adicionais para enumerar e-mails. Isso se aplica a todos os endpoints (registro, confirmação, recuperação de senha, etc.) que podem enviar e-mail, notificações no aplicativo, etc.
 
-### Case sensitiveness
+### Sensibilidade a maiúsculas e minúsculas
 
-The email lookup is made to be case-insensitive. Case-insensitive lookups are the default in MySQL and MSSQL. In SQLite3 we use [`COLLATE NOCASE`](https://www.sqlite.org/datatype3.html#collating_sequences) in the column definition to support it. In PostgreSQL, we use the [`citext` extension](https://www.postgresql.org/docs/current/citext.html).
+A busca por e-mail é feita para ser insensível a maiúsculas e minúsculas. Buscas insensíveis a maiúsculas e minúsculas são o padrão no MySQL e MSSQL. No SQLite3, usamos [`COLLATE NOCASE`](https://www.sqlite.org/datatype3.html#collating_sequences) na definição da coluna para suportá-lo. No PostgreSQL, usamos a [extensão `citext`](https://www.postgresql.org/docs/current/citext.html).
 
-Note `citext` is part of PostgreSQL itself and is bundled with it in most operating systems and package managers. `mix phx.gen.auth` takes care of creating the extension and no extra work is necessary in the majority of cases. If by any chance your package manager splits `citext` into a separate package, you will get an error while migrating, and you can most likely solve it by installing the `postgres-contrib` package.
+Observe que `citext` faz parte do próprio PostgreSQL e é fornecido com ele na maioria dos sistemas operacionais e gerenciadores de pacotes. O `mix phx.gen.auth` cuida da criação da extensão e nenhum trabalho extra é necessário na maioria dos casos. Se por algum motivo seu gerenciador de pacotes divide o `citext` em um pacote separado, você receberá um erro durante a migração e provavelmente poderá resolvê-lo instalando o pacote `postgres-contrib`.
 
-### Concurrent tests
+### Testes concorrentes
 
-The generated tests run concurrently if you are using a database that supports concurrent tests, which is the case of PostgreSQL.
+Os testes gerados são executados simultaneamente se você estiver usando um banco de dados que suporta testes concorrentes, o que é o caso do PostgreSQL.
 
-## More about `mix phx.gen.auth`
+## Mais sobre `mix phx.gen.auth`
 
-Check out `mix phx.gen.auth` for more details, such as using a different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options, and using custom table names.
+Confira `mix phx.gen.auth` para mais detalhes, como usar uma biblioteca de hashing de senha diferente, personalizar o namespace do módulo web, gerar tipo de ID binário, configurar as opções padrão e usar nomes de tabela personalizados.
 
-## Additional resources
+## Recursos adicionais
 
-The following links have more information regarding the motivation and design of the code this generates.
+Os links a seguir têm mais informações sobre a motivação e o design do código que isso gera.
 
-  * Berenice Medel's blog post on generating LiveViews for authentication (rather than conventional Controllers & Views) - [Bringing Phoenix Authentication to Life](https://fly.io/phoenix-files/phx-gen-auth/)
-  * José Valim's blog post - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
-  * The [original `phx_gen_auth` repo][phx_gen_auth repo] (for Phoenix 1.5 applications) - This is a great resource to see discussions around decisions that have been made in earlier versions of the project.
-  * [Original pull request on bare Phoenix app][auth PR]
-  * [Original design spec](https://github.com/dashbitco/mix_phx_gen_auth_demo/blob/auth/README.md)
+  * Post do blog de Berenice Medel sobre a geração de LiveViews para autenticação (em vez de Controllers & Views convencionais) - [Bringing Phoenix Authentication to Life](https://fly.io/phoenix-files/phx-gen-auth/)
+  * Post do blog de José Valim - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
+  * O [repositório original `phx_gen_auth`][phx_gen_auth repo] (para aplicações Phoenix 1.5) - Este é um ótimo recurso para ver discussões sobre decisões que foram tomadas em versões anteriores do projeto.
+  * [Pull request original em aplicativo Phoenix simples][auth PR]
+  * [Especificação de design original](https://github.com/dashbitco/mix_phx_gen_auth_demo/blob/auth/README.md)
 
 [phx_gen_auth repo]: https://github.com/aaronrenner/phx_gen_auth
 [auth PR]: https://github.com/dashbitco/mix_phx_gen_auth_demo/pull/1

@@ -1,20 +1,20 @@
-# Deploying with Releases
+# Implantando com Releases
 
-## What we'll need
+## Do que precisamos
 
-The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](up_and_running.html).
+A única coisa que precisamos para este guia é uma aplicação Phoenix funcional. Para aqueles que precisam de uma aplicação simples para implantar, por favor, siga o guia [Up and Running](up_and_running.html).
 
-## Goals
+## Objetivos
 
-Our main goal for this guide is to package your Phoenix application into a self-contained directory that includes the Erlang VM, Elixir, all of your code and dependencies. This package can then be dropped into a production machine.
+Nosso principal objetivo para este guia é empacotar sua aplicação Phoenix em um diretório autônomo que inclui a VM Erlang, Elixir, todo o seu código e dependências. Este pacote pode então ser colocado em uma máquina de produção.
 
-## Releases, assemble!
+## Releases, montagem!
 
-If you are not familiar with Elixir releases yet, we recommend you to read [Elixir's excellent docs](https://hexdocs.pm/mix/Mix.Tasks.Release.html) before continuing.
+Se você ainda não está familiarizado com releases Elixir, recomendamos que leia a [excelente documentação do Elixir](https://hexdocs.pm/mix/Mix.Tasks.Release.html) antes de continuar.
 
-Once that is done, you can assemble a release by going through all of the steps in our general [deployment guide](deployment.html) with `mix release` at the end. Let's recap.
+Depois disso, você pode montar uma release passando por todas as etapas do nosso [guia geral de implantação](deployment.html) com `mix release` no final. Vamos recapitular.
 
-First set the environment variables:
+Primeiro defina as variáveis de ambiente:
 
 ```console
 $ mix phx.gen.secret
@@ -23,18 +23,18 @@ $ export SECRET_KEY_BASE=REALLY_LONG_SECRET
 $ export DATABASE_URL=ecto://USER:PASS@HOST/database
 ```
 
-Then load dependencies to compile code and assets:
+Em seguida, carregue as dependências para compilar código e assets:
 
 ```console
-# Initial setup
+# Configuração inicial
 $ mix deps.get --only prod
 $ MIX_ENV=prod mix compile
 
-# Compile assets
+# Compilar assets
 $ MIX_ENV=prod mix assets.deploy
 ```
 
-And now run `mix phx.gen.release`:
+E agora execute `mix phx.gen.release`:
 
 ```console
 $ mix phx.gen.release
@@ -45,36 +45,36 @@ $ mix phx.gen.release
 * creating rel/overlays/bin/migrate.bat
 * creating lib/my_app/release.ex
 
-Your application is ready to be deployed in a release!
+Sua aplicação está pronta para ser implantada em uma release!
 
-    # To start your system
+    # Para iniciar seu sistema
     _build/dev/rel/my_app/bin/my_app start
 
-    # To start your system with the Phoenix server running
+    # Para iniciar seu sistema com o servidor Phoenix rodando
     _build/dev/rel/my_app/bin/server
 
-    # To run migrations
+    # Para executar migrações
     _build/dev/rel/my_app/bin/migrate
 
-Once the release is running:
+Uma vez que a release esteja rodando:
 
-    # To connect to it remotely
+    # Para conectar remotamente
     _build/dev/rel/my_app/bin/my_app remote
 
-    # To stop it gracefully (you may also send SIGINT/SIGTERM)
+    # Para parar graciosamente (você também pode enviar SIGINT/SIGTERM)
     _build/dev/rel/my_app/bin/my_app stop
 
-To list all commands:
+Para listar todos os comandos:
 
     _build/dev/rel/my_app/bin/my_app
 
 ```
 
-The `phx.gen.release` task generated a few files for us to assist in releases. First, it created `server` and `migrate` *overlay* scripts for conveniently running the phoenix server inside a release or invoking migrations from a release. The files in the `rel/overlays` directory are copied into every release environment. Next, it generated a `release.ex` file which is used to invoke Ecto migrations without a dependency on `mix` itself.
+A tarefa `phx.gen.release` gerou alguns arquivos para nos auxiliar nas releases. Primeiro, ela criou scripts *overlay* `server` e `migrate` para executar convenientemente o servidor phoenix dentro de uma release ou invocar migrações a partir de uma release. Os arquivos no diretório `rel/overlays` são copiados para todos os ambientes de release. Em seguida, gerou um arquivo `release.ex` que é usado para invocar migrações do Ecto sem depender do próprio `mix`.
 
-*Note*: If you are a Docker user, you can pass the `--docker` flag to `mix phx.gen.release` to generate a Dockerfile ready for deployment.
+*Nota*: Se você é usuário do Docker, pode passar a flag `--docker` para `mix phx.gen.release` para gerar um Dockerfile pronto para implantação.
 
-Next, we can invoke `mix release` to build the release:
+Em seguida, podemos invocar `mix release` para construir a release:
 
 ```console
 $ MIX_ENV=prod mix release
@@ -82,25 +82,25 @@ Generated my_app app
 * assembling my_app-0.1.0 on MIX_ENV=prod
 * using config/runtime.exs to configure the release at runtime
 
-Release created at _build/prod/rel/my_app!
+Release criada em _build/prod/rel/my_app!
 
-    # To start your system
+    # Para iniciar seu sistema
     _build/prod/rel/my_app/bin/my_app start
 
 ...
 ```
 
-You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, or boot your webserver by calling `_build/prod/rel/my_app/bin/server`, where you have to replace `my_app` by your current application name.
+Você pode iniciar a release chamando `_build/prod/rel/my_app/bin/my_app start`, ou iniciar seu servidor web chamando `_build/prod/rel/my_app/bin/server`, onde você deve substituir `my_app` pelo nome atual da sua aplicação.
 
-Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and architecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
+Agora você pode obter todos os arquivos no diretório `_build/prod/rel/my_app`, empacotá-los e executá-los em qualquer máquina de produção com o mesmo sistema operacional e arquitetura do que montou a release. Para mais detalhes, consulte a [documentação de `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
 
-But before we finish this guide, there is one more feature from releases that most Phoenix application will use, so let's talk about that.
+Mas antes de terminarmos este guia, há mais um recurso das releases que a maioria das aplicações Phoenix usará, então vamos falar sobre isso.
 
-## Ecto migrations and custom commands
+## Migrações Ecto e comandos personalizados
 
-A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
+Uma necessidade comum em sistemas de produção é executar comandos personalizados necessários para configurar o ambiente de produção. Um desses comandos é precisamente a migração do banco de dados. Como não temos o `Mix`, uma ferramenta de *build*, dentro das releases, que são um artefato de produção, precisamos trazer esses comandos diretamente para a release.
 
-The `phx.gen.release` command created the following `release.ex` file in your project `lib/my_app/release.ex`, with the following content:
+O comando `phx.gen.release` criou o seguinte arquivo `release.ex` no seu projeto `lib/my_app/release.ex`, com o seguinte conteúdo:
 
 ```elixir
 defmodule MyApp.Release do
@@ -129,17 +129,17 @@ defmodule MyApp.Release do
 end
 ```
 
-Where you replace the first two lines by your application names.
+Onde você substitui as duas primeiras linhas pelos nomes da sua aplicação.
 
-Now you can assemble a new release with `MIX_ENV=prod mix release` and you can invoke any code, including the functions in the module above, by calling the `eval` command:
+Agora você pode montar uma nova release com `MIX_ENV=prod mix release` e pode invocar qualquer código, incluindo as funções no módulo acima, chamando o comando `eval`:
 
 ```console
 $ _build/prod/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
 ```
 
-And that's it! If you peek inside the `migrate` script, you'll see it wraps exactly this invocation.
+E é isso! Se você olhar dentro do script `migrate`, verá que ele encapsula exatamente esta invocação.
 
-You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.load/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind, starting the application will start all processes for the current application, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
+Você pode usar essa abordagem para criar qualquer comando personalizado para executar em produção. Neste caso, usamos `load_app`, que chama `Application.load/1` para carregar a aplicação atual sem iniciá-la. No entanto, você pode querer escrever um comando personalizado que inicie toda a aplicação. Nesses casos, `Application.ensure_all_started/1` deve ser usado. Tenha em mente que iniciar a aplicação iniciará todos os processos para a aplicação atual, incluindo o endpoint Phoenix. Isso pode ser contornado alterando sua árvore de supervisão para não iniciar certos filhos sob certas condições. Por exemplo, no arquivo de comandos da release, você poderia fazer:
 
 ```elixir
 defp start_app do
@@ -149,26 +149,26 @@ defp start_app do
 end
 ```
 
-And then in your application you check `Application.get_env(@app, :minimal)` and start only part of the children when it is set.
+E então na sua aplicação, você verifica `Application.get_env(@app, :minimal)` e inicia apenas parte dos filhos quando definido.
 
-## Containers
+## Contêineres
 
-Elixir releases work well with container technologies, such as Docker. The idea is that you assemble the release inside the Docker container and then build an image based on the release artifacts.
+Releases Elixir funcionam bem com tecnologias de contêineres, como Docker. A ideia é que você monte a release dentro do contêiner Docker e depois construa uma imagem baseada nos artefatos da release.
 
-If you call `mix phx.gen.release --docker` you'll see a new file with these contents:
+Se você chamar `mix phx.gen.release --docker`, verá um novo arquivo com estes conteúdos:
 
 ```Dockerfile
-# Find eligible builder and runner images on Docker Hub. We use Ubuntu/Debian
-# instead of Alpine to avoid DNS resolution issues in production.
+# Encontre imagens adequadas de builder e runner no Docker Hub. Usamos Ubuntu/Debian
+# em vez de Alpine para evitar problemas de resolução de DNS em produção.
 #
 # https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=ubuntu
 # https://hub.docker.com/_/ubuntu?tab=tags
 #
-# This file is based on these images:
+# Este arquivo é baseado nestas imagens:
 #
-#   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
-#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20230612-slim - for the release image
-#   - https://pkgs.org/ - resource for finding needed packages
+#   - https://hub.docker.com/r/hexpm/elixir/tags - para a imagem de build
+#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20230612-slim - para a imagem de release
+#   - https://pkgs.org/ - recurso para encontrar pacotes necessários
 #   - Ex: hexpm/elixir:1.14.5-erlang-25.3.2.4-debian-bullseye-20230612-slim
 #
 ARG ELIXIR_VERSION=1.14.5
@@ -180,28 +180,28 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} as builder
 
-# install build dependencies
+# instalar dependências de build
 RUN apt-get update -y && apt-get install -y build-essential git \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# prepare build dir
+# preparar diretório de build
 WORKDIR /app
 
-# install hex + rebar
+# instalar hex + rebar
 RUN mix local.hex --force && \
     mix local.rebar --force
 
-# set build ENV
+# definir ENV de build
 ENV MIX_ENV="prod"
 
-# install mix dependencies
+# instalar dependências mix
 COPY mix.exs mix.lock ./
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 
-# copy compile-time config files before we compile dependencies
-# to ensure any relevant config change will trigger the dependencies
-# to be re-compiled.
+# copiar arquivos de configuração de tempo de compilação antes de compilarmos dependências
+# para garantir que qualquer alteração de configuração relevante acionará as dependências
+# a serem recompiladas.
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
@@ -211,27 +211,27 @@ COPY lib lib
 
 COPY assets assets
 
-# compile assets
+# compilar assets
 RUN mix assets.deploy
 
-# Compile the release
+# Compilar a release
 RUN mix compile
 
-# Changes to config/runtime.exs don't require recompiling the code
+# Mudanças em config/runtime.exs não requerem recompilação do código
 COPY config/runtime.exs config/
 
 COPY rel rel
 RUN mix release
 
-# start a new build stage so that the final image will only contain
-# the compiled release and other runtime necessities
+# iniciar um novo estágio de build para que a imagem final contenha apenas
+# a release compilada e outras necessidades de runtime
 FROM ${RUNNER_IMAGE}
 
 RUN apt-get update -y && \
   apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# Set the locale
+# Definir o locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
 ENV LANG en_US.UTF-8
@@ -241,26 +241,26 @@ ENV LC_ALL en_US.UTF-8
 WORKDIR "/app"
 RUN chown nobody /app
 
-# set runner ENV
+# definir ENV do runner
 ENV MIX_ENV="prod"
 
-# Only copy the final release from the build stage
+# Copiar apenas a release final do estágio de build
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/my_app ./
 
 USER nobody
 
-# If using an environment that doesn't automatically reap zombie processes, it is
-# advised to add an init process such as tini via `apt-get install`
-# above and adding an entrypoint. See https://github.com/krallin/tini for details
+# Se estiver usando um ambiente que não elimina automaticamente processos zumbis, é
+# aconselhável adicionar um processo init como tini via `apt-get install`
+# acima e adicionar um entrypoint. Veja https://github.com/krallin/tini para detalhes
 # ENTRYPOINT ["/tini", "--"]
 
 CMD ["/app/bin/server"]
 ```
 
-Where `my_app` is the name of your app. At the end, you will have an application in `/app` ready to run as `/app/bin/server`.
+Onde `my_app` é o nome da sua aplicação. No final, você terá uma aplicação em `/app` pronta para executar como `/app/bin/server`.
 
-A few points about configuring a containerized application:
+Alguns pontos sobre a configuração de uma aplicação em contêiner:
 
-- If you run your app in a container, the `Endpoint` needs to be configured to listen on a "public" `:ip` address (like `0.0.0.0`) so that the app can be reached from outside the container. Whether the host should publish the container's ports to its own public IP or to localhost depends on your needs.
-- The more configuration you can provide at runtime (using `config/runtime.exs`), the more reusable your images will be across environments. In particular, secrets like database credentials and API keys should not be compiled into the image, but rather should be provided when creating containers based on that image. This is why the `Endpoint`'s `:secret_key_base` is configured in `config/runtime.exs` by default.
-- If possible, any environment variables that are needed at runtime should be read in `config/runtime.exs`, not scattered throughout your code. Having them all visible in one place will make it easier to ensure the containers get what they need, especially if the person doing the infrastructure work does not work on the Elixir code. Libraries in particular should never directly read environment variables; all their configuration should be handed to them by the top-level application, preferably [without using the application environment](https://hexdocs.pm/elixir/library-guidelines.html#avoid-application-configuration).
+- Se você executar sua aplicação em um contêiner, o `Endpoint` precisa ser configurado para escutar em um endereço `:ip` "público" (como `0.0.0.0`) para que a aplicação possa ser acessada de fora do contêiner. Se o host deve publicar as portas do contêiner para seu próprio IP público ou para localhost depende das suas necessidades.
+- Quanto mais configuração você puder fornecer em tempo de execução (usando `config/runtime.exs`), mais reutilizáveis serão suas imagens em diferentes ambientes. Em particular, segredos como credenciais de banco de dados e chaves de API não devem ser compilados na imagem, mas sim fornecidos ao criar contêineres baseados nessa imagem. É por isso que a `:secret_key_base` do `Endpoint` é configurada em `config/runtime.exs` por padrão.
+- Se possível, quaisquer variáveis de ambiente necessárias em tempo de execução devem ser lidas em `config/runtime.exs`, e não espalhadas por todo o seu código. Ter todas elas visíveis em um só lugar facilitará garantir que os contêineres obtenham o que precisam, especialmente se a pessoa que faz o trabalho de infraestrutura não trabalha no código Elixir. Em particular, as bibliotecas nunca devem ler diretamente variáveis de ambiente; toda a configuração delas deve ser passada pela aplicação de nível superior, preferencialmente [sem usar o ambiente da aplicação](https://hexdocs.pm/elixir/library-guidelines.html#avoid-application-configuration).

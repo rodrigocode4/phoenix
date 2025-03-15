@@ -1,18 +1,18 @@
-# Components and HEEx
+# Componentes e HEEx
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você tenha seguido os [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
+> **Requisito**: Este guia pressupõe que você tenha seguido o [guia do ciclo de vida da requisição](request_lifecycle.html).
 
-The Phoenix endpoint pipeline takes a request, routes it to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connections assigns, and the function's job is to return a HEEx template. We call any function that accepts an `assigns` parameter and returns a HEEx template a *function component*. Function components are defined with the help of the [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) module.
+Os controladores Phoenix atuam como módulos intermediários. Suas funções — chamadas ações — são invocadas pelo roteador em resposta a requisições HTTP. As ações, por sua vez, reúnem todos os dados necessários e realizam todas as etapas necessárias antes de invocar a camada de visualização para renderizar um template ou retornar uma resposta JSON.
 
-Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They serve as a shared abstraction for the standard MVC controller-based applications, LiveView applications, layouts, and smaller UI definitions you'll use throughout other templates.
+Os componentes de função Phoenix são blocos de construção essenciais para qualquer tipo de renderização de templates baseada em marcação que você realizará no Phoenix. Eles servem como uma abstração compartilhada para aplicações MVC baseadas em controladores padrão, aplicações LiveView, layouts e definições de UI menores que você usará em outros templates.
 
-In this chapter, we will recap how components were used in previous chapters and find new use cases for them.
+Neste capítulo, revisaremos como os componentes foram usados em capítulos anteriores e encontraremos novos casos de uso para eles.
 
-## Function components
+## Componentes de função
 
-At the end of the Request life-cycle chapter, we created a template at `lib/hello_web/controllers/hello_html/show.html.heex`, let's open it up:
+No final do capítulo sobre o ciclo de vida da requisição, criamos um template em `lib/hello_web/controllers/hello_html/show.html.heex`. Vamos abri-lo:
 
 ```heex
 <section>
@@ -20,7 +20,7 @@ At the end of the Request life-cycle chapter, we created a template at `lib/hell
 </section>
 ```
 
-This template, is embedded as part of `HelloHTML`, at `lib/hello_web/controllers/hello_html.ex`:
+Este template está incorporado como parte do `HelloHTML`, em `lib/hello_web/controllers/hello_html.ex`:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -30,11 +30,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-That's simple enough. There's only two lines, `use HelloWeb, :html`. This line calls the `html/0` function defined in `HelloWeb` which sets up the basic imports and configuration for our function components and templates.
+Isso é bastante simples. Há apenas duas linhas, `use HelloWeb, :html`. Esta linha chama a função `html/0` definida em `HelloWeb`, que configura as importações e configurações básicas para nossos componentes de função e templates.
 
-All of the imports and aliases we make in our module will also be available in our templates. That's because templates are effectively compiled into functions inside their respective module. For example, if you define a function in your module, you will be able to invoke it directly from the template. Let's see this in practice.
+Todas as importações e aliases que fazemos em nosso módulo também estarão disponíveis em nossos templates. Isso ocorre porque os templates são efetivamente compilados como funções dentro de seus respectivos módulos. Por exemplo, se você definir uma função em seu módulo, poderá invocá-la diretamente do template. Vamos ver isso na prática.
 
-Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from {@messenger}!</h2>` to its own function. We can move it to a function component inside `HelloHTML`, let's do so:
+Imagine que queremos refatorar nosso `show.html.heex` para mover a renderização de `<h2>Hello World, from {@messenger}!</h2>` para sua própria função. Podemos movê-la para um componente de função dentro de `HelloHTML`, assim:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -52,53 +52,52 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We declared the attributes we accept via the `attr/3` macro provided by `Phoenix.Component`, then we defined our `greet/1` function which returns the HEEx template.
+Declaramos os atributos que aceitamos através da macro `attr/3` fornecida por `Phoenix.Component`, então definimos nossa função `greet/1` que retorna o template HEEx.
 
-Next we need to update `show.html.heex`:
+Em seguida, precisamos atualizar `show.html.heex`:
 
-```elixir
+```heex
 <section>
   <.greet messenger={@messenger} />
 </section>
 ```
 
-When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before.
+Quando recarregamos `http://localhost:4000/hello/Frank`, devemos ver o mesmo conteúdo de antes. Como o template `show.html.heex` está incorporado dentro do módulo `HelloHTML`, pudemos invocar o componente de função diretamente como `<.greet messenger="..." />`. Se o componente estivesse definido em outro lugar, precisaríamos dar seu nome completo: `<HelloWeb.HelloHTML.greet messenger="..." />`.
 
-Since templates are embedded inside the `HelloHTML` module, we were able to invoke the view function simply as `<.greet messenger="..." />`.
-
-If the component was defined elsewhere, we can also type `<HelloWeb.HelloHTML.greet messenger="..." />`.
-
-By declaring attributes as required, Phoenix will warn at compile time if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
+Ao declarar atributos como obrigatórios, o Phoenix avisará em tempo de compilação se chamarmos o componente `<.greet />` sem passar os atributos. Se um atributo for opcional, você pode especificar a opção `:default` com um valor:
 
 ```
 attr :messenger, :string, default: nil
 ```
 
-Although this is a quick example, it shows the different roles function components play in Phoenix:
+No geral, os componentes de função são os blocos de construção essenciais da pilha de renderização do Phoenix. Na maioria das vezes, eles são funções que recebem um único argumento chamado `assigns` e chamam o sigil `~H`, como fizemos em `greet/1`. Eles também podem ser invocados a partir de templates, com validação em tempo de compilação de seus atributos declarados via `attr`.
 
-* Function components can be defined as functions that receive `assigns` as argument and call the `~H` sigil, as we did in `greet/1`
+Na verdade, cada template incorporado em `HelloHTML` é um componente de função em si. `show.html.heex` simplesmente se torna um componente de função chamado `show`. Isso também significa que você pode renderizar componentes de função diretamente do controlador, ignorando o template `show.html.heex`:
 
-* Function components can be embedded from template files, that's how we load `show.html.heex` into `HelloWeb.HelloHTML`
+```elixir
+def HelloWeb.HelloController do
+  use HelloWeb, :controller
 
-* Function components can declare which attributes are expected, which are validated at compilation time
+  def show(conn, %{"messenger" => messenger}) do
+    # Renderiza o componente HelloWeb.HelloHTML.greet/1
+    render(conn, :greet, messenger: messenger)
+  end
+end
+```
 
-* Function components can be directly rendered from controllers
-
-* Function components can be directly rendered from other function components, as we called `<.greet messenger={@messenger} />` from `show.html.heex`
-
-And there's more. Before we go deeper, let's fully understand the expressive power behind the HEEx template language.
+A seguir, vamos entender completamente o poder expressivo por trás da linguagem de template HEEx.
 
 ## HEEx
 
-Function components and templates files are powered by [the HEEx template language](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into arbitrary text templates. HEEx extends EEx for writing HTML templates mixed with Elixir interpolation. We can write Elixir code inside `{...}` for HTML-aware interpolation inside tag attributes and the body. We can also interpolate arbitrary HEEx blocks using EEx interpolation (`<%= ... %>`). We use `@name` to access the key `name` defined inside `assigns`.
+Os componentes de função e arquivos de templates são alimentados pela [linguagem de template HEEx](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), que significa "HTML+EEx". EEx é uma biblioteca Elixir que usa `<%= expression %>` para executar expressões Elixir e interpolar seus resultados em templates de texto arbitrários. HEEx estende EEx para escrever templates HTML misturados com interpolação Elixir. Podemos escrever código Elixir dentro de `{...}` para interpolação consciente de HTML dentro de atributos de tag e no corpo. Também podemos interpolar blocos HEEx arbitrários usando interpolação EEx (`<%= ... %>`). Usamos `@name` para acessar a chave `name` definida dentro de `assigns`.
 
-This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
+Isso é frequentemente usado para exibir assigns que definimos por meio do atalho `@`. Em seu controlador, se você invocar:
 
 ```elixir
-  render(conn, :show, username: "joe")
+render(conn, :show, username: "joe")
 ```
 
-Then you can access said username in the templates as `{@username}`. In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:
+Então você pode acessar o nome de usuário nos templates como `{@username}`. Além de exibir assigns e funções, podemos usar praticamente qualquer expressão Elixir. Por exemplo, para ter condicionais:
 
 ```heex
 <%= if some_condition? do %>
@@ -108,7 +107,7 @@ Then you can access said username in the templates as `{@username}`. In addition
 <% end %>
 ```
 
-or even loops:
+ou até mesmo loops:
 
 ```heex
 <table>
@@ -125,25 +124,25 @@ or even loops:
 </table>
 ```
 
-Did you notice the use of `<%= %>` versus `<% %>` above? All expressions that output something to the template **must** use the equals sign (`=`). If this is not included the code will still be executed but nothing will be inserted into the template.
+Você notou o uso de `<%= %>` versus `<% %>`? Todas as expressões que produzem algo para o template **devem** usar o sinal de igual (`=`). Se isso não for incluído, o código ainda será executado, mas nada será inserido no template.
 
-HEEx also comes with handy HTML extensions we will learn next.
+HEEx também vem com extensões HTML úteis que aprenderemos a seguir.
 
-### HTML extensions
+### Extensões HTML
 
-Besides allowing interpolation of Elixir expressions via `<%= %>`, `.heex` templates come with HTML-aware extensions. For example, let's see what happens if you try to interpolate a value with "<" or ">" in it, which would lead to HTML injection:
+Além de permitir a interpolação de expressões Elixir via `<%= %>`, os templates `.heex` vêm com extensões conscientes de HTML. Por exemplo, vejamos o que acontece se você tentar interpolar um valor com "<" ou ">" nele, o que levaria à injeção HTML:
 
 ```heex
 {"<b>Bold?</b>"}
 ```
 
-Once you render the template, you will see the literal `<b>` on the page. This means users cannot inject HTML content on the page. If you want to allow them to do so, you can call `raw`, but do so with extreme care:
+Uma vez que você renderizar o template, verá o literal `<b>` na página. Isso significa que os usuários não podem injetar conteúdo HTML na página. Se você quiser permitir isso, pode chamar `raw`, mas faça isso com extremo cuidado:
 
 ```heex
-{raw "<b>Bold?</b>"}
+{raw("<b>Bold?</b>")}
 ```
 
-Another super power of HEEx templates is validation of HTML and interpolation syntax of attributes. You can write:
+Outro super poder dos templates HEEx é a validação da sintaxe HTML e interpolação de atributos. Você pode escrever:
 
 ```heex
 <div title="My div" class={@class}>
@@ -151,9 +150,9 @@ Another super power of HEEx templates is validation of HTML and interpolation sy
 </div>
 ```
 
-Notice how you could simply use `key={value}`. HEEx will automatically handle special values such as `false` to remove the attribute or a list of classes.
+Observe como você pode simplesmente usar `key={value}`. HEEx lidará automaticamente com valores especiais como `false` para remover o atributo ou uma lista de classes.
 
-To interpolate a dynamic number of attributes in a keyword list or map, do:
+Para interpolar um número dinâmico de atributos em uma lista de palavras-chave ou mapa, faça:
 
 ```heex
 <div title="My div" {@many_attributes}>
@@ -161,9 +160,9 @@ To interpolate a dynamic number of attributes in a keyword list or map, do:
 </div>
 ```
 
-Also, try removing the closing `</div>` or renaming it to `</div-typo>`. HEEx templates will let you know about your error.
+Além disso, tente remover o fechamento `</div>` ou renomeá-lo para `</div-typo>`. Os templates HEEx irão informá-lo sobre seu erro.
 
-HEEx also supports shorthand syntax for `if` and `for` expressions via the special `:if` and `:for` attributes. For example, rather than this:
+HEEx também suporta sintaxe abreviada para expressões `if` e `for` através dos atributos especiais `:if` e `:for`. Por exemplo, em vez de:
 
 ```heex
 <%= if @some_condition do %>
@@ -171,13 +170,13 @@ HEEx also supports shorthand syntax for `if` and `for` expressions via the speci
 <% end %>
 ```
 
-You can write:
+Você pode escrever:
 
 ```heex
 <div :if={@some_condition}>...</div>
 ```
 
-Likewise, for comprehensions may be written as:
+Da mesma forma, compreensões for podem ser escritas como:
 
 ```heex
 <ul>
@@ -187,19 +186,19 @@ Likewise, for comprehensions may be written as:
 
 ## Layouts
 
-Layouts are just function components. They are defined in a module, just like all other function component templates. In a newly generated app, this is `lib/hello_web/components/layouts.ex`. You will also find a `layouts` folder with two built-in layouts generated by Phoenix. The default _root layout_ is called `root.html.heex`, and it is the layout into which all templates will be rendered by default. The second is the _app layout_, called `app.html.heex`, which is rendered within the root layout and includes our contents.
+Layouts são apenas componentes de função. Eles são definidos em um módulo, assim como todos os outros templates de componentes de função. Em um aplicativo recém-gerado, isso é `lib/hello_web/components/layouts.ex`. Você também encontrará uma pasta `layouts` com dois layouts incorporados gerados pelo Phoenix. O _layout raiz_ padrão é chamado `root.html.heex`, e é o layout no qual todos os templates serão renderizados por padrão. O segundo é o _layout do aplicativo_, chamado `app.html.heex`, que é renderizado dentro do layout raiz e inclui nossos conteúdos.
 
-You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/components/layouts/root.html.heex`, just about at the end of the `<body>`, we will see this.
+Você pode estar se perguntando como a string resultante de uma visualização renderizada acaba dentro de um layout. Essa é uma ótima pergunta! Se olharmos para `lib/hello_web/components/layouts/root.html.heex`, quase no final do `<body>`, veremos isso.
 
 ```heex
 {@inner_content}
 ```
 
-In other words, after rendering your page, the result is placed in the `@inner_content` assign.
+Em outras palavras, depois de renderizar sua página, o resultado é colocado no assign `@inner_content`.
 
-Phoenix provides all kinds of conveniences to control which layout should be rendered. For example, the `Phoenix.Controller` module provides the `put_root_layout/2` function for us to switch _root layouts_. This takes `conn` as its first argument and a keyword list of formats and their layouts. You can set it to `false` to disable the layout altogether.
+Phoenix fornece todo tipo de conveniências para controlar qual layout deve ser renderizado. Por exemplo, o módulo `Phoenix.Controller` fornece a função `put_root_layout/2` para trocarmos _layouts raiz_. Isso recebe `conn` como seu primeiro argumento e uma lista de palavras-chave de formatos e seus layouts. Você pode defini-lo como `false` para desabilitar completamente o layout.
 
-You can edit the `index` action of `HelloController` in `lib/hello_web/controllers/hello_controller.ex` to look like this.
+Você pode editar a ação `index` de `HelloController` em `lib/hello_web/controllers/hello_controller.ex` para parecer com isso.
 
 ```elixir
 def index(conn, _params) do
@@ -209,11 +208,11 @@ def index(conn, _params) do
 end
 ```
 
-After reloading [http://localhost:4000/hello](http://localhost:4000/hello), we should see a very different page, one with no title or CSS styling at all.
+Depois de recarregar [http://localhost:4000/hello](http://localhost:4000/hello), devemos ver uma página muito diferente, uma sem título ou estilo CSS.
 
-To customize the application layout, we invoke a similar function named `put_layout/2`. Let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, copy the existing `app.html.heex` to a new file `admin.html.heex` in the same directory `lib/hello_web/components/layouts`. Then remove everything inside the `<header>...</header>` tags (or change it to whatever you desire) in the new file.
+Para personalizar o layout da aplicação, invocamos uma função similar chamada `put_layout/2`. Vamos realmente criar outro layout e renderizar o template de índice nele. Como exemplo, digamos que tínhamos um layout diferente para a seção de administração de nossa aplicação que não tinha a imagem do logotipo. Para fazer isso, copie o existente `app.html.heex` para um novo arquivo `admin.html.heex` no mesmo diretório `lib/hello_web/components/layouts`. Em seguida, remova tudo dentro das tags `<header>...</header>` (ou altere-o para o que desejar) no novo arquivo.
 
-Now, in the `index` action of the controller of `lib/hello_web/controllers/hello_controller.ex`, add the following:
+Agora, na ação `index` do controlador de `lib/hello_web/controllers/hello_controller.ex`, adicione o seguinte:
 
 ```elixir
 def index(conn, _params) do
@@ -223,22 +222,24 @@ def index(conn, _params) do
 end
 ```
 
-When we load the page, we should be rendering the admin layout without the header (or a custom one that you wrote).
+Quando carregamos a página, deveríamos estar renderizando o layout de administração sem o cabeçalho (ou com um personalizado que você escreveu).
 
-At this point, you may be wondering, why does Phoenix have two layouts?
+Neste ponto, você pode estar se perguntando, por que o Phoenix tem dois layouts?
 
-First of all, it gives us flexibility. In practice, we will hardly have multiple root layouts, as they often contain only HTML headers. This allows us to focus on different application layouts with only the parts that changes between them. Second of all, Phoenix ships with a feature called LiveView, which allows us to build rich and real-time user experiences with server-rendered HTML. LiveView is capable of dynamically changing the contents of the page, but it only ever changes the app layout, never the root layout. Check out [the LiveView documentation](https://hexdocs.pm/phoenix_live_view) to learn more.
+Primeiro, isso nos dá flexibilidade. Na prática, dificilmente teremos vários layouts raiz, pois eles geralmente contêm apenas cabeçalhos HTML. Isso nos permite focar em diferentes layouts de aplicação apenas com as partes que mudam entre eles. Em segundo lugar, o Phoenix vem com um recurso chamado LiveView, que nos permite construir experiências de usuário ricas e em tempo real com HTML renderizado pelo servidor. LiveView é capaz de alterar dinamicamente o conteúdo da página, mas apenas altera o layout do aplicativo, nunca o layout raiz. Confira [a documentação do LiveView](https://hexdocs.pm/phoenix_live_view) para saber mais.
 
 ## CoreComponents
 
-In a new Phoenix application, you will also find a `core_components.ex` module inside the `components` folder. This module is a great example of defining function components to be reused throughout our application. This guarantees that, as our application evolves, our components will look consistent.
+Em uma nova aplicação Phoenix, você também encontrará um módulo `core_components.ex` dentro da pasta `components`. Este módulo é um ótimo exemplo de definição de componentes de função para reutilização em toda a nossa aplicação. Isso garante que, à medida que nossa aplicação evolui, nossos componentes terão uma aparência consistente.
 
-If you look inside `def html` in `HelloWeb` placed at `lib/hello_web.ex`, you will see that `CoreComponents` are automatically imported into all HTML views via `use HelloWeb, :html`. This is also the reason why `CoreComponents` itself performs `use Phoenix.Component` instead `use HelloWeb, :html` at the top: doing the latter would cause a deadlock as we would try to import `CoreComponents` into itself.
+Se você olhar dentro de `def html` em `HelloWeb` localizado em `lib/hello_web.ex`, verá que `CoreComponents` é automaticamente importado em todas as visualizações HTML via `use HelloWeb, :html`. Esta também é a razão pela qual o próprio `CoreComponents` executa `use Phoenix.Component` em vez de `use HelloWeb, :html` no topo: fazer o último causaria um deadlock, pois tentaríamos importar `CoreComponents` dentro de si mesmo.
 
-CoreComponents also play an important role in Phoenix code generators, as the code generators assume those components are available in order to quickly scaffold your application. In case you want to learn more about all of these pieces, you may:
+CoreComponents também desempenha um papel importante nos geradores de código Phoenix, pois os geradores pressupõem que esses componentes estão disponíveis para construir rapidamente sua aplicação. Caso você queira aprender mais sobre todas essas peças, você pode:
 
-  * Explore the generated `CoreComponents` module to learn more from practical examples
+  * Explorar o módulo `CoreComponents` gerado para aprender mais com exemplos práticos
 
-  * Read the official documentation for [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html)
+  * Ler a documentação oficial para [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html)
 
-  * Read the official documentation for [HEEx and the ~H sigils](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2)
+  * Ler a documentação oficial para [HEEx e os sigils ~H](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2)
+
+  * Se você estiver procurando componentes de nível mais alto além dos mínimos incluídos pelo Phoenix, [o projeto LiveView mantém uma lista de sistemas de componentes](https://github.com/phoenixframework/phoenix_live_view#component-systems)

@@ -1,20 +1,20 @@
-# Testing Contexts
+# Testando Contextos
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você tenha lido os [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
+> **Requisito**: Este guia pressupõe que você tenha lido o [Guia de Introdução a Testes](testing.html).
 
-> **Requirement**: This guide expects that you have gone through the [Contexts guide](contexts.html).
+> **Requisito**: Este guia pressupõe que você tenha lido o [Guia de Contextos](contexts.html).
 
-At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
+No final do guia de Introdução a Testes, geramos um recurso HTML para posts usando o seguinte comando:
 
 ```console
 $ mix phx.gen.html Blog Post posts title body:text
 ```
 
-This gave us a number of modules for free, including a Blog context and a Post schema, alongside their respective test files. As we have learned in the Context guide, the Blog context is simply a module with functions to a particular area of our business domain, while Post schema maps to a particular table in our database.
+Isso nos deu vários módulos gratuitamente, incluindo um contexto Blog e um esquema Post, junto com seus respectivos arquivos de teste. Como aprendemos no guia de Contexto, o contexto Blog é simplesmente um módulo com funções para uma área específica do nosso domínio de negócios, enquanto o esquema Post mapeia para uma tabela específica em nosso banco de dados.
 
-In this guide, we are going to explore the tests generated for our contexts and schemas. Before we do anything else, let's run `mix test` to make sure our test suite runs cleanly.
+Neste guia, vamos explorar os testes gerados para nossos contextos e esquemas. Antes de fazer qualquer outra coisa, vamos executar `mix test` para garantir que nossa suíte de testes esteja funcionando sem problemas.
 
 ```console
 $ mix test
@@ -26,11 +26,11 @@ Finished in 0.6 seconds
 Randomized with seed 638414
 ```
 
-Great. We've got twenty-one tests and they are all passing!
+Ótimo. Temos vinte e um testes e todos estão passando!
 
-## Testing posts
+## Testando posts
 
-If you open up `test/hello/blog_test.exs`, you will see a file with the following:
+Se você abrir `test/hello/blog_test.exs`, verá um arquivo com o seguinte conteúdo:
 
 ```elixir
 defmodule Hello.BlogTest do
@@ -53,19 +53,19 @@ defmodule Hello.BlogTest do
     ...
 ```
 
-As the top of the file we import `Hello.DataCase`, which as we will see soon, it is similar to `HelloWeb.ConnCase`. While `HelloWeb.ConnCase` sets up helpers for working with connections, which is useful when testing controllers and views, `Hello.DataCase` provides functionality for working with contexts and schemas.
+No topo do arquivo, importamos `Hello.DataCase`, que, como veremos em breve, é semelhante ao `HelloWeb.ConnCase`. Enquanto `HelloWeb.ConnCase` configura auxiliares para trabalhar com conexões, o que é útil ao testar controladores e visualizações, `Hello.DataCase` fornece funcionalidade para trabalhar com contextos e esquemas.
 
-Next, we define an alias, so we can refer to `Hello.Blog` simply as `Blog`.
+Em seguida, definimos um alias, para que possamos nos referir a `Hello.Blog` simplesmente como `Blog`.
 
-Then we start a `describe "posts"` block. A `describe` block is a feature in ExUnit that allows us to group similar tests. The reason why we have grouped all post related tests together is because contexts in Phoenix are capable of grouping multiple schemas together. For example, if we ran this command:
+Então começamos um bloco `describe "posts"`. Um bloco `describe` é um recurso no ExUnit que nos permite agrupar testes semelhantes. A razão pela qual agrupamos todos os testes relacionados a posts é porque os contextos no Phoenix são capazes de agrupar múltiplos esquemas. Por exemplo, se executarmos este comando:
 
 ```console
 $ mix phx.gen.html Blog Comment comments post_id:references:posts body:text
 ```
 
-We will get a bunch of new functions in the `Hello.Blog` context, plus a whole new `describe "comments"` block in our test file.
+Obteremos um monte de novas funções no contexto `Hello.Blog`, além de um novo bloco `describe "comments"` em nosso arquivo de teste.
 
-The tests defined for our context are very straight-forward. They call the functions in our context and assert on their results. As you can see, some of those tests even create entries in the database:
+Os testes definidos para nosso contexto são muito diretos. Eles chamam as funções em nosso contexto e afirmam sobre seus resultados. Como você pode ver, alguns desses testes até criam entradas no banco de dados:
 
 ```elixir
 test "create_post/1 with valid data creates a post" do
@@ -77,11 +77,11 @@ test "create_post/1 with valid data creates a post" do
 end
 ```
 
-At this point, you may wonder: how can Phoenix make sure the data created in one of the tests do not affect other tests? We are glad you asked. To answer this question, let's talk about the `DataCase`.
+Neste ponto, você pode se perguntar: como o Phoenix pode garantir que os dados criados em um dos testes não afetem outros testes? Ficamos felizes que você tenha perguntado. Para responder a esta pergunta, vamos falar sobre o `DataCase`.
 
-## The DataCase
+## O DataCase
 
-If you open up `test/support/data_case.ex`, you will find the following:
+Se você abrir `test/support/data_case.ex`, encontrará o seguinte:
 
 ```elixir
 defmodule Hello.DataCase do
@@ -114,29 +114,29 @@ defmodule Hello.DataCase do
 end
 ```
 
-`Hello.DataCase` is another `ExUnit.CaseTemplate`. In the `using` block, we can see all of the aliases and imports `DataCase` brings into our tests. The `setup` chunk for `DataCase` is very similar to the one from `ConnCase`. As we can see, most of the `setup` block revolves around setting up a SQL Sandbox.
+`Hello.DataCase` é outro `ExUnit.CaseTemplate`. No bloco `using`, podemos ver todos os aliases e importações que o `DataCase` traz para nossos testes. O trecho `setup` para `DataCase` é muito semelhante ao de `ConnCase`. Como podemos ver, a maior parte do bloco `setup` gira em torno da configuração de um SQL Sandbox.
 
-The SQL Sandbox is precisely what allows our tests to write to the database without affecting any of the other tests. In a nutshell, at the beginning of every test, we start a transaction in the database. When the test is over, we automatically rollback the transaction, effectively erasing all of the data created in the test.
+O SQL Sandbox é precisamente o que permite que nossos testes escrevam no banco de dados sem afetar nenhum dos outros testes. Em resumo, no início de cada teste, iniciamos uma transação no banco de dados. Quando o teste termina, revertemos automaticamente a transação, efetivamente apagando todos os dados criados no teste.
 
-Furthermore, the SQL Sandbox allows multiple tests to run concurrently, even if they talk to the database. This feature is provided for PostgreSQL databases and it can be used to further speed up your contexts and controllers tests by adding a `async: true` flag when using them:
+Além disso, o SQL Sandbox permite que vários testes sejam executados simultaneamente, mesmo que se comuniquem com o banco de dados. Esse recurso é fornecido para bancos de dados PostgreSQL e pode ser usado para acelerar ainda mais seus testes de contextos e controladores, adicionando uma flag `async: true` ao usá-los:
 
 ```elixir
 use Hello.DataCase, async: true
 ```
 
-There are some considerations you need to have in mind when running asynchronous tests with the sandbox, so please refer to the [`Ecto.Adapters.SQL.Sandbox`](https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.Sandbox.html) for more information.
+Existem algumas considerações que você precisa ter em mente ao executar testes assíncronos com o sandbox, então consulte [`Ecto.Adapters.SQL.Sandbox`](https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.Sandbox.html) para mais informações.
 
-Finally at the end of the of the `DataCase` module we can find a function named `errors_on` with some examples of how to use it. This function is used for testing any validation we may want to add to our schemas. Let's give it a try by adding our own validations and then testing them.
+Finalmente, no final do módulo `DataCase`, podemos encontrar uma função chamada `errors_on` com alguns exemplos de como usá-la. Esta função é usada para testar qualquer validação que possamos querer adicionar aos nossos esquemas. Vamos experimentá-la adicionando nossas próprias validações e depois testando-as.
 
-## Testing schemas
+## Testando esquemas
 
-When we generate our HTML Post resource, Phoenix generated a Blog context and a Post schema. It generated a test file for the context, but no test file for the schema. However, this doesn't mean we don't need to test the schema, it just means we did not have to test the schema so far.
+Quando geramos nosso recurso HTML Post, o Phoenix gerou um contexto Blog e um esquema Post. Ele gerou um arquivo de teste para o contexto, mas nenhum arquivo de teste para o esquema. No entanto, isso não significa que não precisamos testar o esquema, apenas significa que não tivemos que testar o esquema até agora.
 
-You may be wondering then: when do we test the context directly and when do we test the schema directly? The answer to this question is the same answer to the question of when do we add code to a context and when do we add it to the schema?
+Você pode estar se perguntando: quando testamos o contexto diretamente e quando testamos o esquema diretamente? A resposta a esta pergunta é a mesma resposta à pergunta de quando adicionamos código a um contexto e quando o adicionamos ao esquema?
 
-The general guideline is to keep all side-effect free code in the schema. In other words, if you are simply working with data structures, schemas and changesets, put it in the schema. The context will typically have the code that creates and updates schemas and then write them to a database or an API.
+A diretriz geral é manter todo o código livre de efeitos colaterais no esquema. Em outras palavras, se você está simplesmente trabalhando com estruturas de dados, esquemas e changesets, coloque-o no esquema. O contexto normalmente terá o código que cria e atualiza esquemas e depois os escreve em um banco de dados ou uma API.
 
-We'll be adding additional validations to the schema module, so that's a great opportunity to write some schema specific tests. Open up `lib/hello/blog/post.ex` and add the following validation to `def changeset`:
+Vamos adicionar validações adicionais ao módulo de esquema, o que é uma ótima oportunidade para escrever alguns testes específicos de esquema. Abra `lib/hello/blog/post.ex` e adicione a seguinte validação ao `def changeset`:
 
 ```elixir
 def changeset(post, attrs) do
@@ -147,7 +147,7 @@ def changeset(post, attrs) do
 end
 ```
 
-The new validation says the title needs to have at least 2 characters. Let's write a test for this. Create a new file at `test/hello/blog/post_test.exs` with this:
+A nova validação diz que o título precisa ter pelo menos 2 caracteres. Vamos escrever um teste para isso. Crie um novo arquivo em `test/hello/blog/post_test.exs` com isto:
 
 ```elixir
 defmodule Hello.Blog.PostTest do
@@ -161,4 +161,4 @@ defmodule Hello.Blog.PostTest do
 end
 ```
 
-And that's it. As our business domain grows, we have well-defined places to test our contexts and schemas.
+E é isso. À medida que nosso domínio de negócios cresce, temos lugares bem definidos para testar nossos contextos e esquemas.

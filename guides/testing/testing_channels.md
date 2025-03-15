@@ -1,16 +1,16 @@
-# Testing Channels
+# Testando Canais
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você tenha lido os [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
+> **Requisito**: Este guia pressupõe que você tenha lido o [Guia de Introdução a Testes](testing.html).
 
-> **Requirement**: This guide expects that you have gone through the [Channels guide](channels.html).
+> **Requisito**: Este guia pressupõe que você tenha lido o [Guia de Canais](channels.html).
 
-In the Channels guide, we saw that a "Channel" is a layered system with different components. Given this, there would be cases when writing unit tests for our Channel functions may not be enough. We may want to verify that its different moving parts are working together as we expect. This integration testing would assure us that we correctly defined our channel route, the channel module, and its callbacks; and that the lower-level layers such as the PubSub and Transport are configured correctly and are working as intended.
+No guia de Canais, vimos que um "Canal" é um sistema em camadas com diferentes componentes. Sendo assim, haverá casos em que escrever testes unitários para nossas funções de Canal pode não ser o suficiente. Podemos querer verificar se suas diferentes partes estão funcionando juntas como esperamos. Este teste de integração nos asseguraria que definimos corretamente nossa rota de canal, o módulo do canal e seus callbacks; e que as camadas de nível inferior, como o PubSub e Transport, estão configuradas corretamente e funcionando conforme o esperado.
 
-## Generating channels
+## Gerando canais
 
-As we progress through this guide, it would help to have a concrete example we could work off of. Phoenix comes with a Mix task for generating a basic channel and tests. These generated files serve as a good reference for writing channels and their corresponding tests. Let's go ahead and generate our Channel:
+À medida que avançamos neste guia, seria útil ter um exemplo concreto para trabalharmos. O Phoenix vem com uma tarefa Mix para gerar um canal básico e seus testes. Esses arquivos gerados servem como uma boa referência para escrever canais e seus testes correspondentes. Vamos em frente e gerar nosso Canal:
 
 ```console
 $ mix phx.gen.channel Room
@@ -36,18 +36,18 @@ in your `assets/js/app.js` file:
     import "./user_socket.js"
 ```
 
-This creates a channel, its test and instructs us to add a channel route in `lib/hello_web/channels/user_socket.ex`. It is important to add the channel route or our channel won't function at all!
+Isso cria um canal, seu teste e nos instrui a adicionar uma rota de canal em `lib/hello_web/channels/user_socket.ex`. É importante adicionar a rota do canal, caso contrário, nosso canal não funcionará de forma alguma!
 
-## The ChannelCase
+## O ChannelCase
 
-Open up `test/hello_web/channels/room_channel_test.exs` and you will find this:
+Abra `test/hello_web/channels/room_channel_test.exs` e você encontrará isso:
 
 ```elixir
 defmodule HelloWeb.RoomChannelTest do
   use HelloWeb.ChannelCase
 ```
 
-Similar to `ConnCase` and `DataCase`, we now have a `ChannelCase`. All three of them have been generated for us when we started our Phoenix application. Let's take a look at it. Open up `test/support/channel_case.ex`:
+Semelhante ao `ConnCase` e ao `DataCase`, agora temos um `ChannelCase`. Todos os três foram gerados para nós quando iniciamos nossa aplicação Phoenix. Vamos dar uma olhada nele. Abra `test/support/channel_case.ex`:
 
 ```elixir
 defmodule HelloWeb.ChannelCase do
@@ -71,14 +71,13 @@ defmodule HelloWeb.ChannelCase do
 end
 ```
 
-It is very straight-forward. It sets up a case template that imports all of `Phoenix.ChannelTest` on use. In the `setup` block, it starts the SQL Sandbox, which we discussed in the [Testing contexts guide](testing_contexts.html).
+É muito direto. Ele configura um template de caso que importa todo o `Phoenix.ChannelTest` ao usar. No bloco `setup`, ele inicia o SQL Sandbox, que discutimos no [guia de Testes de contextos](testing_contexts.html).
 
-## Subscribe and joining
+## Inscrevendo-se e entrando
 
-Now that we know that Phoenix provides with a custom Test Case just for channels and what it
-provides, we can move on to understanding the rest of `test/hello_web/channels/room_channel_test.exs`.
+Agora que sabemos que o Phoenix nos fornece um Caso de Teste personalizado apenas para canais e o que ele fornece, podemos seguir em frente para entender o resto de `test/hello_web/channels/room_channel_test.exs`.
 
-First off, is the setup block:
+Primeiro, temos o bloco de configuração:
 
 ```elixir
 setup do
@@ -91,13 +90,13 @@ setup do
 end
 ```
 
-The `setup` block sets up a `Phoenix.Socket` based on the `UserSocket` module, which you can find at `lib/hello_web/channels/user_socket.ex`. Then it says we want to subscribe and join the `RoomChannel`, accessible as `"room:lobby"` in the `UserSocket`. At the end of the test, we return the `%{socket: socket}` as metadata, so we can reuse it on every test.
+O bloco `setup` configura um `Phoenix.Socket` baseado no módulo `UserSocket`, que você pode encontrar em `lib/hello_web/channels/user_socket.ex`. Em seguida, ele diz que queremos nos inscrever e entrar no `RoomChannel`, acessível como `"room:lobby"` no `UserSocket`. No final do teste, retornamos o `%{socket: socket}` como metadados, para que possamos reutilizá-lo em cada teste.
 
-In a nutshell, `subscribe_and_join/3` emulates the client joining a channel and subscribes the test process to the given topic. This is a necessary step since clients need to join a channel before they can send and receive events on that channel.
+Em resumo, `subscribe_and_join/3` emula o cliente entrando em um canal e inscreve o processo de teste no tópico fornecido. Este é um passo necessário, já que os clientes precisam entrar em um canal antes que possam enviar e receber eventos nesse canal.
 
-## Testing a synchronous reply
+## Testando uma resposta síncrona
 
-The first test block in our generated channel test looks like:
+O primeiro bloco de teste em nosso teste de canal gerado parece com:
 
 ```elixir
 test "ping replies with status ok", %{socket: socket} do
@@ -106,7 +105,7 @@ test "ping replies with status ok", %{socket: socket} do
 end
 ```
 
-This tests the following code in our `HelloWeb.RoomChannel`:
+Isso testa o seguinte código em nosso `HelloWeb.RoomChannel`:
 
 ```elixir
 # Channels can be used in a request/response fashion
@@ -116,15 +115,15 @@ def handle_in("ping", payload, socket) do
 end
 ```
 
-As is stated in the comment above, we see that a `reply` is synchronous since it mimics the request/response pattern we are familiar with in HTTP. This synchronous reply is best used when we only want to send an event back to the client when we are done processing the message on the server. For example, when we save something to the database and then send a message to the client only once that's done.
+Como é indicado no comentário acima, vemos que uma `reply` é síncrona, já que imita o padrão de solicitação/resposta com o qual estamos familiarizados no HTTP. Esta resposta síncrona é melhor utilizada quando queremos enviar um evento de volta ao cliente apenas quando terminamos de processar a mensagem no servidor. Por exemplo, quando salvamos algo no banco de dados e então enviamos uma mensagem ao cliente somente depois que isso for concluído.
 
-In the `test "ping replies with status ok", %{socket: socket} do` line, we see that we have the map `%{socket: socket}`. This gives us access to the `socket` in the setup block.
+Na linha `test "ping replies with status ok", %{socket: socket} do`, vemos que temos o mapa `%{socket: socket}`. Isso nos dá acesso ao `socket` no bloco de configuração.
 
-We emulate the client pushing a message to the channel with `push/3`. In the line `ref = push(socket, "ping", %{"hello" => "there"})`, we push the event `"ping"` with the payload `%{"hello" => "there"}` to the channel. This triggers the `handle_in/3` callback we have for the `"ping"` event in our channel. Note that we store the `ref` since we need that on the next line for asserting the reply. With `assert_reply ref, :ok, %{"hello" => "there"}`, we assert that the server sends a synchronous reply `:ok, %{"hello" => "there"}`. This is how we check that the `handle_in/3` callback for the `"ping"` was triggered.
+Emulamos o cliente enviando uma mensagem para o canal com `push/3`. Na linha `ref = push(socket, "ping", %{"hello" => "there"})`, enviamos o evento `"ping"` com a carga útil `%{"hello" => "there"}` para o canal. Isso aciona o callback `handle_in/3` que temos para o evento `"ping"` em nosso canal. Observe que armazenamos a `ref` porque precisamos disso na próxima linha para afirmar a resposta. Com `assert_reply ref, :ok, %{"hello" => "there"}`, afirmamos que o servidor envia uma resposta síncrona `:ok, %{"hello" => "there"}`. É assim que verificamos que o callback `handle_in/3` para o `"ping"` foi acionado.
 
-### Testing a Broadcast
+### Testando um Broadcast
 
-It is common to receive messages from the client and broadcast to everyone subscribed to a current topic. This common pattern is simple to express in Phoenix and is one of the generated `handle_in/3` callbacks in our `HelloWeb.RoomChannel`.
+É comum receber mensagens do cliente e transmiti-las para todos os inscritos em um tópico atual. Este padrão comum é simples de expressar no Phoenix e é um dos callbacks `handle_in/3` gerados em nosso `HelloWeb.RoomChannel`.
 
 ```elixir
 def handle_in("shout", payload, socket) do
@@ -133,7 +132,7 @@ def handle_in("shout", payload, socket) do
 end
 ```
 
-Its corresponding test looks like:
+Seu teste correspondente parece com:
 
 ```elixir
 test "shout broadcasts to room:lobby", %{socket: socket} do
@@ -142,18 +141,18 @@ test "shout broadcasts to room:lobby", %{socket: socket} do
 end
 ```
 
-We notice that we access the same `socket` that is from the setup block. How handy! We also do the same `push/3` as we did in the synchronous reply test. So we `push` the `"shout"` event with the payload `%{"hello" => "all"}`.
+Notamos que acessamos o mesmo `socket` que está no bloco de configuração. Que conveniente! Também fazemos o mesmo `push/3` que fizemos no teste de resposta síncrona. Então, enviamos o evento `"shout"` com a carga útil `%{"hello" => "all"}`.
 
-Since the `handle_in/3` callback for the `"shout"` event just broadcasts the same event and payload, all subscribers in the `"room:lobby"` should receive the message. To check that, we do `assert_broadcast "shout", %{"hello" => "all"}`.
+Como o callback `handle_in/3` para o evento `"shout"` apenas transmite o mesmo evento e carga útil, todos os inscritos no `"room:lobby"` devem receber a mensagem. Para verificar isso, fazemos `assert_broadcast "shout", %{"hello" => "all"}`.
 
-**NOTE:** `assert_broadcast/3` tests that the message was broadcast in the PubSub system. For testing if a client receives a message, use `assert_push/3`.
+**NOTA:** `assert_broadcast/3` testa se a mensagem foi transmitida no sistema PubSub. Para testar se um cliente recebe uma mensagem, use `assert_push/3`.
 
-### Testing an asynchronous push from the server
+### Testando um push assíncrono do servidor
 
-The last test in our `HelloWeb.RoomChannelTest` verifies that broadcasts from the server are pushed to the client. Unlike the previous tests discussed, we are indirectly testing that the channel's `handle_out/3` callback is triggered. By default, `handle_out/3` is implemented for us and simply pushes the message on to the client.
+O último teste em nosso `HelloWeb.RoomChannelTest` verifica que as transmissões do servidor são enviadas para o cliente. Diferentemente dos testes anteriores discutidos, estamos testando indiretamente se o callback `handle_out/3` do canal é acionado. Por padrão, `handle_out/3` é implementado para nós e simplesmente envia a mensagem para o cliente.
 
-Since the `handle_out/3` event is only triggered when we call `broadcast/3` from our channel, we will need to emulate that in our test. We do that by calling `broadcast_from` or `broadcast_from!`. Both serve the same purpose with the only difference of `broadcast_from!` raising an error when broadcast fails.
+Como o evento `handle_out/3` só é acionado quando chamamos `broadcast/3` do nosso canal, precisaremos emular isso em nosso teste. Fazemos isso chamando `broadcast_from` ou `broadcast_from!`. Ambos servem ao mesmo propósito, com a única diferença de que `broadcast_from!` gera um erro quando a transmissão falha.
 
-The line `broadcast_from!(socket, "broadcast", %{"some" => "data"})` will trigger the `handle_out/3` callback which pushes the same event and payload back to the client. To test this, we do `assert_push "broadcast", %{"some" => "data"}`.
+A linha `broadcast_from!(socket, "broadcast", %{"some" => "data"})` acionará o callback `handle_out/3`, que envia o mesmo evento e carga útil de volta para o cliente. Para testar isso, fazemos `assert_push "broadcast", %{"some" => "data"}`.
 
-That's it. Now you are ready to develop and fully test real-time applications. To learn more about other functionality provided when testing channels, check out the documentation for [`Phoenix.ChannelTest`](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html).
+É isso. Agora você está pronto para desenvolver e testar completamente aplicações em tempo real. Para saber mais sobre outras funcionalidades fornecidas ao testar canais, consulte a documentação de [`Phoenix.ChannelTest`](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html).

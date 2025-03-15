@@ -1,16 +1,16 @@
-# JSON and APIs
+# JSON e APIs
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia espera que você tenha passado pelos [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through the [Controllers guide](controllers.html).
+> **Requisito**: Este guia espera que você tenha passado pelo [guia de Controladores](controllers.html).
 
-You can also use the Phoenix Framework to build [Web APIs](https://en.wikipedia.org/wiki/Web_API). By default Phoenix supports JSON but you can bring any other rendering format you desire.
+Você também pode usar o Framework Phoenix para construir [APIs Web](https://en.wikipedia.org/wiki/Web_API). Por padrão, o Phoenix suporta JSON, mas você pode trazer qualquer outro formato de renderização que desejar.
 
-## The JSON API
+## A API JSON
 
-For this guide let's create a simple JSON API to store our favourite links, that will support all the CRUD (Create, Read, Update, Delete) operations out of the box.
+Para este guia, vamos criar uma API JSON simples para armazenar nossos links favoritos, que suportará todas as operações CRUD (Criar, Ler, Atualizar, Excluir) prontas para uso.
 
-For this guide, we will use Phoenix generators to scaffold our API infrastructure:
+Para este guia, usaremos os geradores do Phoenix para estruturar nossa infraestrutura de API:
 
 ```console
 mix phx.gen.json Urls Url urls link:string title:string
@@ -29,16 +29,16 @@ mix phx.gen.json Urls Url urls link:string title:string
 * injecting test/support/fixtures/urls_fixtures.ex
 ```
 
-We will break those files into four categories:
+Vamos dividir esses arquivos em quatro categorias:
 
-  * Files in `lib/hello_web` responsible for effectively rendering JSON
-  * Files in `lib/hello` responsible for defining our context and logic to persist links to the database
-  * Files in `priv/repo/migrations` responsible for updating our database
-  * Files in `test` to test our controllers and contexts
+  * Arquivos em `lib/hello_web` responsáveis por renderizar JSON efetivamente
+  * Arquivos em `lib/hello` responsáveis por definir nosso contexto e lógica para persistir links no banco de dados
+  * Arquivos em `priv/repo/migrations` responsáveis por atualizar nosso banco de dados
+  * Arquivos em `test` para testar nossos controladores e contextos
 
-In this guide, we will explore only the first category of files. To learn more about how Phoenix stores and manage data, check out [the Ecto guide](ecto.md) and [the Contexts guide](contexts.md) for more information. We also have a whole section dedicated to testing.
+Neste guia, exploraremos apenas a primeira categoria de arquivos. Para saber mais sobre como o Phoenix armazena e gerencia dados, confira [o guia do Ecto](ecto.md) e [o guia de Contextos](contexts.md) para mais informações. Também temos uma seção inteira dedicada a testes.
 
-At the end, the generator asks us to add the `/url` resource to our `:api` scope in `lib/hello_web/router.ex`:
+No final, o gerador nos pede para adicionar o recurso `/url` ao nosso escopo `:api` em `lib/hello_web/router.ex`:
 
 ```elixir
 scope "/api", HelloWeb do
@@ -47,31 +47,31 @@ scope "/api", HelloWeb do
 end
 ```
 
-The API scope uses the `:api` pipeline, which will run specific steps such as ensuring the client can handle JSON responses.
+O escopo da API usa o pipeline `:api`, que executará etapas específicas, como garantir que o cliente possa lidar com respostas JSON.
 
-Then we need to update our repository by running migrations:
+Em seguida, precisamos atualizar nosso repositório executando migrações:
 
 ```console
 mix ecto.migrate
 ```
 
-### Trying out the JSON API
+### Testando a API JSON
 
-Before we go ahead and change those files, let's take a look at how our API behaves from the command line.
+Antes de prosseguirmos e alterarmos esses arquivos, vamos dar uma olhada em como nossa API se comporta a partir da linha de comando.
 
-First, we need to start the server:
+Primeiro, precisamos iniciar o servidor:
 
 ```console
 mix phx.server
 ```
 
-Next, let's make a smoke test to check our API is working with:
+Em seguida, vamos fazer um teste rápido para verificar se nossa API está funcionando:
 
 ```console
 curl -i http://localhost:4000/api/urls
 ```
 
-If everything went as planned we should get a `200` response:
+Se tudo correu conforme o planejado, devemos obter uma resposta `200`:
 
 ```console
 HTTP/1.1 200 OK
@@ -85,7 +85,7 @@ x-request-id: Fuyg-wMl4S-hAfsAAAUk
 {"data":[]}
 ```
 
-We didn't get any data because we haven't populated the database with any yet. So let's add some links:
+Não recebemos nenhum dado porque ainda não populamos o banco de dados. Então, vamos adicionar alguns links:
 
 ```console
 curl -iX POST http://localhost:4000/api/urls \
@@ -97,19 +97,19 @@ curl -iX POST http://localhost:4000/api/urls \
    -d '{"url": {"link":"https://elixir-lang.org", "title":"Elixir"}}'
 ```
 
-Now we can retrieve all links:
+Agora podemos recuperar todos os links:
 
 ```console
 curl -i http://localhost:4000/api/urls
 ```
 
-Or we can just retrieve a link by its `id`:
+Ou podemos apenas recuperar um link por seu `id`:
 
 ```console
 curl -i http://localhost:4000/api/urls/1
 ```
 
-Next, we can update a link with:
+Em seguida, podemos atualizar um link com:
 
 ```console
 curl -iX PUT http://localhost:4000/api/urls/2 \
@@ -117,20 +117,20 @@ curl -iX PUT http://localhost:4000/api/urls/2 \
    -d '{"url": {"title":"Elixir Programming Language"}}'
 ```
 
-The response should be a `200` with the updated link in the body.
+A resposta deve ser um `200` com o link atualizado no corpo.
 
-Finally, we need to try out the removal of a link:
+Por fim, precisamos testar a remoção de um link:
 
 ```console
 curl -iX DELETE http://localhost:4000/api/urls/2 \
    -H 'Content-Type: application/json'
 ```
 
-A `204` response should be returned to indicate the successful removal of the link.
+Uma resposta `204` deve ser retornada para indicar a remoção bem-sucedida do link.
 
-## Rendering JSON
+## Renderizando JSON
 
-To understand how to render JSON, let's start with the `index` action from `UrlController` defined at `lib/hello_web/controllers/url_controller.ex`:
+Para entender como renderizar JSON, vamos começar com a ação `index` do `UrlController` definida em `lib/hello_web/controllers/url_controller.ex`:
 
 ```elixir
   def index(conn, _params) do
@@ -139,9 +139,9 @@ To understand how to render JSON, let's start with the `index` action from `UrlC
   end
 ```
 
-As we can see, this is not any different from how Phoenix renders HTML templates. We call `render/3`, passing the connection, the template we want our views to render (`:index`), and the data we want to make available to our views.
+Como podemos ver, isso não é diferente de como o Phoenix renderiza templates HTML. Chamamos `render/3`, passando a conexão, o template que queremos que nossas views renderizem (`:index`) e os dados que queremos disponibilizar para nossas views.
 
-Phoenix typically uses one view per rendering format. When rendering HTML, we would use `UrlHTML`. Now that we are rendering JSON, we will find a `UrlJSON` view collocated with the template at `lib/hello_web/controllers/url_json.ex`. Let's open it up:
+O Phoenix normalmente usa uma view por formato de renderização. Ao renderizar HTML, usaríamos `UrlHTML`. Agora que estamos renderizando JSON, encontraremos uma view `UrlJSON` colocada junto com o template em `lib/hello_web/controllers/url_json.ex`. Vamos abri-la:
 
 ```elixir
 defmodule HelloWeb.UrlJSON do
@@ -171,15 +171,15 @@ defmodule HelloWeb.UrlJSON do
 end
 ```
 
-This view is very simple. The `index` function receives all URLs, and converts them into a list of maps. Those maps are placed inside the data key at the root, exactly as we saw when interfacing with our application from `cURL`. In other words, our JSON view converts our complex data into simple Elixir data-structures. Once our view layer returns, Phoenix uses the `Jason` library to encode JSON and send the response to the client.
+Esta view é muito simples. A função `index` recebe todos os URLs e os converte em uma lista de mapas. Esses mapas são colocados dentro da chave data na raiz, exatamente como vimos ao interagir com nossa aplicação a partir do `cURL`. Em outras palavras, nossa view JSON converte nossos dados complexos em estruturas de dados Elixir simples. Uma vez que nossa camada de view retorna, o Phoenix usa a biblioteca `Jason` para codificar JSON e enviar a resposta ao cliente.
 
-If you explore the remaining the controller, you will learn the `show` action is similar to the `index` one. For `create`, `update`, and `delete` actions, Phoenix uses one other important feature, called "Action fallback".
+Se você explorar o restante do controlador, verá que a ação `show` é semelhante à `index`. Para as ações `create`, `update` e `delete`, o Phoenix usa outro recurso importante, chamado "Action fallback".
 
 ## Action fallback
 
-Action fallback allows us to centralize error handling code in plugs, which are called when a controller action fails to return a [`%Plug.Conn{}`](`t:Plug.Conn.t/0`) struct. These plugs receive both the `conn` which was originally passed to the controller action along with the return value of the action.
+O Action fallback nos permite centralizar o código de tratamento de erros em plugs, que são chamados quando uma ação do controlador falha em retornar uma estrutura [`%Plug.Conn{}`](`t:Plug.Conn.t/0`). Esses plugs recebem tanto a `conn` que foi originalmente passada para a ação do controlador quanto o valor de retorno da ação.
 
-Let's say we have a `show` action which uses [`with`](`with/1`) to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `fetch_post/1` to return `{:error, :not_found}` if the post is not found and `authorize_user/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could use our `ErrorHTML` and `ErrorJSON` views which are generated by Phoenix for every new application to handle these error paths accordingly:
+Digamos que temos uma ação `show` que usa [`with`](`with/1`) para buscar uma postagem de blog e, em seguida, autorizar o usuário atual a visualizar essa postagem. Neste exemplo, podemos esperar que `fetch_post/1` retorne `{:error, :not_found}` se a postagem não for encontrada e `authorize_user/3` pode retornar `{:error, :unauthorized}` se o usuário não estiver autorizado. Poderíamos usar nossas views `ErrorHTML` e `ErrorJSON`, que são geradas pelo Phoenix para cada nova aplicação, para lidar com esses caminhos de erro de acordo:
 
 ```elixir
 defmodule HelloWeb.MyController do
@@ -206,9 +206,9 @@ defmodule HelloWeb.MyController do
 end
 ```
 
-Now imagine you may need to implement similar logic for every controller and action handled by your API. This would result in a lot of repetition.
+Agora imagine que você pode precisar implementar uma lógica semelhante para cada controlador e ação tratada pela sua API. Isso resultaria em muita repetição.
 
-Instead we can define a module plug which knows how to handle these error cases specifically. Since controllers are module plugs, let's define our plug as a controller:
+Em vez disso, podemos definir um plug de módulo que sabe como lidar com esses casos de erro especificamente. Como os controladores são plugs de módulo, vamos definir nosso plug como um controlador:
 
 ```elixir
 defmodule HelloWeb.MyFallbackController do
@@ -230,7 +230,7 @@ defmodule HelloWeb.MyFallbackController do
 end
 ```
 
-Then we can reference our new controller as the `action_fallback` and simply remove the `else` block from our `with`:
+Então podemos referenciar nosso novo controlador como o `action_fallback` e simplesmente remover o bloco `else` do nosso `with`:
 
 ```elixir
 defmodule HelloWeb.MyController do
@@ -247,11 +247,11 @@ defmodule HelloWeb.MyController do
 end
 ```
 
-Whenever the `with` conditions do not match, `HelloWeb.MyFallbackController` will receive the original `conn` as well as the result of the action and respond accordingly.
+Sempre que as condições do `with` não corresponderem, `HelloWeb.MyFallbackController` receberá o `conn` original, bem como o resultado da ação, e responderá de acordo.
 
-## FallbackController and ChangesetJSON
+## FallbackController e ChangesetJSON
 
-With this knowledge in hand, we can explore the `FallbackController` (`lib/hello_web/controllers/fallback_controller.ex`) generated by `mix phx.gen.json`. In particular, it handles one clause (the other is generated as an example):
+Com esse conhecimento em mãos, podemos explorar o `FallbackController` (`lib/hello_web/controllers/fallback_controller.ex`) gerado por `mix phx.gen.json`. Em particular, ele lida com uma cláusula (a outra é gerada como exemplo):
 
 ```elixir
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
@@ -262,7 +262,7 @@ With this knowledge in hand, we can explore the `FallbackController` (`lib/hello
   end
 ```
 
-The goal of this clause is to handle the `{:error, changeset}` return types from the `HelloWeb.Urls` context and render them into rendered errors via the `ChangesetJSON` view. Let's open up `lib/hello_web/controllers/changeset_json.ex` to learn more:
+O objetivo dessa cláusula é lidar com os tipos de retorno `{:error, changeset}` do contexto `HelloWeb.Urls` e transformá-los em erros renderizados através da view `ChangesetJSON`. Vamos abrir `lib/hello_web/controllers/changeset_json.ex` para saber mais:
 
 ```elixir
 defmodule HelloWeb.ChangesetJSON do
@@ -277,7 +277,7 @@ defmodule HelloWeb.ChangesetJSON do
 end
 ```
 
-As we can see, it will convert the errors into a data structure, which will be rendered as JSON. The changeset is a data structure responsible for casting and validating data. For our example, it is defined in `Hello.Urls.Url.changeset/1`. Let's open up `lib/hello/urls/url.ex` and see its definition:
+Como podemos ver, ele converterá os erros em uma estrutura de dados, que será renderizada como JSON. O changeset é uma estrutura de dados responsável por converter e validar dados. Para nosso exemplo, ele é definido em `Hello.Urls.Url.changeset/1`. Vamos abrir `lib/hello/urls/url.ex` e ver sua definição:
 
 ```elixir
   @doc false
@@ -288,7 +288,7 @@ As we can see, it will convert the errors into a data structure, which will be r
   end
 ```
 
-As you can see, the changeset requires both link and title to be given. This means we can try posting a url with no link and title and see how our API responds:
+Como você pode ver, o changeset requer que tanto o link quanto o título sejam fornecidos. Isso significa que podemos tentar postar um url sem link e título e ver como nossa API responde:
 
 ```console
 curl -iX POST http://localhost:4000/api/urls \
@@ -298,42 +298,43 @@ curl -iX POST http://localhost:4000/api/urls \
 {"errors": {"link": ["can't be blank"], "title": ["can't be blank"]}}
 ```
 
-Feel free to modify the `changeset` function and see how your API behaves.
+Sinta-se à vontade para modificar a função `changeset` e ver como sua API se comporta.
 
-## API-only applications
+## Aplicações somente API
 
-In case you want to generate a Phoenix application exclusively for APIs, you can pass
-several options when invoking `mix phx.new`. Let's check which `--no-*` flags we need
-to use to not generate the scaffolding that isn't necessary on our Phoenix application
-for the REST API.
+Caso você queira gerar uma aplicação Phoenix exclusivamente para APIs, você pode passar
+várias opções ao invocar `mix phx.new`. Vamos verificar quais flags `--no-*` precisamos
+usar para não gerar o scaffolding que não é necessário em nossa aplicação Phoenix
+para a API REST.
 
-From your terminal run:
+Do seu terminal, execute:
 
 ```console
 mix help phx.new
 ```
 
-The output should contain the following:
+A saída deve conter o seguinte:
 
 ```text
-  • --no-assets - equivalent to --no-esbuild and --no-tailwind
-  • --no-dashboard - do not include Phoenix.LiveDashboard
-  • --no-ecto - do not generate Ecto files
-  • --no-esbuild - do not include esbuild dependencies and
-    assets. We do not recommend setting this option, unless for API
-    only applications, as doing so requires you to manually add and
-    track JavaScript dependencies
-  • --no-gettext - do not generate gettext files
-  • --no-html - do not generate HTML views
-  • --no-live - comment out LiveView socket setup in your Endpoint
-    and assets/js/app.js. Automatically disabled if --no-html is given
-  • --no-mailer - do not generate Swoosh mailer files
-  • --no-tailwind - do not include tailwind dependencies and
-    assets. The generated markup will still include Tailwind CSS
-    classes, those are left-in as reference for the subsequent
-    styling of your layout and components
+  • --no-assets - equivalente a --no-esbuild e --no-tailwind
+  • --no-dashboard - não incluir Phoenix.LiveDashboard
+  • --no-ecto - não gerar arquivos Ecto
+  • --no-esbuild - não incluir dependências e ativos do esbuild.
+    Não recomendamos definir esta opção, exceto para aplicações
+    somente API, pois isso exige que você adicione e rastreie
+    manualmente as dependências JavaScript
+  • --no-gettext - não gerar arquivos gettext
+  • --no-html - não gerar views HTML
+  • --no-live - comentar a configuração do socket LiveView em seu
+    Endpoint e assets/js/app.js. Automaticamente desativado se
+    --no-html for fornecido
+  • --no-mailer - não gerar arquivos do mailer Swoosh
+  • --no-tailwind - não incluir dependências e ativos do tailwind.
+    O markup gerado ainda incluirá classes CSS do Tailwind, essas
+    são mantidas como referência para o estilo subsequente do seu
+    layout e componentes
 ```
 
-The `--no-html` is the obvious one we want to use when creating any Phoenix application for an API in order to leave out all the unnecessary HTML scaffolding. You may also pass `--no-assets`, if you don't want any of the asset management bit, `--no-gettext` if you don't support internationalization, and so on.
+O `--no-html` é o óbvio que queremos usar ao criar qualquer aplicação Phoenix para uma API, a fim de deixar de fora todo o scaffolding HTML desnecessário. Você também pode passar `--no-assets`, se não quiser nenhuma parte do gerenciamento de ativos, `--no-gettext` se não suportar internacionalização, e assim por diante.
 
-Also bear in mind that nothing stops you to have a backend that supports simultaneously the REST API and a Web App (HTML, assets, internationalization and sockets).
+Tenha em mente também que nada o impede de ter um backend que suporte simultaneamente a API REST e um aplicativo Web (HTML, ativos, internacionalização e sockets).

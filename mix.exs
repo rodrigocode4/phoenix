@@ -178,14 +178,14 @@ defmodule Phoenix.MixProject do
 
   defp groups_for_extras do
     [
-      Introduction: ~r/guides\/introduction\/.?/,
-      Guides: ~r/guides\/[^\/]+\.md/,
-      Authentication: ~r/guides\/authentication\/.?/,
-      "Real-time": ~r/guides\/real_time\/.?/,
-      Testing: ~r/guides\/testing\/.?/,
+      "Introdução": ~r/guides\/introduction\/.?/,
+      "Guias": ~r/guides\/[^\/]+\.md/,
+      "Autenticação": ~r/guides\/authentication\/.?/,
+      "Tempo real": ~r/guides\/real_time\/.?/,
+      "Testes": ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
-      Cheatsheets: ~r/guides\/cheatsheets\/.?/,
-      "How-to's": ~r/guides\/howto\/.?/
+      "Guia rápido": ~r/guides\/cheatsheets\/.?/,
+      "Como fazer": ~r/guides\/howto\/.?/
     ]
   end
 

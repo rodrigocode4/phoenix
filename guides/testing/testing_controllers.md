@@ -1,20 +1,20 @@
-# Testing Controllers
+# Testando Controllers
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você tenha passado pelos [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [instalada e funcionando](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
+> **Requisito**: Este guia pressupõe que você tenha passado pelo [Guia de Introdução a Testes](testing.html).
 
-At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
+No final do guia de Introdução a Testes, geramos um recurso HTML para posts usando o seguinte comando:
 
 ```console
 $ mix phx.gen.html Blog Post posts title body:text
 ```
 
-This gave us a number of modules for free, including a PostController and the associated tests. We are going to explore those tests to learn more about testing controllers in general. At the end of the guide, we will generate a JSON resource, and explore how our API tests look like.
+Isso nos deu vários módulos gratuitamente, incluindo um PostController e os testes associados. Vamos explorar esses testes para aprender mais sobre como testar controllers em geral. No final do guia, vamos gerar um recurso JSON e explorar como são nossos testes de API.
 
-## HTML controller tests
+## Testes de controller HTML
 
-If you open up `test/hello_web/controllers/post_controller_test.exs`, you will find the following:
+Se você abrir o arquivo `test/hello_web/controllers/post_controller_test.exs`, você encontrará o seguinte:
 
 ```elixir
 defmodule HelloWeb.PostControllerTest do
@@ -36,11 +36,11 @@ defmodule HelloWeb.PostControllerTest do
   ...
 ```
 
-Similar to the `PageControllerTest` that ships with our application, this controller tests uses `use HelloWeb.ConnCase` to setup the testing structure. Then, as usual, it defines some aliases, some module attributes to use throughout testing, and then it starts a series of `describe` blocks, each of them to test a different controller action.
+Semelhante ao `PageControllerTest` que vem com nossa aplicação, este teste de controller usa `use HelloWeb.ConnCase` para configurar a estrutura de testes. Em seguida, como de costume, ele define alguns aliases, alguns atributos de módulo para usar durante os testes e, então, começa uma série de blocos `describe`, cada um deles para testar uma ação diferente do controller.
 
-### The index action
+### A ação index
 
-The first describe block is for the `index` action. The action itself is implemented like this in `lib/hello_web/controllers/post_controller.ex`:
+O primeiro bloco describe é para a ação `index`. A própria ação é implementada da seguinte forma em `lib/hello_web/controllers/post_controller.ex`:
 
 ```elixir
 def index(conn, _params) do
@@ -49,9 +49,9 @@ def index(conn, _params) do
 end
 ```
 
-It gets all posts and renders the "index.html" template. The template can be found in `lib/hello_web/templates/page/index.html.heex`.
+Ela obtém todos os posts e renderiza o template "index.html". O template pode ser encontrado em `lib/hello_web/templates/page/index.html.heex`.
 
-The test looks like this:
+O teste se parece com isto:
 
 ```elixir
 describe "index" do
@@ -62,11 +62,11 @@ describe "index" do
 end
 ```
 
-The test for the `index` page is quite straight-forward. It uses the `get/2` helper to make a request to the `"/posts"` page, which is verified against our router in the test thanks to `~p`, then we assert we got a successful HTML response and match on its contents.
+O teste para a página `index` é bastante direto. Ele usa o helper `get/2` para fazer uma requisição à página `"/posts"`, que é verificada em nosso router no teste graças ao `~p`, então verificamos se recebemos uma resposta HTML bem-sucedida e fazemos a correspondência com seu conteúdo.
 
-### The create action
+### A ação create
 
-The next test we will look at is the one for the `create` action. The `create` action implementation is this:
+O próximo teste que vamos analisar é o da ação `create`. A implementação da ação `create` é esta:
 
 ```elixir
 def create(conn, %{"post" => post_params}) do
@@ -82,7 +82,7 @@ def create(conn, %{"post" => post_params}) do
 end
 ```
 
-Since there are two possible outcomes for the `create`, we will have at least two tests:
+Como existem dois possíveis resultados para o `create`, teremos pelo menos dois testes:
 
 ```elixir
 describe "create post" do
@@ -103,13 +103,13 @@ describe "create post" do
 end
 ```
 
-The first test starts with a `post/2` request. That's because once the form in the `/posts/new` page is submitted, it becomes a POST request to the create action. Because we have supplied valid attributes, the post should have been successfully created and we should have redirected to the show action of the new post. This new page will have an address like `/posts/ID`, where ID is the identifier of the post in the database.
+O primeiro teste começa com uma requisição `post/2`. Isso ocorre porque, uma vez que o formulário na página `/posts/new` é enviado, ele se torna uma requisição POST para a ação create. Como fornecemos atributos válidos, o post deve ter sido criado com sucesso e devemos ter sido redirecionados para a ação show do novo post. Esta nova página terá um endereço como `/posts/ID`, onde ID é o identificador do post no banco de dados.
 
-We then use `redirected_params(conn)` to get the ID of the post and then match that we indeed redirected to the show action. Finally, we do request a `get` request to the page we redirected to, allowing us to verify that the post was indeed created.
+Em seguida, usamos `redirected_params(conn)` para obter o ID do post e, então, verificamos que realmente redirecionamos para a ação show. Finalmente, fazemos uma requisição `get` para a página para a qual redirecionamos, permitindo-nos verificar que o post foi realmente criado.
 
-For the second test, we simply test the failure scenario. If any invalid attribute is given, it should re-render the "New Post" page.
+Para o segundo teste, simplesmente testamos o cenário de falha. Se qualquer atributo inválido for fornecido, ele deve renderizar novamente a página "New Post".
 
-One common question is: how many failure scenarios do you test at the controller level? For example, in the [Testing Contexts](testing_contexts.html) guide, we introduced a validation to the `title` field of the post:
+Uma pergunta comum é: quantos cenários de falha você testa no nível do controller? Por exemplo, no guia [Testando Contexts](testing_contexts.html), introduzimos uma validação para o campo `title` do post:
 
 ```elixir
 def changeset(post, attrs) do
@@ -120,21 +120,21 @@ def changeset(post, attrs) do
 end
 ```
 
-In other words, creating a post can fail for the following reasons:
+Em outras palavras, a criação de um post pode falhar pelas seguintes razões:
 
-  * the title is missing
-  * the body is missing
-  * the title is present but is less than 2 characters
+  * o título está faltando
+  * o corpo está faltando
+  * o título está presente, mas tem menos de 2 caracteres
 
-Should we test all of these possible outcomes in our controller tests?
+Devemos testar todos esses possíveis resultados em nossos testes de controller?
 
-The answer is no. All of the different rules and outcomes should be verified in your context and schema tests. The controller works as the integration layer. In the controller tests we simply want to verify, in broad strokes, that we handle both success and failure scenarios.
+A resposta é não. Todas as diferentes regras e resultados devem ser verificados em seus testes de contexto e schema. O controller funciona como a camada de integração. Nos testes de controller, simplesmente queremos verificar, em linhas gerais, que lidamos com cenários de sucesso e falha.
 
-The test for `update` follows a similar structure as `create`, so let's skip to the `delete` test.
+O teste para `update` segue uma estrutura semelhante ao `create`, então vamos pular para o teste de `delete`.
 
-### The delete action
+### A ação delete
 
-The `delete` action looks like this:
+A ação `delete` se parece com isto:
 
 ```elixir
 def delete(conn, %{"id" => id}) do
@@ -147,7 +147,7 @@ def delete(conn, %{"id" => id}) do
 end
 ```
 
-The test is written like this:
+O teste é escrito assim:
 
 ```elixir
   describe "delete post" do
@@ -169,13 +169,13 @@ The test is written like this:
   end
 ```
 
-First of all, `setup` is used to declare that the `create_post` function should run before every test in this `describe` block. The `create_post` function simply creates a post and stores it in the test metadata. This allows us to, in the first line of the test, match on both the post and the connection:
+Primeiramente, `setup` é usado para declarar que a função `create_post` deve ser executada antes de cada teste neste bloco `describe`. A função `create_post` simplesmente cria um post e o armazena nos metadados do teste. Isso nos permite, na primeira linha do teste, fazer a correspondência tanto com o post quanto com a conexão:
 
 ```elixir
 test "deletes chosen post", %{conn: conn, post: post} do
 ```
 
-The test uses `delete/2` to delete the post and then asserts that we redirected to the index page. Finally, we check that it is no longer possible to access the show page of the deleted post:
+O teste usa `delete/2` para excluir o post e, em seguida, verifica que redirecionamos para a página de índice. Finalmente, verificamos que não é mais possível acessar a página de exibição do post excluído:
 
 ```elixir
 assert_error_sent 404, fn ->
@@ -183,12 +183,12 @@ assert_error_sent 404, fn ->
 end
 ```
 
-`assert_error_sent` is a testing helper provided by `Phoenix.ConnTest`. In this case, it verifies that:
+`assert_error_sent` é um auxiliar de teste fornecido por `Phoenix.ConnTest`. Neste caso, ele verifica que:
 
-  1. An exception was raised
-  2. The exception has a status code equivalent to 404 (which stands for Not Found)
+  1. Uma exceção foi levantada
+  2. A exceção tem um código de status equivalente a 404 (que significa Not Found)
 
-This pretty much mimics how Phoenix handles exceptions. For example, when we access `/posts/12345` where `12345` is an ID that does not exist, we will invoke our `show` action:
+Isso imita bastante como o Phoenix lida com exceções. Por exemplo, quando acessamos `/posts/12345` onde `12345` é um ID que não existe, invocaremos nossa ação `show`:
 
 ```elixir
 def show(conn, %{"id" => id}) do
@@ -197,9 +197,9 @@ def show(conn, %{"id" => id}) do
 end
 ```
 
-When an unknown post ID is given to `Blog.get_post!/1`, it raises an `Ecto.NotFoundError`. If your application raises any exception during a web request, Phoenix translates those requests into proper HTTP response codes. In this case, 404.
+Quando um ID de post desconhecido é fornecido a `Blog.get_post!/1`, ele levanta um `Ecto.NotFoundError`. Se sua aplicação levantar qualquer exceção durante uma requisição web, o Phoenix traduz essas requisições em códigos de resposta HTTP adequados. Neste caso, 404.
 
-We could, for example, have written this test as:
+Poderíamos, por exemplo, ter escrito este teste como:
 
 ```elixir
 assert_raise Ecto.NotFoundError, fn ->
@@ -207,23 +207,23 @@ assert_raise Ecto.NotFoundError, fn ->
 end
 ```
 
-However, you may prefer the implementation Phoenix generates by default as it ignores the specific details of the failure, and instead verifies what the browser would actually receive.
+No entanto, você pode preferir a implementação que o Phoenix gera por padrão, pois ela ignora os detalhes específicos da falha e, em vez disso, verifica o que o navegador realmente receberia.
 
-The tests for `new`, `edit`, and `show` actions are simpler variations of the tests we have seen so far. You can check the action implementation and their respective tests yourself. Now we are ready to move to JSON controller tests.
+Os testes para as ações `new`, `edit` e `show` são variações mais simples dos testes que vimos até agora. Você pode verificar a implementação da ação e seus respectivos testes por conta própria. Agora estamos prontos para passar para os testes de controller JSON.
 
-## JSON controller tests
+## Testes de controller JSON
 
-So far we have been working with a generated HTML resource. However, let's take a look at how our tests look like when we generate a JSON resource.
+Até agora, estávamos trabalhando com um recurso HTML gerado. No entanto, vamos dar uma olhada em como nossos testes se parecem quando geramos um recurso JSON.
 
-First of all, run this command:
+Primeiro, execute este comando:
 
 ```console
 $ mix phx.gen.json News Article articles title body
 ```
 
-We chose a very similar concept to the Blog context <-> Post schema, except we are using a different name, so we can study these concepts in isolation.
+Escolhemos um conceito muito semelhante ao context Blog <-> schema Post, exceto que estamos usando um nome diferente, para que possamos estudar esses conceitos isoladamente.
 
-After you run the command above, do not forget to follow the final steps output by the generator. Once all is done, we should run `mix test` and now have 35 passing tests:
+Depois de executar o comando acima, não se esqueça de seguir as etapas finais geradas pelo gerador. Quando tudo estiver pronto, devemos executar `mix test` e agora ter 35 testes passando:
 
 ```console
 $ mix test
@@ -235,21 +235,21 @@ Finished in 0.6 seconds
 Randomized with seed 618478
 ```
 
-You may have noticed that this time the scaffold controller has generated fewer tests. Previously it generated 16 (we went from 5 to 21) and now it generated 14 (we went from 21 to 35). That's because JSON APIs do not need to expose the `new` and `edit` actions. We can see this is the case in the resource we have added to the router at the end of the `mix phx.gen.json` command:
+Você pode ter notado que desta vez o controller scaffold gerou menos testes. Anteriormente, ele gerou 16 (passamos de 5 para 21) e agora gerou 14 (passamos de 21 para 35). Isso porque as APIs JSON não precisam expor as ações `new` e `edit`. Podemos ver que é o caso no recurso que adicionamos ao router no final do comando `mix phx.gen.json`:
 
 ```elixir
 resources "/articles", ArticleController, except: [:new, :edit]
 ```
 
-`new` and `edit` are only necessary for HTML because they basically exist to assist users in creating and updating resources. Besides having less actions, we will notice the controller and view tests and implementations for JSON are drastically different from the HTML ones.
+`new` e `edit` só são necessários para HTML porque eles basicamente existem para ajudar os usuários a criar e atualizar recursos. Além de ter menos ações, vamos notar que os testes e implementações de controller e view para JSON são drasticamente diferentes dos HTML.
 
-The only thing that is pretty much the same between HTML and JSON is the contexts and the schema, which, once you think about it, it makes total sense. After all, your business logic should remain the same, regardless if you are exposing it as HTML or JSON.
+A única coisa que é praticamente a mesma entre HTML e JSON são os contexts e o schema, o que, uma vez que você pensa sobre isso, faz total sentido. Afinal, sua lógica de negócios deve permanecer a mesma, independentemente de você expô-la como HTML ou JSON.
 
-With the differences in hand, let's take a look at the controller tests.
+Com as diferenças em mãos, vamos dar uma olhada nos testes de controller.
 
-### The index action
+### A ação index
 
-Open up `test/hello_web/controllers/article_controller_test.exs`. The initial structure is quite similar to `post_controller_test.exs`. So let's take a look at the tests for the `index` action. The `index` action itself is implemented in `lib/hello_web/controllers/article_controller.ex` like this:
+Abra `test/hello_web/controllers/article_controller_test.exs`. A estrutura inicial é bastante semelhante a `post_controller_test.exs`. Então, vamos dar uma olhada nos testes para a ação `index`. A ação `index` em si é implementada em `lib/hello_web/controllers/article_controller.ex` assim:
 
 ```elixir
 def index(conn, _params) do
@@ -258,7 +258,7 @@ def index(conn, _params) do
 end
 ```
 
-The action gets all articles and renders the index template. Since we are talking about JSON, we don't have a `index.json.heex` template. Instead, the code that converts `articles` into JSON can be found directly in the ArticleJSON module, defined at `lib/hello_web/controllers/article_json.ex` like this:
+A ação obtém todos os artigos e renderiza o template de índice. Como estamos falando de JSON, não temos um template `index.json.heex`. Em vez disso, o código que converte `articles` em JSON pode ser encontrado diretamente no módulo ArticleJSON, definido em `lib/hello_web/controllers/article_json.ex` assim:
 
 ```elixir
 defmodule HelloWeb.ArticleJSON do
@@ -282,9 +282,9 @@ defmodule HelloWeb.ArticleJSON do
 end
 ```
 
-Since a controller render is a regular function call, we don't need any extra features to render JSON. We simply define functions for our `index` and `show` actions that return the map of JSON for articles.
+Como um render de controller é uma chamada de função regular, não precisamos de recursos extras para renderizar JSON. Simplesmente definimos funções para nossas ações `index` e `show` que retornam o mapa de JSON para artigos.
 
-Let's take a look at the test for the `index` action then:
+Vamos dar uma olhada no teste para a ação `index` então:
 
 ```elixir
 describe "index" do
@@ -295,13 +295,13 @@ describe "index" do
 end
 ```
 
-It simply accesses the `index` path, asserts we got a JSON response with status 200 and that it contains a "data" key with an empty list, as we have no articles to return.
+Ele simplesmente acessa o caminho `index`, afirma que recebemos uma resposta JSON com status 200 e que ela contém uma chave "data" com uma lista vazia, já que não temos artigos para retornar.
 
-That was quite boring. Let's look at something more interesting.
+Isso foi bastante monótono. Vamos olhar para algo mais interessante.
 
-### The `create` action
+### A ação `create`
 
-The `create` action is defined like this:
+A ação `create` é definida assim:
 
 ```elixir
 def create(conn, %{"article" => article_params}) do
@@ -314,9 +314,9 @@ def create(conn, %{"article" => article_params}) do
 end
 ```
 
-As we can see, it checks if an article could be created. If so, it sets the status code to `:created` (which translates to 201), it sets a "location" header with the location of the article, and then renders "show.json" with the article.
+Como podemos ver, ela verifica se um artigo pôde ser criado. Se sim, ela define o código de status como `:created` (que se traduz em 201), define um cabeçalho "location" com a localização do artigo e, em seguida, renderiza "show.json" com o artigo.
 
-This is precisely what the first test for the `create` action verifies:
+Isso é precisamente o que o primeiro teste para a ação `create` verifica:
 
 ```elixir
 describe "create article" do
@@ -334,24 +334,24 @@ describe "create article" do
   end
 ```
 
-The test uses `post/2` to create a new article and then we verify that the article returned a JSON response, with status 201, and that it had a "data" key in it. We pattern match the "data" on `%{"id" => id}`, which allows us to extract the ID of the new article. Then we perform a `get/2` request on the `show` route and verify that the article was successfully created.
+O teste usa `post/2` para criar um novo artigo e, em seguida, verificamos que o artigo retornou uma resposta JSON, com status 201, e que tinha uma chave "data" nela. Fazemos a correspondência de padrão da "data" em `%{"id" => id}`, o que nos permite extrair o ID do novo artigo. Em seguida, realizamos uma requisição `get/2` na rota `show` e verificamos se o artigo foi criado com sucesso.
 
-Inside `describe "create article"`, we will find another test, which handles the failure scenario. Can you spot the failure scenario in the `create` action? Let's recap it:
+Dentro de `describe "create article"`, encontraremos outro teste, que lida com o cenário de falha. Você consegue identificar o cenário de falha na ação `create`? Vamos recapitular:
 
 ```elixir
 def create(conn, %{"article" => article_params}) do
   with {:ok, %Article{} = article} <- News.create_article(article_params) do
 ```
 
-The `with` special form that ships as part of Elixir allows us to check explicitly for the happy paths. In this case, we are interested only in the scenarios where `News.create_article(article_params)` returns `{:ok, article}`, if it returns anything else, the other value will simply be returned directly and none of the contents inside the `do/end` block will be executed. In other words, if `News.create_article/1` returns `{:error, changeset}`, we will simply return `{:error, changeset}` from the action.
+A forma especial `with` que vem como parte do Elixir nos permite verificar explicitamente os caminhos felizes. Neste caso, estamos interessados apenas nos cenários em que `News.create_article(article_params)` retorna `{:ok, article}`, se retornar qualquer outra coisa, o outro valor simplesmente será retornado diretamente e nenhum dos conteúdos dentro do bloco `do/end` será executado. Em outras palavras, se `News.create_article/1` retornar `{:error, changeset}`, simplesmente retornaremos `{:error, changeset}` da ação.
 
-However, this introduces an issue. Our actions do not know how to handle the `{:error, changeset}` result by default. Luckily, we can teach Phoenix Controllers to handle it with the Action Fallback controller. At the top of `ArticleController`, you will find:
+No entanto, isso introduz um problema. Nossas ações não sabem como lidar com o resultado `{:error, changeset}` por padrão. Felizmente, podemos ensinar Controllers Phoenix a lidar com isso com o controller Action Fallback. No topo de `ArticleController`, você encontrará:
 
 ```elixir
   action_fallback HelloWeb.FallbackController
 ```
 
-This line says: if any action does not return a `%Plug.Conn{}`, we want to invoke `FallbackController` with the result. You will find `HelloWeb.FallbackController` at `lib/hello_web/controllers/fallback_controller.ex` and it looks like this:
+Esta linha diz: se qualquer ação não retornar um `%Plug.Conn{}`, queremos invocar `FallbackController` com o resultado. Você encontrará `HelloWeb.FallbackController` em `lib/hello_web/controllers/fallback_controller.ex` e ele se parece com isto:
 
 ```elixir
 defmodule HelloWeb.FallbackController do
@@ -373,9 +373,9 @@ defmodule HelloWeb.FallbackController do
 end
 ```
 
-You can see how the first clause of the `call/2` function handles the `{:error, changeset}` case, setting the status code to unprocessable entity (422), and then rendering "error.json" from the changeset view with the failed changeset.
+Você pode ver como a primeira cláusula da função `call/2` lida com o caso `{:error, changeset}`, definindo o código de status como unprocessable entity (422) e, em seguida, renderizando "error.json" da view changeset com o changeset com falha.
 
-With this in mind, let's look at our second test for `create`:
+Com isso em mente, vamos olhar para nosso segundo teste para `create`:
 
 ```elixir
 test "renders errors when data is invalid", %{conn: conn} do
@@ -384,13 +384,13 @@ test "renders errors when data is invalid", %{conn: conn} do
 end
 ```
 
-It simply posts to the `create` path with invalid parameters. This makes it return a JSON response, with status code 422, and a response with a non-empty "errors" key.
+Ele simplesmente faz um post para o caminho `create` com parâmetros inválidos. Isso faz com que retorne uma resposta JSON, com código de status 422, e uma resposta com uma chave "errors" não vazia.
 
-The `action_fallback` can be extremely useful to reduce boilerplate when designing APIs. You can learn more about the "Action Fallback" in the [Controllers guide](controllers.html).
+O `action_fallback` pode ser extremamente útil para reduzir o código padrão ao projetar APIs. Você pode aprender mais sobre o "Action Fallback" no [guia de Controllers](controllers.html).
 
-### The `delete` action
+### A ação `delete`
 
-Finally, the last action we will study is the `delete` action for JSON. Its implementation looks like this:
+Finalmente, a última ação que vamos estudar é a ação `delete` para JSON. Sua implementação se parece com isto:
 
 ```elixir
 def delete(conn, %{"id" => id}) do
@@ -402,9 +402,9 @@ def delete(conn, %{"id" => id}) do
 end
 ```
 
-The new action simply attempts to delete the article and, if it succeeds, it returns an empty response with status code `:no_content` (204).
+A nova ação simplesmente tenta excluir o artigo e, se tiver sucesso, retorna uma resposta vazia com código de status `:no_content` (204).
 
-The test looks like this:
+O teste se parece com isto:
 
 ```elixir
 describe "delete article" do
@@ -426,8 +426,8 @@ defp create_article(_) do
 end
 ```
 
-It setups a new article, then in the test it invokes the `delete` path to delete it, asserting on a 204 response, which is neither JSON nor HTML. Then it verifies that we can no longer access said article.
+Ele configura um novo artigo, então no teste invoca o caminho `delete` para excluí-lo, afirmando uma resposta 204, que não é nem JSON nem HTML. Depois, verifica que não podemos mais acessar o referido artigo.
 
-That's all!
+É isso!
 
-Now that we understand how the scaffolded code and their tests work for both HTML and JSON APIs, we are prepared to move forward in building and maintaining our web applications!
+Agora que entendemos como o código gerado e seus testes funcionam para APIs HTML e JSON, estamos preparados para avançar na construção e manutenção de nossas aplicações web!

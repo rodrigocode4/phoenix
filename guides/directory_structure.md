@@ -1,8 +1,8 @@
-# Directory structure
+# Estrutura de diretórios
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você tenha percorrido os [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [em funcionamento](up_and_running.html).
 
-When we use `mix phx.new` to generate a new Phoenix application, it builds a top-level directory structure like this:
+Quando usamos `mix phx.new` para gerar uma nova aplicação Phoenix, ele constrói uma estrutura de diretório de nível superior como esta:
 
 ```console
 ├── _build
@@ -10,33 +10,33 @@ When we use `mix phx.new` to generate a new Phoenix application, it builds a top
 ├── config
 ├── deps
 ├── lib
-│   ├── hello
-│   ├── hello.ex
-│   ├── hello_web
-│   └── hello_web.ex
+│   ├── hello
+│   ├── hello.ex
+│   ├── hello_web
+│   └── hello_web.ex
 ├── priv
 └── test
 ```
 
-We will go over those directories one by one:
+Vamos percorrer esses diretórios um por um:
 
-  * `_build` - a directory created by the `mix` command line tool that ships as part of Elixir that holds all compilation artifacts. As we have seen in "[Up and Running](up_and_running.html)", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch.
+  * `_build` - um diretório criado pela ferramenta de linha de comando `mix` que acompanha o Elixir e contém todos os artefatos de compilação. Como vimos em "[Em funcionamento](up_and_running.html)", `mix` é a principal interface para sua aplicação. Usamos o Mix para compilar nosso código, criar bancos de dados, executar nosso servidor e muito mais. Este diretório não deve ser incluído no controle de versão e pode ser removido a qualquer momento. Removê-lo forçará o Mix a reconstruir sua aplicação do zero.
 
-  * `assets` - a directory that keeps source code for your front-end assets, typically JavaScript and CSS. These sources are automatically bundled by the `esbuild` tool. Static files like images and fonts go in `priv/static`.
+  * `assets` - um diretório que mantém o código-fonte para seus ativos de front-end, tipicamente JavaScript e CSS. Essas fontes são automaticamente empacotadas pela ferramenta `esbuild`. Arquivos estáticos como imagens e fontes vão em `priv/static`.
 
-  * `config` - a directory that holds your project configuration. The `config/config.exs` file is the entry point for your configuration. At the end of the `config/config.exs`, it imports environment specific configuration, which can be found in `config/dev.exs`, `config/test.exs`, and `config/prod.exs`. Finally, `config/runtime.exs` is executed and it is the best place to read secrets and other dynamic configuration.
+  * `config` - um diretório que contém a configuração do seu projeto. O arquivo `config/config.exs` é o ponto de entrada para sua configuração. No final do `config/config.exs`, ele importa configurações específicas do ambiente, que podem ser encontradas em `config/dev.exs`, `config/test.exs` e `config/prod.exs`. Finalmente, `config/runtime.exs` é executado e é o melhor lugar para ler segredos e outras configurações dinâmicas.
 
-  * `deps` - a directory with all of our Mix dependencies. You can find all dependencies listed in the `mix.exs` file, inside the `defp deps do` function definition. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to download all deps from scratch.
+  * `deps` - um diretório com todas as nossas dependências Mix. Você pode encontrar todas as dependências listadas no arquivo `mix.exs`, dentro da definição da função `defp deps do`. Este diretório não deve ser incluído no controle de versão e pode ser removido a qualquer momento. Removê-lo forçará o Mix a baixar todas as dependências do zero.
 
-  * `lib` - a directory that holds your application source code. This directory is broken into two subdirectories, `lib/hello` and `lib/hello_web`. The `lib/hello` directory will be responsible to host all of your business logic and business domain. It typically interacts directly with the database - it is the "Model" in Model-View-Controller (MVC) architecture. `lib/hello_web` is responsible for exposing your business domain to the world, in this case, through a web application. It holds both the View and Controller from MVC. We will discuss the contents of these directories with more detail in the next sections.
+  * `lib` - um diretório que contém o código-fonte da sua aplicação. Este diretório é dividido em dois subdiretórios, `lib/hello` e `lib/hello_web`. O diretório `lib/hello` será responsável por hospedar toda a sua lógica de negócios e domínio de negócios. Normalmente, interage diretamente com o banco de dados - é o "Modelo" na arquitetura Modelo-Visão-Controlador (MVC). `lib/hello_web` é responsável por expor seu domínio de negócios ao mundo, neste caso, através de uma aplicação web. Ele contém tanto a Visão quanto o Controlador do MVC. Discutiremos o conteúdo desses diretórios com mais detalhes nas próximas seções.
 
-  * `priv` - a directory that keeps all resources that are necessary in production but are not directly part of your source code. You typically keep database scripts, translation files, images, and more in here. Generated assets, created from files in the `assets` directory, are placed in `priv/static/assets` by default.
+  * `priv` - um diretório que mantém todos os recursos necessários em produção, mas que não fazem parte diretamente do seu código-fonte. Você normalmente mantém scripts de banco de dados, arquivos de tradução, imagens e mais aqui. Os ativos gerados, criados a partir de arquivos no diretório `assets`, são colocados em `priv/static/assets` por padrão.
 
-  * `test` - a directory with all of our application tests. It often mirrors the same structure found in `lib`.
+  * `test` - um diretório com todos os testes da nossa aplicação. Frequentemente, espelha a mesma estrutura encontrada em `lib`.
 
-## The lib/hello directory
+## O diretório lib/hello
 
-The `lib/hello` directory hosts all of your business domain. Since our project does not have any business logic yet, the directory is mostly empty. You will only find three files:
+O diretório `lib/hello` hospeda todo o seu domínio de negócios. Como nosso projeto ainda não possui nenhuma lógica de negócios, o diretório está praticamente vazio. Você encontrará apenas três arquivos:
 
 ```console
 lib/hello
@@ -45,7 +45,7 @@ lib/hello
 └── repo.ex
 ```
 
-The `lib/hello/application.ex` file defines an Elixir application named `Hello.Application`. That's because at the end of the day Phoenix applications are simply Elixir applications. The `Hello.Application` module defines which services are part of our application:
+O arquivo `lib/hello/application.ex` define uma aplicação Elixir chamada `Hello.Application`. Isso porque, no final das contas, as aplicações Phoenix são simplesmente aplicações Elixir. O módulo `Hello.Application` define quais serviços fazem parte da nossa aplicação:
 
 ```elixir
 children = [
@@ -56,11 +56,11 @@ children = [
 ]
 ```
 
-If it is your first time with Phoenix, you don't need to worry about the details right now. For now, suffice it to say our application starts a database repository, a PubSub system for sharing messages across processes and nodes, and the application endpoint, which effectively serves HTTP requests. These services are started in the order they are defined and, whenever shutting down your application, they are stopped in the reverse order.
+Se esta é sua primeira vez com Phoenix, você não precisa se preocupar com os detalhes agora. Por enquanto, basta dizer que nossa aplicação inicia um repositório de banco de dados, um sistema PubSub para compartilhar mensagens entre processos e nós, e o endpoint da aplicação, que efetivamente serve requisições HTTP. Esses serviços são iniciados na ordem em que são definidos e, ao desligar sua aplicação, são interrompidos na ordem inversa.
 
-You can learn more about applications in [Elixir's official docs for Application](https://hexdocs.pm/elixir/Application.html).
+Você pode aprender mais sobre aplicações na [documentação oficial do Elixir para Application](https://hexdocs.pm/elixir/Application.html).
 
-The `lib/hello/mailer.ex` file holds the `Hello.Mailer` module, which defines the main interface to deliver e-mails:
+O arquivo `lib/hello/mailer.ex` contém o módulo `Hello.Mailer`, que define a interface principal para enviar e-mails:
 
 ```elixir
 defmodule Hello.Mailer do
@@ -68,7 +68,7 @@ defmodule Hello.Mailer do
 end
 ```
 
-In the same `lib/hello` directory, we will find a `lib/hello/repo.ex`. It defines a `Hello.Repo` module which is our main interface to the database. If you are using Postgres (the default database), you will see something like this:
+No mesmo diretório `lib/hello`, encontraremos um `lib/hello/repo.ex`. Ele define um módulo `Hello.Repo` que é nossa interface principal para o banco de dados. Se você estiver usando Postgres (o banco de dados padrão), verá algo como isto:
 
 ```elixir
 defmodule Hello.Repo do
@@ -78,51 +78,51 @@ defmodule Hello.Repo do
 end
 ```
 
-And that's it for now. As you work on your project, we will add files and modules to this directory.
+E é isso por enquanto. À medida que você trabalha em seu projeto, adicionaremos arquivos e módulos a este diretório.
 
-## The lib/hello_web directory
+## O diretório lib/hello_web
 
-The `lib/hello_web` directory holds the web-related parts of our application. It looks like this when expanded:
+O diretório `lib/hello_web` contém as partes relacionadas à web da nossa aplicação. Ele se parece com isto quando expandido:
 
 ```console
 lib/hello_web
 ├── controllers
-│   ├── page_controller.ex
-│   ├── page_html.ex
-│   ├── error_html.ex
-│   ├── error_json.ex
-│   └── page_html
-│       └── home.html.heex
+│   ├── page_controller.ex
+│   ├── page_html.ex
+│   ├── error_html.ex
+│   ├── error_json.ex
+│   └── page_html
+│       └── home.html.heex
 ├── components
-│   ├── core_components.ex
-│   ├── layouts.ex
-│   └── layouts
-│       ├── app.html.heex
-│       └── root.html.heex
+│   ├── core_components.ex
+│   ├── layouts.ex
+│   └── layouts
+│       ├── app.html.heex
+│       └── root.html.heex
 ├── endpoint.ex
 ├── gettext.ex
 ├── router.ex
 └── telemetry.ex
 ```
 
-All of the files which are currently in the `controllers` and `components` directories are there to create the "Welcome to Phoenix!" page we saw in the "[Up and running](up_and_running.html)" guide.
+Todos os arquivos que estão atualmente nos diretórios `controllers` e `components` estão lá para criar a página "Welcome to Phoenix!" que vimos no guia "[Em funcionamento](up_and_running.html)".
 
-By looking at `controller` and `components` directories, we can see Phoenix provides features for handling layouts and HTML and error pages out of the box.
+Ao observar os diretórios `controller` e `components`, podemos ver que o Phoenix fornece recursos para lidar com layouts, HTML e páginas de erro prontos para uso.
 
-Besides the directories mentioned, `lib/hello_web` has four files at its root. `lib/hello_web/endpoint.ex` is the entry-point for HTTP requests. Once the browser accesses [http://localhost:4000](http://localhost:4000), the endpoint starts processing the data, eventually leading to the router, which is defined in `lib/hello_web/router.ex`. The router defines the rules to dispatch requests to "controllers", which calls a view module to render HTML pages back to clients. We explore these layers in length in other guides, starting with the "[Request life-cycle](request_lifecycle.html)" guide coming next.
+Além dos diretórios mencionados, `lib/hello_web` tem quatro arquivos em sua raiz. `lib/hello_web/endpoint.ex` é o ponto de entrada para requisições HTTP. Uma vez que o navegador acessa [http://localhost:4000](http://localhost:4000), o endpoint começa a processar os dados, eventualmente levando ao roteador, que é definido em `lib/hello_web/router.ex`. O roteador define as regras para despachar requisições para "controladores", que chamam um módulo de visualização para renderizar páginas HTML de volta aos clientes. Exploramos essas camadas extensivamente em outros guias, começando com o guia "[Ciclo de vida da requisição](request_lifecycle.html)" que vem a seguir.
 
-Through _Telemetry_, Phoenix is able to collect metrics and send monitoring events of your application. The `lib/hello_web/telemetry.ex` file defines the supervisor responsible for managing the telemetry processes. You can find more information on this topic in the [Telemetry guide](telemetry.html).
+Através do _Telemetry_, o Phoenix é capaz de coletar métricas e enviar eventos de monitoramento da sua aplicação. O arquivo `lib/hello_web/telemetry.ex` define o supervisor responsável por gerenciar os processos de telemetria. Você pode encontrar mais informações sobre este tópico no [guia de Telemetria](telemetry.html).
 
-Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://hexdocs.pm/gettext/Gettext.html). If you are not worried about internationalization, you can safely skip this file and its contents.
+Finalmente, há um arquivo `lib/hello_web/gettext.ex` que fornece internacionalização através do [Gettext](https://hexdocs.pm/gettext/Gettext.html). Se você não está preocupado com internacionalização, pode pular com segurança este arquivo e seu conteúdo.
 
-## The assets directory
+## O diretório assets
 
-The `assets` directory contains source files related to front-end assets, such as JavaScript and CSS. Since Phoenix v1.6, we use [`esbuild`](https://github.com/evanw/esbuild/) to compile assets, which is managed by the [`esbuild`](https://github.com/phoenixframework/esbuild) Elixir package. The integration with `esbuild` is baked into your app. The relevant config can be found in your `config/config.exs` file.
+O diretório `assets` contém arquivos fonte relacionados a ativos de front-end, como JavaScript e CSS. Desde o Phoenix v1.6, usamos o [`esbuild`](https://github.com/evanw/esbuild/) para compilar ativos, que é gerenciado pelo pacote Elixir [`esbuild`](https://github.com/phoenixframework/esbuild). A integração com o `esbuild` está incorporada em seu aplicativo. A configuração relevante pode ser encontrada em seu arquivo `config/config.exs`.
 
-Your other static assets are placed in the `priv/static` folder, where `priv/static/assets` is kept for generated assets. Everything in `priv/static` is served by the `Plug.Static` plug configured in `lib/hello_web/endpoint.ex`.  When running in dev mode (`MIX_ENV=dev`), Phoenix watches for any changes you make in the `assets` directory, and then takes care of updating your front end application in your browser as you work.
+Seus outros ativos estáticos são colocados na pasta `priv/static`, onde `priv/static/assets` é mantido para ativos gerados. Tudo em `priv/static` é servido pelo plug `Plug.Static` configurado em `lib/hello_web/endpoint.ex`. Quando executado no modo de desenvolvimento (`MIX_ENV=dev`), o Phoenix observa quaisquer alterações que você fizer no diretório `assets` e, em seguida, cuida de atualizar sua aplicação front-end em seu navegador enquanto você trabalha.
 
-Note that when you first create your Phoenix app using `mix phx.new` it is possible to specify options that will affect the presence and layout of the `assets` directory.  In fact, Phoenix apps can bring their own front end tools or not have a front-end at all (handy if you're writing an API for example).  For more information you can run `mix help phx.new` or see the documentation in [Mix tasks](mix_tasks.html).
+Observe que quando você cria seu aplicativo Phoenix pela primeira vez usando `mix phx.new`, é possível especificar opções que afetarão a presença e o layout do diretório `assets`. Na verdade, os aplicativos Phoenix podem trazer suas próprias ferramentas de front-end ou não ter um front-end (útil se você estiver escrevendo uma API, por exemplo). Para mais informações, você pode executar `mix help phx.new` ou ver a documentação em [Tarefas Mix](mix_tasks.html).
 
-If the default esbuild integration does not cover your needs, for example because you want to use another build tool, you can switch to a [custom assets build](asset_management.html#custom_builds).
+Se a integração padrão do esbuild não atender às suas necessidades, por exemplo, porque você deseja usar outra ferramenta de build, você pode mudar para uma [build de ativos personalizada](asset_management.html#custom_builds).
 
-As for CSS, Phoenix ships with the [Tailwind CSS Framework](https://tailwindcss.com/), providing a base setup for projects. You may move to any CSS framework of your choice. Additional references can be found in the [asset management](asset_management.md#css) guide.
+Quanto ao CSS, o Phoenix vem com o [Tailwind CSS Framework](https://tailwindcss.com/), fornecendo uma configuração base para projetos. Você pode mudar para qualquer framework CSS de sua escolha. Referências adicionais podem ser encontradas no guia de [gerenciamento de ativos](asset_management.md#css).

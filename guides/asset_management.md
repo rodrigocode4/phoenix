@@ -1,56 +1,60 @@
-# Asset Management
+# Gerenciamento de Assets
 
-Beside producing HTML, most web applications have various assets (JavaScript, CSS, images, fonts and so on).
+Além de produzir HTML, a maioria das aplicações web possuem vários assets (JavaScript, CSS, imagens, fontes e assim por diante).
 
-From Phoenix v1.7, new applications use [esbuild](https://esbuild.github.io/) to prepare assets via the [Elixir esbuild wrapper](https://github.com/phoenixframework/esbuild), and [tailwindcss](https://tailwindcss.com) via the [Elixir tailwindcss wrapper](https://github.com/phoenixframework/tailwind) for CSS. The direct integration with `esbuild` and `tailwind` means that newly generated applications do not have dependencies on Node.js or an external build system (e.g. Webpack).
+Desde o Phoenix v1.7, novas aplicações usam [esbuild](https://esbuild.github.io/) para preparar assets via [wrapper Elixir do esbuild](https://github.com/phoenixframework/esbuild), e [tailwindcss](https://tailwindcss.com) via [wrapper Elixir do tailwindcss](https://github.com/phoenixframework/tailwind) para CSS. A integração direta com `esbuild` e `tailwind` significa que aplicações recém-geradas não têm dependências no Node.js ou em um sistema de build externo (ex: Webpack).
 
-Your JavaScript is typically placed at "assets/js/app.js" and `esbuild` will extract it to "priv/static/assets/app.js". In development, this is done automatically via the `esbuild` watcher. In production, this is done by running `mix assets.deploy`.
+Seu JavaScript normalmente é colocado em "assets/js/app.js" e o `esbuild` o extrairá para "priv/static/assets/app.js". Em desenvolvimento, isso é feito automaticamente pelo observador do `esbuild`. Em produção, isso é feito executando `mix assets.deploy`.
 
-`esbuild` can also handle your CSS files, but by default `tailwind` handles all CSS building.
+O `esbuild` também pode lidar com seus arquivos CSS, mas por padrão o `tailwind` cuida de toda a construção de CSS.
 
-Finally, all other assets, that usually don't have to be preprocessed, go directly to "priv/static".
+Finalmente, todos os outros assets, que geralmente não precisam ser pré-processados, vão diretamente para "priv/static".
 
-## Third-party JS packages
+## Pacotes JS de terceiros
 
-If you want to import JavaScript dependencies, you have at least three options to add them to your application:
+Se você deseja importar dependências JavaScript, você tem pelo menos três opções para adicioná-las à sua aplicação:
 
-1. Vendor those dependencies inside your project and import them in your "assets/js/app.js" using a relative path:
+1. Incorporar essas dependências dentro do seu projeto e importá-las em seu "assets/js/app.js" usando um caminho relativo:
 
    ```javascript
    import topbar from "../vendor/topbar"
    ```
 
-2. Call `npm install topbar --save` inside your assets directory and `esbuild` will be able to automatically pick them up:
+2. Chamar `npm install topbar --prefix assets` criará `package.json` e `package-lock.json` dentro do diretório assets e o `esbuild` poderá detectá-los automaticamente:
 
    ```javascript
    import topbar from "topbar"
    ```
 
-3. Use Mix to track the dependency from a source repository:
+3. Usar o Mix para rastrear a dependência de um repositório fonte:
 
    ```elixir
    # mix.exs
    {:topbar, github: "buunguyen/topbar", app: false, compile: false}
    ```
 
-   Run `mix deps.get` to fetch the dependency and then import it:
+   Execute `mix deps.get` para buscar a dependência e então importe-a:
 
    ```javascript
    import topbar from "topbar"
    ```
 
-   New applications use this third approach to import Heroicons, avoiding
-   vendoring a copy of all icons when you may only use a few or even none,
-   avoiding Node.js and `npm`, and tracking an explicit version that is easy to
-   update thanks to Mix. It is important to note that git dependencies cannot
-   be used by Hex packages, so if you intend to publish your project to Hex,
-   consider vendoring the files instead.
+   Novas aplicações usam essa terceira abordagem para importar Heroicons, evitando
+   incorporar uma cópia de todos os ícones quando você pode usar apenas alguns ou mesmo nenhum,
+   evitando Node.js e `npm`, e rastreando uma versão explícita que é fácil de
+   atualizar graças ao Mix. É importante notar que dependências git não podem
+   ser usadas por pacotes Hex, então se você pretende publicar seu projeto no Hex,
+   considere incorporar os arquivos.
 
-## Images, fonts, and external files
+Note que se você usar gerenciadores de pacotes JS de terceiros, pode precisar ajustar suas etapas de implantação
+para incluir adequadamente os pacotes. Se você estiver usando `mix phx.gen.release --docker`, dê uma olhada na
+[documentação](Mix.Tasks.Phx.Gen.Release.html#module-docker) para mais detalhes.
 
-If you reference an external file in your CSS or JavaScript files, `esbuild` will attempt to validate and manage them, unless told otherwise.
+## Imagens, fontes e arquivos externos
 
-For example, imagine you want to reference `priv/static/images/bg.png`, served at `/images/bg.png`, from your CSS file:
+Se você referenciar um arquivo externo em seus arquivos CSS ou JavaScript, o `esbuild` tentará validar e gerenciar esses arquivos, a menos que seja instruído de outra forma.
+
+Por exemplo, imagine que você quer referenciar `priv/static/images/bg.png`, servido em `/images/bg.png`, do seu arquivo CSS:
 
 ```css
 body {
@@ -58,41 +62,41 @@ body {
 }
 ```
 
-The above may fail with the following message:
+O código acima pode falhar com a seguinte mensagem:
 
 ```text
 error: Could not resolve "/images/bg.png" (mark it as external to exclude it from the bundle)
 ```
 
-Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
+Dado que as imagens já são gerenciadas pelo Phoenix, você precisa marcar todos os recursos de `/images` (e também `/fonts`) como externos, como diz a mensagem de erro. Isso é o que o Phoenix faz por padrão para novos aplicativos desde v1.6.1+. No seu `config/config.exs`, você encontrará:
 
 ```elixir
-args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+args: ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
 ```
 
-If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
+Se você precisar referenciar outros diretórios, você precisa atualizar os argumentos acima adequadamente. Note que executar `mix phx.digest` criará arquivos digeridos para todos os assets em `priv/static`, então suas imagens e fontes ainda terão cache-busting.
 
-## Esbuild plugins
+## Plugins do Esbuild
 
-Phoenix's default configuration of `esbuild` (via the Elixir wrapper) does not allow you to use [esbuild plugins](https://esbuild.github.io/plugins/). If you want to use an esbuild plugin, for example to compile SASS files to CSS, you can replace the default build system with a custom build script.
+A configuração padrão do `esbuild` do Phoenix (via wrapper Elixir) não permite que você use [plugins do esbuild](https://esbuild.github.io/plugins/). Se você quiser usar um plugin do esbuild, por exemplo para compilar arquivos SASS para CSS, você pode substituir o sistema de build padrão por um script de build personalizado.
 
-The following is an example of a custom build using esbuild via Node.JS. First of all, you'll need to install Node.js in development and make it available for your production build step.
+O seguinte é um exemplo de uma build personalizada usando esbuild via Node.js. Primeiro, você precisará instalar o Node.js em desenvolvimento e disponibilizá-lo para sua etapa de build de produção.
 
-Then you'll need to add `esbuild` to your Node.js packages and the Phoenix packages. Inside the `assets` directory, run:
+Então você precisará adicionar `esbuild` aos seus pacotes Node.js e aos pacotes Phoenix. Dentro do diretório `assets`, execute:
 
 ```console
 $ npm install esbuild --save-dev
 $ npm install ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view --save
 ```
 
-or, for Yarn:
+ou, para Yarn:
 
 ```console
 $ yarn add --dev esbuild
 $ yarn add ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view
 ```
 
-Next, add a custom JavaScript build script. We'll call the example `assets/build.js`:
+Em seguida, adicione um script de build JavaScript personalizado. Vamos chamar o exemplo de `assets/build.js`:
 
 ```javascript
 const esbuild = require("esbuild");
@@ -102,19 +106,19 @@ const watch = args.includes('--watch');
 const deploy = args.includes('--deploy');
 
 const loader = {
-  // Add loaders for images/fonts/etc, e.g. { '.svg': 'file' }
+  // Adicione loaders para imagens/fontes/etc, ex: { '.svg': 'file' }
 };
 
 const plugins = [
-  // Add and configure plugins here
+  // Adicione e configure plugins aqui
 ];
 
-// Define esbuild options
+// Define as opções do esbuild
 let opts = {
   entryPoints: ["js/app.js"],
   bundle: true,
   logLevel: "info",
-  target: "es2017",
+  target: "es2022",
   outdir: "../priv/static/assets",
   external: ["*.css", "fonts/*", "images/*"],
   nodePaths: ["../deps"],
@@ -147,13 +151,13 @@ if (watch) {
 }
 ```
 
-This script covers following use cases:
+Este script cobre os seguintes casos de uso:
 
-- `node build.js`: builds for development & testing (useful on CI)
-- `node build.js --watch`: like above, but watches for changes continuously
-- `node build.js --deploy`: builds minified assets for production
+- `node build.js`: compila para desenvolvimento e teste (útil em CI)
+- `node build.js --watch`: como acima, mas observa mudanças continuamente
+- `node build.js --deploy`: compila assets minificados para produção
 
-Modify `config/dev.exs` so that the script runs whenever you change files, replacing the existing `:esbuild` configuration under `watchers`:
+Modifique o `config/dev.exs` para que o script seja executado sempre que você alterar arquivos, substituindo a configuração existente de `:esbuild` em `watchers`:
 
 ```elixir
 config :hello, HelloWeb.Endpoint,
@@ -164,7 +168,7 @@ config :hello, HelloWeb.Endpoint,
   ...
 ```
 
-Modify the `aliases` task in `mix.exs` to install `npm` packages during `mix setup` and use the new `esbuild` on `mix assets.deploy`:
+Modifique a tarefa `aliases` em `mix.exs` para instalar pacotes `npm` durante `mix setup` e usar o novo `esbuild` em `mix assets.deploy`:
 
 ```elixir
   defp aliases do
@@ -176,38 +180,38 @@ Modify the `aliases` task in `mix.exs` to install `npm` packages during `mix set
   end
 ```
 
-Finally, remove the `esbuild` configuration from `config/config.exs` and remove the dependency from the `deps` function in your `mix.exs`, and you are done!
+Finalmente, remova a configuração do `esbuild` do `config/config.exs` e remova a dependência da função `deps` no seu `mix.exs`, e está pronto!
 
-## Alternative JS build tools
+## Ferramentas de build JS alternativas
 
-If you are writing an API or you want to use another asset build tool, you may want to remove the `esbuild` Hex package (see steps below). Then you must follow the additional steps required by the third-party tool.
+Se você estiver escrevendo uma API ou quiser usar outra ferramenta de build de asset, você pode querer remover o pacote Hex `esbuild` (veja os passos abaixo). Então você deve seguir as etapas adicionais exigidas pela ferramenta de terceiros.
 
-### Remove esbuild
+### Remover esbuild
 
-1. Remove the `esbuild` configuration in `config/config.exs` and `config/dev.exs`,
-2. Remove the `assets.deploy` task defined in `mix.exs`,
-3. Remove the `esbuild` dependency from `mix.exs`,
-4. Unlock the `esbuild` dependency:
+1. Remova a configuração do `esbuild` em `config/config.exs` e `config/dev.exs`,
+2. Remova a tarefa `assets.deploy` definida em `mix.exs`,
+3. Remova a dependência `esbuild` de `mix.exs`,
+4. Desbloqueie a dependência `esbuild`:
 
 ```console
 $ mix deps.unlock esbuild
 ```
 
-## Alternative CSS frameworks
+## Frameworks CSS alternativos
 
-By default, Phoenix generates CSS with the `tailwind` library and its default plugins.
+Por padrão, o Phoenix gera CSS com a biblioteca `tailwind` e seus plugins padrão.
 
-If you want to use external `tailwind` plugins or another CSS framework, you should replace the `tailwind` Hex package (see steps below). Then you can use an `esbuild` plugin (as outlined above) or even bring a separate framework altogether.
+Se você quiser usar plugins `tailwind` externos ou outro framework CSS, você deve substituir o pacote Hex `tailwind` (veja os passos abaixo). Então você pode usar um plugin `esbuild` (como descrito acima) ou até mesmo trazer um framework completamente separado.
 
-### Remove tailwind
+### Remover tailwind
 
-1. Remove the `tailwind` configuration in `config/config.exs` and `config/dev.exs`,
-2. Remove the `assets.deploy` task defined in `mix.exs`,
-3. Remove the `tailwind` dependency from `mix.exs`,
-4. Unlock the `tailwind` dependency:
+1. Remova a configuração do `tailwind` em `config/config.exs` e `config/dev.exs`,
+2. Remova a tarefa `assets.deploy` definida em `mix.exs`,
+3. Remova a dependência `tailwind` de `mix.exs`,
+4. Desbloqueie a dependência `tailwind`:
 
 ```console
 $ mix deps.unlock tailwind
 ```
 
-You may optionally remove and delete the `heroicons` dependency as well.
+Você pode opcionalmente remover e excluir a dependência `heroicons` também.

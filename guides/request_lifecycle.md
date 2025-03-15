@@ -1,42 +1,42 @@
-# Request life-cycle
+# Ciclo de vida da requisição
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você tenha passado pelos [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [em execução](up_and_running.html).
 
-The goal of this guide is to talk about Phoenix's request life-cycle. This guide will take a practical approach where we will learn by doing: we will add two new pages to our Phoenix project and comment on how the pieces fit together along the way.
+O objetivo deste guia é falar sobre o ciclo de vida da requisição do Phoenix. Este guia adotará uma abordagem prática onde aprenderemos fazendo: adicionaremos duas novas páginas ao nosso projeto Phoenix e comentaremos como as peças se encaixam ao longo do caminho.
 
-Let's get on with our first new Phoenix page!
+Vamos começar com nossa primeira nova página Phoenix!
 
-## Adding a new page
+## Adicionando uma nova página
 
-When your browser accesses [http://localhost:4000/](http://localhost:4000/), it sends a HTTP request to whatever service is running on that address, in this case our Phoenix application. The HTTP request is made of a verb and a path. For example, the following browser requests translate into:
+Quando seu navegador acessa [http://localhost:4000/](http://localhost:4000/), ele envia uma requisição HTTP para qualquer serviço que esteja rodando nesse endereço, neste caso, nossa aplicação Phoenix. A requisição HTTP é composta por um verbo e um caminho. Por exemplo, as seguintes requisições do navegador se traduzem em:
 
-| Browser address bar                 | Verb | Path          |
+| Barra de endereço do navegador       | Verbo | Caminho       |
 |:------------------------------------|:-----|:--------------|
 | <http://localhost:4000/>            | GET  | /             |
 | <http://localhost:4000/hello>       | GET  | /hello        |
 | <http://localhost:4000/hello/world> | GET  | /hello/world  |
 
-There are other HTTP verbs. For example, submitting a form typically uses the POST verb.
+Existem outros verbos HTTP. Por exemplo, enviar um formulário geralmente usa o verbo POST.
 
-Web applications typically handle requests by mapping each verb/path pair into a specific part of your application. This matching in Phoenix is done by the router. For example, we may map "/articles" to a portion of our application that shows all articles. Therefore, to add a new page, our first task is to add a new route.
+Aplicações web normalmente tratam requisições mapeando cada par verbo/caminho para uma parte específica da sua aplicação. Esse mapeamento no Phoenix é feito pelo roteador. Por exemplo, podemos mapear "/articles" para uma parte da nossa aplicação que mostra todos os artigos. Portanto, para adicionar uma nova página, nossa primeira tarefa é adicionar uma nova rota.
 
-### A new route
+### Uma nova rota
 
-The router maps unique HTTP verb/path pairs to controller/action pairs which will handle them. Controllers in Phoenix are simply Elixir modules. Actions are functions that are defined within these controllers.
+O roteador mapeia pares únicos de verbo/caminho HTTP para pares de controlador/ação que irão tratá-los. Controladores no Phoenix são simplesmente módulos Elixir. Ações são funções que são definidas dentro desses controladores.
 
-Phoenix generates a router file for us in new applications at `lib/hello_web/router.ex`. This is where we will be working for this section.
+O Phoenix gera um arquivo de roteador para nós em novas aplicações em `lib/hello_web/router.ex`. É aqui que estaremos trabalhando nesta seção.
 
-The route for our "Welcome to Phoenix!" page from the previous [Up And Running Guide](up_and_running.html) looks like this.
+A rota para nossa página "Bem-vindo ao Phoenix!" do [Guia de Execução](up_and_running.html) anterior se parece com isso:
 
 ```elixir
 get "/", PageController, :home
 ```
 
-Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an HTTP `GET` request to the root path. All requests like this will be handled by the `home/2` function in the `HelloWeb.PageController` module defined in `lib/hello_web/controllers/page_controller.ex`.
+Vamos entender o que esta rota nos diz. Visitar [http://localhost:4000/](http://localhost:4000/) emite uma requisição HTTP `GET` para o caminho raiz. Todas as requisições como esta serão tratadas pela função `home/2` no módulo `HelloWeb.PageController` definido em `lib/hello_web/controllers/page_controller.ex`.
 
-The page we are going to build will say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
+A página que vamos construir dirá "Hello World, from Phoenix!" quando apontarmos nosso navegador para [http://localhost:4000/hello](http://localhost:4000/hello).
 
-The first thing we need to do is to create the page route for a new page. Let's open up `lib/hello_web/router.ex` in a text editor. For a brand new application, it looks like this:
+A primeira coisa que precisamos fazer é criar a rota da página para uma nova página. Vamos abrir `lib/hello_web/router.ex` em um editor de texto. Para uma aplicação nova, ele se parece com isto:
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -70,9 +70,9 @@ defmodule HelloWeb.Router do
 end
 ```
 
-For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. We will discuss those in the [Routing guide](routing.html).
+Por enquanto, vamos ignorar os pipelines e o uso de `scope` aqui e apenas focar em adicionar uma rota. Discutiremos isso no [guia de Roteamento](routing.html).
 
-Let's add a new route to the router that maps a `GET` request for `/hello` to the `index` action of a soon-to-be-created `HelloWeb.HelloController` inside the `scope "/" do` block of the router:
+Vamos adicionar uma nova rota ao roteador que mapeia uma requisição `GET` para `/hello` para a ação `index` de um `HelloWeb.HelloController` que criaremos em breve dentro do bloco `scope "/" do` do roteador:
 
 ```elixir
 scope "/", HelloWeb do
@@ -83,11 +83,11 @@ scope "/", HelloWeb do
 end
 ```
 
-### A new controller
+### Um novo controlador
 
-Controllers are Elixir modules, and actions are Elixir functions defined in them. The purpose of actions is to gather the data and perform the tasks needed for rendering. Our route specifies that we need a `HelloWeb.HelloController` module with an `index/2` function.
+Controladores são módulos Elixir, e ações são funções Elixir definidas neles. O propósito das ações é reunir os dados e realizar as tarefas necessárias para a renderização. Nossa rota especifica que precisamos de um módulo `HelloWeb.HelloController` com uma função `index/2`.
 
-To make the `index` action happen, let's create a new `lib/hello_web/controllers/hello_controller.ex` file, and make it look like the following:
+Para fazer a ação `index` acontecer, vamos criar um novo arquivo `lib/hello_web/controllers/hello_controller.ex`, e fazê-lo parecer com o seguinte:
 
 ```elixir
 defmodule HelloWeb.HelloController do
@@ -99,17 +99,17 @@ defmodule HelloWeb.HelloController do
 end
 ```
 
-We'll save a discussion of `use HelloWeb, :controller` for the [Controllers guide](controllers.html). For now, let's focus on the `index` action.
+Deixaremos uma discussão de `use HelloWeb, :controller` para o [guia de Controladores](controllers.html). Por enquanto, vamos focar na ação `index`.
 
-All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by prefixing it with `_`.
+Todas as ações do controlador recebem dois argumentos. O primeiro é `conn`, uma struct que contém uma tonelada de dados sobre a requisição. O segundo é `params`, que são os parâmetros da requisição. Aqui, não estamos usando `params`, e evitamos avisos do compilador prefixando-o com `_`.
 
-The core of this action is `render(conn, :index)`. It tells Phoenix to render the `index` template. The modules responsible for rendering are called views. By default, Phoenix views are named after the controller (`HelloController`) and format (`HTML` in this case), so Phoenix is expecting a `HelloWeb.HelloHTML` to exist and define an `index/1` function.
+O núcleo desta ação é `render(conn, :index)`. Ele diz ao Phoenix para renderizar o template `index`. Os módulos responsáveis pela renderização são chamados de views. Por padrão, as views do Phoenix são nomeadas após o controlador (`HelloController`) e formato (`HTML` neste caso), então o Phoenix espera que exista um `HelloWeb.HelloHTML` e defina uma função `index/1`.
 
-### A new view
+### Uma nova view
 
-Phoenix views act as the presentation layer. For example, we expect the output of rendering `index` to be a complete HTML page. To make our lives easier, we often use templates for creating those HTML pages.
+As views do Phoenix atuam como a camada de apresentação. Por exemplo, esperamos que a saída da renderização `index` seja uma página HTML completa. Para facilitar nossas vidas, frequentemente usamos templates para criar essas páginas HTML.
 
-Let's create a new view. Create `lib/hello_web/controllers/hello_html.ex` and make it look like this:
+Vamos criar uma nova view. Crie `lib/hello_web/controllers/hello_html.ex` e faça-o parecer com isso:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -117,9 +117,9 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-To add templates to this view, we can define them as function components in the module or in separate files.
+Para adicionar templates a esta view, podemos defini-los como componentes de função no módulo ou em arquivos separados.
 
-Let's start by defining a function component:
+Vamos começar definindo um componente de função:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -133,11 +133,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We defined a function that receives `assigns` as arguments and use [the `~H` sigil](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) to put the contents we want to render. Inside the `~H` sigil, we use a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
+Definimos uma função que recebe `assigns` como argumentos e usamos [o sigil `~H`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) para colocar o conteúdo que queremos renderizar. Dentro do sigil `~H`, usamos uma linguagem de template chamada HEEx, que significa "HTML+EEx". `EEx` é uma biblioteca para incorporar Elixir que vem como parte do próprio Elixir. "HTML+EEx" é uma extensão Phoenix do EEx que é consciente do HTML, com suporte para validação HTML, componentes e escape automático de valores. Este último protege você contra vulnerabilidades de segurança como Cross-Site-Scripting sem trabalho extra da sua parte.
 
-A template file works in the same way. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
+Um arquivo de template funciona da mesma maneira. Componentes de função são ótimos para templates menores e arquivos separados são uma boa escolha quando você tem muita marcação ou suas funções começam a ficar incontroláveis.
 
-Let's give it a try by defining a template in its own file. First delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
+Vamos experimentar definindo um template em seu próprio arquivo. Primeiro, exclua nossa função `def index(assigns)` de cima e substitua-a por uma declaração `embed_templates`:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -147,13 +147,13 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello_html` directory into our module as function definitions.
+Aqui estamos dizendo a `Phoenix.Component` para incorporar todos os templates `.heex` encontrados no diretório irmão `hello_html` em nosso módulo como definições de funções.
 
-Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory.
+Em seguida, precisamos adicionar arquivos ao diretório `lib/hello_web/controllers/hello_html`.
 
-Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
+Observe que o nome do controlador (`HelloController`), o nome da view (`HelloHTML`) e o diretório do template (`hello_html`) seguem a mesma convenção de nomenclatura e são nomeados um após o outro. Eles também estão colocados juntos na árvore de diretórios:
 
-> **Note**: We can rename the `hello_html` directory to whatever we want and put it in a subdirectory of `lib/hello_web/controllers`, as long as we update the `embed_templates` setting accordingly. However, it's best to keep the same naming convention to prevent any confusion.
+> **Nota**: Podemos renomear o diretório `hello_html` para o que quisermos e colocá-lo em um subdiretório de `lib/hello_web/controllers`, desde que atualizemos a configuração `embed_templates` adequadamente. No entanto, é melhor manter a mesma convenção de nomenclatura para evitar qualquer confusão.
 
 ```
 lib/hello_web
@@ -164,7 +164,7 @@ lib/hello_web
 |       ├── index.html.heex
 ```
 
-A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, let's create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`:
+Um arquivo de template tem a seguinte estrutura: `NOME.FORMATO.LINGUAGEM_DE_TEMPLATE`. No nosso caso, vamos criar um arquivo `index.html.heex` em `lib/hello_web/controllers/hello_html/index.html.heex`:
 
 ```heex
 <section>
@@ -172,29 +172,29 @@ A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. 
 </section>
 ```
 
-Template files are compiled into the module as function components themselves, there is no runtime or performance difference between the two styles.
+Os arquivos de template são compilados no módulo como componentes de função, não há diferença de runtime ou desempenho entre os dois estilos.
 
-Now that we've got the route, controller, view, and template, we should be able to point our browsers at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix! (In case you stopped the server along the way, the task to restart it is `mix phx.server`.)
+Agora que temos a rota, o controlador, a view e o template, devemos ser capazes de apontar nossos navegadores para [http://localhost:4000/hello](http://localhost:4000/hello) e ver nossa saudação do Phoenix! (Caso você tenha parado o servidor ao longo do caminho, a tarefa para reiniciá-lo é `mix phx.server`.)
 
 ![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into layouts: first it renders `lib/hello_web/components/layouts/root.html.heex` which renders `lib/hello_web/components/layouts/app.html.heex` which finally includes our contents. If you open those files, you'll see a line that looks like this at the bottom:
+Há algumas coisas interessantes para notar sobre o que acabamos de fazer. Não precisamos parar e reiniciar o servidor enquanto fazíamos essas mudanças. Sim, o Phoenix tem recarregamento automático de código! Além disso, mesmo que nosso arquivo `index.html.heex` consista apenas de uma única tag `section`, a página que obtemos é um documento HTML completo. Nosso template de índice é realmente renderizado em layouts: primeiro ele renderiza `lib/hello_web/components/layouts/root.html.heex` que renderiza `lib/hello_web/components/layouts/app.html.heex` que finalmente inclui nosso conteúdo. Se você abrir esses arquivos, verá uma linha que se parece com isso na parte inferior:
 
 ```heex
 {@inner_content}
 ```
 
-Which injects our template into the layout before the HTML is sent off to the browser. We will talk more about layouts in the Controllers guide.
+Que injeta nosso template no layout antes que o HTML seja enviado para o navegador. Falaremos mais sobre layouts no guia de Controladores.
 
-> A note on hot code reloading: Some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
+> Uma nota sobre recarregamento automático de código: Alguns editores com seus linters automáticos podem impedir que o recarregamento automático de código funcione. Se não estiver funcionando para você, por favor veja a discussão neste [issue](https://github.com/phoenixframework/phoenix/issues/1165).
 
-## From endpoint to views
+## Do endpoint às views
 
-As we built our first page, we could start to understand how the request life-cycle is put together. Now let's take a more holistic look at it.
+Conforme construímos nossa primeira página, pudemos começar a entender como o ciclo de vida da requisição é montado. Agora vamos dar uma olhada mais holística nisso.
 
-All HTTP requests start in our application endpoint. You can find it as a module named `HelloWeb.Endpoint` in `lib/hello_web/endpoint.ex`. Once you open up the endpoint file, you will see that, similar to the router, the endpoint has many calls to `plug`. `Plug` is a library and a specification for stitching web applications together. It is an essential part of how Phoenix handles requests and we will discuss it in detail in the [Plug guide](plug.html) coming next.
+Todas as requisições HTTP começam em nosso endpoint da aplicação. Você pode encontrá-lo como um módulo chamado `HelloWeb.Endpoint` em `lib/hello_web/endpoint.ex`. Quando você abrir o arquivo do endpoint, verá que, semelhante ao roteador, o endpoint tem muitas chamadas para `plug`. `Plug` é uma biblioteca e uma especificação para unir aplicações web. É uma parte essencial de como o Phoenix lida com requisições e discutiremos isso em detalhes no [guia do Plug](plug.html) a seguir.
 
-For now, it suffices to say that each plug defines a slice of request processing. In the endpoint you will find a skeleton roughly like this:
+Por enquanto, é suficiente dizer que cada plug define uma fatia do processamento da requisição. No endpoint você encontrará um esqueleto aproximadamente assim:
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -211,29 +211,29 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-Each of these plugs have a specific responsibility that we will learn later. The last plug is precisely the `HelloWeb.Router` module. This allows the endpoint to delegate all further request processing to the router. As we now know, its main responsibility is to map verb/path pairs to controllers. The controller then tells a view to render a template.
+Cada um desses plugs tem uma responsabilidade específica que aprenderemos mais tarde. O último plug é precisamente o módulo `HelloWeb.Router`. Isso permite que o endpoint delegue todo o processamento adicional da requisição ao roteador. Como agora sabemos, sua principal responsabilidade é mapear pares verbo/caminho para controladores. O controlador então diz a uma view para renderizar um template.
 
-At this moment, you may be thinking this can be a lot of steps to simply render a page. However, as our application grows in complexity, we will see that each layer serves a distinct purpose:
+Neste momento, você pode estar pensando que podem ser muitas etapas apenas para renderizar uma página. No entanto, à medida que nossa aplicação cresce em complexidade, veremos que cada camada serve a um propósito distinto:
 
-  * endpoint (`Phoenix.Endpoint`) - the endpoint contains the common and initial path that all requests go through. If you want something to happen on all requests, it goes to the endpoint.
+  * endpoint (`Phoenix.Endpoint`) - o endpoint contém o caminho comum e inicial pelo qual todas as requisições passam. Se você quiser que algo aconteça em todas as requisições, isso vai para o endpoint.
 
-  * router (`Phoenix.Router`) - the router is responsible for dispatching verb/path to controllers. The router also allows us to scope functionality. For example, some pages in your application may require user authentication, others may not.
+  * roteador (`Phoenix.Router`) - o roteador é responsável por despachar verbo/caminho para controladores. O roteador também nos permite escopar funcionalidades. Por exemplo, algumas páginas em sua aplicação podem exigir autenticação do usuário, outras podem não exigir.
 
-  * controller (`Phoenix.Controller`) - the job of the controller is to retrieve request information, talk to your business domain, and prepare data for the presentation layer.
+  * controlador (`Phoenix.Controller`) - o trabalho do controlador é recuperar informações da requisição, falar com seu domínio de negócios e preparar dados para a camada de apresentação.
 
-  * view - the view handles the structured data from the controller and converts it to a presentation to be shown to users. Views are often named after the content format they are rendering.
+  * view - a view lida com os dados estruturados do controlador e os converte em uma apresentação para ser mostrada aos usuários. As views são frequentemente nomeadas após o formato de conteúdo que estão renderizando.
 
-Let's do a quick recap on how the last three components work together by adding another page.
+Vamos fazer uma rápida recapitulação de como os últimos três componentes funcionam juntos, adicionando outra página.
 
-## Another new page
+## Outra nova página
 
-Let's add just a little complexity to our application. We're going to add a new page that will recognize a piece of the URL, label it as a "messenger" and pass it through the controller into the template so our messenger can say hello.
+Vamos adicionar um pouco de complexidade à nossa aplicação. Vamos adicionar uma nova página que reconhecerá uma parte da URL, rotulá-la como um "mensageiro" e passá-la pelo controlador para o template para que nosso mensageiro possa dizer olá.
 
-As we did last time, the first thing we'll do is create a new route.
+Como fizemos na última vez, a primeira coisa que faremos é criar uma nova rota.
 
-### Another new route
+### Outra nova rota
 
-For this exercise, we're going to reuse `HelloController` created at the [previous step](request_lifecycle.html#a-new-controller) and add a new `show` action. We'll add a line just below our last route, like this:
+Para este exercício, vamos reutilizar o `HelloController` criado na [etapa anterior](request_lifecycle.html#a-new-controller) e adicionar uma nova ação `show`. Vamos adicionar uma linha logo abaixo da nossa última rota, assim:
 
 ```elixir
 scope "/", HelloWeb do
@@ -245,11 +245,11 @@ scope "/", HelloWeb do
 end
 ```
 
-Notice that we use the `:messenger` syntax in the path. Phoenix will take whatever value that appears in that position in the URL and convert it into a parameter. For example, if we point the browser at: `http://localhost:4000/hello/Frank`, the value of `"messenger"` will be `"Frank"`.
+Observe que usamos a sintaxe `:messenger` no caminho. O Phoenix pegará qualquer valor que apareça nessa posição na URL e o converterá em um parâmetro. Por exemplo, se apontarmos o navegador para: `http://localhost:4000/hello/Frank`, o valor de `"messenger"` será `"Frank"`.
 
-### Another new action
+### Outra nova ação
 
-Requests to our new route will be handled by the `HelloWeb.HelloController` `show` action. We already have the controller at `lib/hello_web/controllers/hello_controller.ex`, so all we need to do is edit that controller and add a `show` action to it. This time, we'll need to extract the messenger from the parameters so that we can pass it (the messenger) to the template. To do that, we add this show function to the controller:
+Requisições para nossa nova rota serão tratadas pela ação `show` do `HelloWeb.HelloController`. Já temos o controlador em `lib/hello_web/controllers/hello_controller.ex`, então tudo o que precisamos fazer é editar esse controlador e adicionar uma ação `show` a ele. Desta vez, precisaremos extrair o mensageiro dos parâmetros para que possamos passá-lo (o mensageiro) para o template. Para fazer isso, adicionamos esta função show ao controlador:
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
@@ -257,9 +257,9 @@ def show(conn, %{"messenger" => messenger}) do
 end
 ```
 
-Within the body of the `show` action, we also pass a third argument to the render function, a key-value pair where `:messenger` is the key, and the `messenger` variable is passed as the value.
+Dentro do corpo da ação `show`, também passamos um terceiro argumento para a função render, um par chave-valor onde `:messenger` é a chave, e a variável `messenger` é passada como o valor.
 
-If the body of the action needs access to the full map of parameters bound to the `params` variable, in addition to the bound messenger variable, we could define `show/2` like this:
+Se o corpo da ação precisar acessar o mapa completo de parâmetros vinculados à variável `params`, além da variável mensageiro vinculada, poderíamos definir `show/2` assim:
 
 ```elixir
 def show(conn, %{"messenger" => messenger} = params) do
@@ -267,19 +267,19 @@ def show(conn, %{"messenger" => messenger} = params) do
 end
 ```
 
-It's good to remember that the keys of the `params` map will always be strings, and that the equals sign does not represent assignment, but is instead a [pattern match](https://hexdocs.pm/elixir/pattern-matching.html) assertion.
+É bom lembrar que as chaves do mapa `params` sempre serão strings, e que o sinal de igual não representa atribuição, mas é uma asserção de [correspondência de padrão](https://hexdocs.pm/elixir/pattern-matching.html).
 
-### Another new template
+### Outro novo template
 
-For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/controllers/hello_html` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger.
+Para a última peça deste quebra-cabeça, precisaremos de um novo template. Como é para a ação `show` de `HelloController`, ele irá para o diretório `lib/hello_web/controllers/hello_html` e será chamado `show.html.heex`. Ele se parecerá surpreendentemente com nosso template `index.html.heex`, exceto que precisaremos exibir o nome do nosso mensageiro.
 
-To do that, we'll use the special HEEx tags for executing Elixir expressions: `{...}` and `<%= %>`. Notice that EEx tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
+Para fazer isso, usaremos as tags especiais HEEx para executar expressões Elixir: `{...}` e `<%= %>`. Observe que a tag EEx tem um sinal de igual assim: `<%=` . Isso significa que qualquer código Elixir que estiver entre essas tags será executado, e o valor resultante substituirá a tag na saída HTML. Se o sinal de igual estivesse ausente, o código ainda seria executado, mas o valor não apareceria na página.
 
-Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx, and thereby supports the EEx `<%= %>` interpolation syntax for interpolating arbitrary blocks of code. In general, the HEEx `{...}` interpolation syntax is preferred anytime there is HTML-aware intepolation to be done – such as within attributes or inline values with a body.
+Lembre-se de que nossos templates são escritos em HEEx (HTML+EEx). HEEx é um superconjunto de EEx e, portanto, suporta a sintaxe de interpolação `<%= %>` do EEx para interpolação de blocos arbitrários de código. Em geral, a sintaxe de interpolação `{...}` do HEEx é preferida sempre que houver interpolação consciente do HTML a ser feita – como dentro de atributos ou valores inline com um corpo.
 
-The only times `EEx` `<%= %>` interpolation is necessary is for interpolationg arbitrary blocks of markup, such as branching logic that inects separate markup trees, or for interpolating values within `<script>` or `<style>` tags.
+As únicas vezes em que a interpolação `<%= %>` do `EEx` é necessária é para interpolação de blocos arbitrários de marcação, como lógica de ramificação que injeta árvores de marcação separadas, ou para interpolação de valores dentro de tags `<script>` ou `<style>`.
 
-This is what the `hello_html/show.html.heex` template should look like:
+É assim que o template `hello_html/show.html.heex` deve parecer:
 
 ```heex
 <section>
@@ -287,12 +287,12 @@ This is what the `hello_html/show.html.heex` template should look like:
 </section>
 ```
 
-Our messenger appears as `@messenger`.
+Nosso mensageiro aparece como `@messenger`.
 
-The values we passed to the view from the controller are collectively called our "assigns". We could access our messenger value via `assigns.messenger` but through some metaprogramming, Phoenix gives us the much cleaner `@` syntax for use in templates.
+Os valores que passamos para a view a partir do controlador são coletivamente chamados de nossos "assigns". Poderíamos acessar nosso valor de mensageiro via `assigns.messenger`, mas através de alguma metaprogramação, o Phoenix nos dá a sintaxe muito mais limpa `@` para uso em templates.
 
-We're done. If you point your browser to [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
+Terminamos. Se você apontar seu navegador para [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), deverá ver uma página que se parece com esta:
 
 ![Frank Greets Us from Phoenix](assets/images/hello-world-from-frank.png)
 
-Play around a bit. Whatever you put after `/hello/` will appear on the page as your messenger.
+Brinque um pouco. O que quer que você coloque após `/hello/` aparecerá na página como seu mensageiro.

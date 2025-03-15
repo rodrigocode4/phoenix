@@ -1,26 +1,26 @@
-# Custom Error Pages
+# Páginas de Erro Personalizadas
 
-New Phoenix projects have two error views called `ErrorHTML` and `ErrorJSON`, which live in `lib/hello_web/controllers/`. The purpose of these views is to handle errors in a general way for each format, from one centralized location.
+Novos projetos Phoenix têm duas views de erro chamadas `ErrorHTML` e `ErrorJSON`, que ficam em `lib/hello_web/controllers/`. O objetivo dessas views é lidar com erros de forma geral para cada formato, a partir de um local centralizado.
 
-## The Error Views
+## As Views de Erro
 
-For new applications, the `ErrorHTML` and `ErrorJSON` views looks like this:
+Para novas aplicações, as views `ErrorHTML` e `ErrorJSON` são assim:
 
 ```elixir
 defmodule HelloWeb.ErrorHTML do
   use HelloWeb, :html
 
-  # If you want to customize your error pages,
-  # uncomment the embed_templates/1 call below
-  # and add pages to the error directory:
+  # Se você deseja personalizar suas páginas de erro,
+  # descomente a chamada embed_templates/1 abaixo
+  # e adicione páginas ao diretório de erro:
   #
   #   * lib/<%= @lib_web_name %>/controllers/error_html/404.html.heex
   #   * lib/<%= @lib_web_name %>/controllers/error_html/500.html.heex
   #
   # embed_templates "error_html/*"
 
-  # The default is to render a plain text page based on
-  # the template name. For example, "404.html" becomes
+  # O padrão é renderizar uma página de texto simples baseada
+  # no nome do template. Por exemplo, "404.html" se torna
   # "Not Found".
   def render(template, _assigns) do
     Phoenix.Controller.status_message_from_template(template)
@@ -28,15 +28,15 @@ defmodule HelloWeb.ErrorHTML do
 end
 
 defmodule HelloWeb.ErrorJSON do
-  # If you want to customize a particular status code,
-  # you may add your own clauses, such as:
+  # Se você quiser personalizar um código de status específico,
+  # você pode adicionar suas próprias cláusulas, como:
   #
   # def render("500.json", _assigns) do
   #   %{errors: %{detail: "Internal Server Error"}}
   # end
 
-  # By default, Phoenix returns the status message from
-  # the template name. For example, "404.json" becomes
+  # Por padrão, Phoenix retorna a mensagem de status do
+  # nome do template. Por exemplo, "404.json" se torna
   # "Not Found".
   def render(template, _assigns) do
     %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
@@ -44,7 +44,7 @@ defmodule HelloWeb.ErrorJSON do
 end
 ```
 
-Before we dive into this, let's see what the rendered `404 Not Found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that, we need to set `debug_errors: false` in `config/dev.exs`.
+Antes de mergulharmos nisso, vamos ver como aparece a mensagem `404 Not Found` renderizada em um navegador. No ambiente de desenvolvimento, o Phoenix depurará erros por padrão, mostrando uma página de depuração muito informativa. O que queremos aqui, no entanto, é ver qual página a aplicação serviria em produção. Para fazer isso, precisamos definir `debug_errors: false` em `config/dev.exs`.
 
 ```elixir
 import Config
@@ -56,11 +56,11 @@ config :hello, HelloWeb.Endpoint,
   . . .
 ```
 
-After modifying our config file, we need to restart our server in order for this change to take effect. After restarting the server, let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
+Depois de modificar nosso arquivo de configuração, precisamos reiniciar nosso servidor para que essa alteração entre em vigor. Após reiniciar o servidor, vamos para [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) para uma aplicação local em execução e ver o que obtemos.
 
-Ok, that's not very exciting. We get the bare string "Not Found", displayed without any markup or styling.
+Ok, isso não é muito empolgante. Obtemos a string simples "Not Found", exibida sem qualquer marcação ou estilo.
 
-The first question is, where does that error string come from? The answer is right in `ErrorHTML`.
+A primeira pergunta é: de onde vem essa string de erro? A resposta está bem no `ErrorHTML`.
 
 ```elixir
 def render(template, _assigns) do
@@ -68,19 +68,19 @@ def render(template, _assigns) do
 end
 ```
 
-Great, so we have this `render/2` function that takes a template and an `assigns` map, which we ignore. When you call `render(conn, :some_template)` from the controller, Phoenix first looks for a `some_template/1` function on the view module. If no function exists, it falls back to calling `render/2` with the template and format name, such as `"some_template.html"`.
+Ótimo, então temos essa função `render/2` que recebe um template e um mapa `assigns`, que ignoramos. Quando você chama `render(conn, :some_template)` do controller, o Phoenix primeiro procura uma função `some_template/1` no módulo da view. Se não existir nenhuma função, ele recorre à chamada de `render/2` com o nome do template e formato, como `"some_template.html"`.
 
-In other words, to provide custom error pages, we could simply define a proper `render/2` function clause in `HelloWeb.ErrorHTML`.
+Em outras palavras, para fornecer páginas de erro personalizadas, poderíamos simplesmente definir uma cláusula de função `render/2` adequada em `HelloWeb.ErrorHTML`.
 
 ```elixir
   def render("404.html", _assigns) do
-    "Page Not Found"
+    "Página Não Encontrada"
   end
 ```
 
-But we can do even better.
+Mas podemos fazer ainda melhor.
 
-Phoenix generates an `ErrorHTML` for us, but it doesn't give us a `lib/hello_web/controllers/error_html` directory. Let's create one now. Inside our new directory, let's add a template named `404.html.heex` and give it some markup – a mixture of our application layout and a new `<div>` with our message to the user.
+Phoenix gera um `ErrorHTML` para nós, mas não nos dá um diretório `lib/hello_web/controllers/error_html`. Vamos criar um agora. Dentro do nosso novo diretório, vamos adicionar um template chamado `404.html.heex` e dar-lhe alguma marcação – uma mistura do layout da nossa aplicação e uma nova `<div>` com nossa mensagem para o usuário.
 
 ```heex
 <!DOCTYPE html>
@@ -88,7 +88,7 @@ Phoenix generates an `ErrorHTML` for us, but it doesn't give us a `lib/hello_web
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Welcome to Phoenix!</title>
+    <title>Bem-vindo ao Phoenix!</title>
     <link rel="stylesheet" href="/assets/app.css"/>
     <script defer type="text/javascript" src="/assets/app.js"></script>
   </head>
@@ -97,40 +97,40 @@ Phoenix generates an `ErrorHTML` for us, but it doesn't give us a `lib/hello_web
       <section class="container">
         <nav>
           <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+            <li><a href="https://hexdocs.pm/phoenix/overview.html">Comece Aqui</a></li>
           </ul>
         </nav>
         <a href="https://phoenixframework.org/" class="phx-logo">
-          <img src="/images/logo.svg" alt="Phoenix Framework Logo"/>
+          <img src="/images/logo.svg" alt="Logo do Phoenix Framework"/>
         </a>
       </section>
     </header>
     <main class="container">
       <section class="phx-hero">
-        <p>Sorry, the page you are looking for does not exist.</p>
+        <p>Desculpe, a página que você está procurando não existe.</p>
       </section>
     </main>
   </body>
 </html>
 ```
 
-After you define the template file, remember to remove the equivalent `render/2` clause for that template, as otherwise the function overrides the template. Let's do so for the 404.html clause we have previously introduced in `lib/hello_web/controllers/error_html.ex`. We also need to tell Phoenix to embed our templates into the module:
+Depois de definir o arquivo de template, lembre-se de remover a cláusula `render/2` equivalente para esse template, pois caso contrário a função sobrescreverá o template. Vamos fazer isso para a cláusula 404.html que introduzimos anteriormente em `lib/hello_web/controllers/error_html.ex`. Também precisamos dizer ao Phoenix para incorporar nossos templates no módulo:
 
 ```diff
 + embed_templates "error_html/*"
 
 - def render("404.html", _assigns) do
--  "Page Not Found"
+-  "Página Não Encontrada"
 - end
 ```
 
-Now, when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.heex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. This is to avoid circular errors. For example, what happens if our application failed due to an error in the layout? Attempting to render the layout again will just trigger another error. So ideally we want to minimize the amount of dependencies and logic in our error templates, sharing only what is necessary.
+Agora, quando voltarmos para [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), devemos ver uma página de erro muito mais agradável. Vale ressaltar que não renderizamos nosso template `404.html.heex` através do layout da nossa aplicação, mesmo que queiramos que nossa página de erro tenha a aparência e sensação do resto do nosso site. Isso é para evitar erros circulares. Por exemplo, o que acontece se nossa aplicação falhar devido a um erro no layout? Tentar renderizar o layout novamente apenas acionará outro erro. Portanto, idealmente, queremos minimizar a quantidade de dependências e lógica em nossos templates de erro, compartilhando apenas o necessário.
 
-## Custom exceptions
+## Exceções personalizadas
 
-Elixir provides a macro called `defexception/1` for defining custom exceptions. Exceptions are represented as structs, and structs need to be defined inside of modules.
+Elixir fornece uma macro chamada `defexception/1` para definir exceções personalizadas. Exceções são representadas como structs, e structs precisam ser definidas dentro de módulos.
 
-In order to create a custom exception, we need to define a new module. Conventionally, this will have "Error" in the name. Inside that module, we need to define a new exception with `defexception/1`, the file `lib/hello_web.ex` seems like a good place for it.
+Para criar uma exceção personalizada, precisamos definir um novo módulo. Convencionalmente, este terá "Error" no nome. Dentro desse módulo, precisamos definir uma nova exceção com `defexception/1`, o arquivo `lib/hello_web.ex` parece um bom lugar para isso.
 
 ```elixir
 defmodule HelloWeb.SomethingNotFoundError do
@@ -138,15 +138,15 @@ defmodule HelloWeb.SomethingNotFoundError do
 end
 ```
 
-You can raise your new exception like this:
+Você pode levantar sua nova exceção assim:
 
 ```elixir
 raise HelloWeb.SomethingNotFoundError, "oops"
 ```
 
-By default, Plug and Phoenix will treat all exceptions as 500 errors. However, Plug provides a protocol called `Plug.Exception` where we are able to customize the status and add actions that exception structs can return on the debug error page.
+Por padrão, Plug e Phoenix tratarão todas as exceções como erros 500. No entanto, Plug fornece um protocolo chamado `Plug.Exception` onde podemos personalizar o status e adicionar ações que as structs de exceção podem retornar na página de erro de depuração.
 
-If we wanted to supply a status of 404 for an `HelloWeb.SomethingNotFoundError` error, we could do it by defining an implementation for the `Plug.Exception` protocol like this, in `lib/hello_web.ex`:
+Se quiséssemos fornecer um status 404 para um erro `HelloWeb.SomethingNotFoundError`, poderíamos fazer isso definindo uma implementação para o protocolo `Plug.Exception` assim, em `lib/hello_web.ex`:
 
 ```elixir
 defimpl Plug.Exception, for: HelloWeb.SomethingNotFoundError do
@@ -155,7 +155,7 @@ defimpl Plug.Exception, for: HelloWeb.SomethingNotFoundError do
 end
 ```
 
-Alternatively, you could define a `plug_status` field directly in the exception struct:
+Alternativamente, você poderia definir um campo `plug_status` diretamente na struct de exceção:
 
 ```elixir
 defmodule HelloWeb.SomethingNotFoundError do
@@ -163,13 +163,13 @@ defmodule HelloWeb.SomethingNotFoundError do
 end
 ```
 
-However, implementing the `Plug.Exception` protocol by hand can be convenient in certain occasions, such as when providing actionable errors.
+No entanto, implementar o protocolo `Plug.Exception` manualmente pode ser conveniente em certas ocasiões, como ao fornecer erros acionáveis.
 
-## Actionable errors
+## Erros acionáveis
 
-Exception actions are functions that can be triggered from the error page, and they're basically a list of maps defining a `label` and a `handler` to be executed. As an example, Phoenix will display an error if you have pending migrations and will provide a button on the error page to perform the pending migrations.
+Ações de exceção são funções que podem ser acionadas a partir da página de erro, e são basicamente uma lista de mapas definindo um `label` e um `handler` a ser executado. Como exemplo, Phoenix exibirá um erro se você tiver migrações pendentes e fornecerá um botão na página de erro para realizar as migrações pendentes.
 
-When `debug_errors` is `true`, they are rendered in the error page as a collection of buttons and follow the format of:
+Quando `debug_errors` é `true`, eles são renderizados na página de erro como uma coleção de botões e seguem o formato de:
 
 ```elixir
 [
@@ -180,7 +180,7 @@ When `debug_errors` is `true`, they are rendered in the error page as a collecti
 ]
 ```
 
-If we wanted to return some actions for an `HelloWeb.SomethingNotFoundError` we would implement `Plug.Exception` like this:
+Se quiséssemos retornar algumas ações para um `HelloWeb.SomethingNotFoundError`, implementaríamos `Plug.Exception` assim:
 
 ```elixir
 defimpl Plug.Exception, for: HelloWeb.SomethingNotFoundError do
@@ -189,7 +189,7 @@ defimpl Plug.Exception, for: HelloWeb.SomethingNotFoundError do
   def actions(_exception) do
     [
       %{
-        label: "Run seeds",
+        label: "Executar seeds",
         handler: {Code, :eval_file, ["priv/repo/seeds.exs"]}
       }
     ]

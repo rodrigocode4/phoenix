@@ -1,91 +1,91 @@
-# Deploying on Gigalixir
+# Implantando no Gigalixir
 
-## What we'll need
+## O que vamos precisar
 
-The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
+A única coisa que precisaremos para este guia é uma aplicação Phoenix funcional. Para aqueles que precisam de uma aplicação simples para implantar, por favor, siga o guia [Up and Running](https://hexdocs.pm/phoenix/up_and_running.html).
 
-## Goals
+## Objetivos
 
-Our main goal for this guide is to get a Phoenix application running on Gigalixir.
+Nosso principal objetivo para este guia é colocar uma aplicação Phoenix funcionando no Gigalixir.
 
-## Steps
+## Passos
 
-Let's separate this process into a few steps, so we can keep track of where we are.
+Vamos separar este processo em alguns passos, para que possamos acompanhar onde estamos.
 
-- Initialize Git repository
-- Install the Gigalixir CLI
-- Sign up for Gigalixir
-- Create and set up Gigalixir application
-- Provision a database
-- Make our project ready for Gigalixir
-- Deploy time!
-- Useful Gigalixir commands
+- Inicializar repositório Git
+- Instalar a CLI do Gigalixir
+- Cadastrar-se no Gigalixir
+- Criar e configurar a aplicação Gigalixir
+- Provisionar um banco de dados
+- Preparar nosso projeto para o Gigalixir
+- Hora do deploy!
+- Comandos úteis do Gigalixir
 
-## Initializing Git repository
+## Inicializando repositório Git
 
-If you haven't already, we'll need to commit our files to git. We can do so by running the following commands in our project directory:
+Se você ainda não fez isso, precisaremos fazer commit dos nossos arquivos no git. Podemos fazer isso executando os seguintes comandos no diretório do nosso projeto:
 
 ```console
 $ git init
 $ git add .
-$ git commit -m "Initial commit"
+$ git commit -m "Commit inicial"
 ```
 
-## Installing the Gigalixir CLI
+## Instalando a CLI do Gigalixir
 
-Follow the instructions [here](https://gigalixir.readthedocs.io/en/latest/getting-started-guide.html#install-the-command-line-interface) to install the command-line interface for your platform.
+Siga as instruções [aqui](https://gigalixir.readthedocs.io/en/latest/getting-started-guide.html#install-the-command-line-interface) para instalar a interface de linha de comando para sua plataforma.
 
-## Signing up for Gigalixir
+## Cadastrando-se no Gigalixir
 
-We can sign up for an account at [gigalixir.com](https://www.gigalixir.com) or with the CLI. Let's use the CLI.
+Podemos criar uma conta em [gigalixir.com](https://www.gigalixir.com) ou com a CLI. Vamos usar a CLI.
 
 ```console
 $ gigalixir signup
 ```
 
-Gigalixir’s free tier does not require a credit card and comes with 1 app instance and 1 PostgreSQL database for free, but please consider upgrading to a paid plan if you are running a production application.
+O plano gratuito do Gigalixir não requer cartão de crédito e vem com 1 instância de aplicação e 1 banco de dados PostgreSQL gratuitos, mas considere fazer upgrade para um plano pago se estiver executando uma aplicação em produção.
 
-Next, let's login
+Em seguida, vamos fazer login
 
 ```console
 $ gigalixir login
 ```
 
-And verify
+E verificar
 
 ```console
 $ gigalixir account
 ```
 
-## Creating and setting up our Gigalixir application
+## Criando e configurando nossa aplicação Gigalixir
 
-There are three different ways to deploy a Phoenix app on Gigalixir: with mix, with Elixir's releases, or with Distillery. In this guide, we'll be using Mix because it is the easiest to get up and running, but you won't be able to connect a remote observer or hot upgrade. For more information, see [Mix vs Distillery vs Elixir Releases](https://gigalixir.readthedocs.io/en/latest/modify-app/index.html#mix-vs-distillery-vs-elixir-releases). If you want to deploy with another method, follow the [Getting Started Guide](https://gigalixir.readthedocs.io/en/latest/getting-started-guide.html).
+Existem três maneiras diferentes de implantar um aplicativo Phoenix no Gigalixir: com mix, com releases do Elixir ou com Distillery. Neste guia, usaremos o Mix porque é o mais fácil de começar a usar, mas você não poderá conectar um observador remoto ou fazer hot upgrade. Para mais informações, consulte [Mix vs Distillery vs Elixir Releases](https://gigalixir.readthedocs.io/en/latest/modify-app/index.html#mix-vs-distillery-vs-elixir-releases). Se quiser implantar com outro método, siga o [Guia de Introdução](https://gigalixir.readthedocs.io/en/latest/getting-started-guide.html).
 
-### Creating a Gigalixir application
+### Criando uma aplicação Gigalixir
 
-Let's create a Gigalixir application
+Vamos criar uma aplicação Gigalixir
 
 ```console
-$ gigalixir create -n "your_app_name"
+$ gigalixir create -n "nome_da_sua_aplicacao"
 ```
 
-Note: the app name cannot be changed afterwards. A random name is used if you do not provide one.
+Observação: o nome da aplicação não pode ser alterado posteriormente. Um nome aleatório é usado se você não fornecer um.
 
-Verify the app was created
+Verifique se a aplicação foi criada
 
 ```console
 $ gigalixir apps
 ```
 
-Verify that a git remote was created 
+Verifique se um remote do git foi criado
 
 ```console
 $ git remote -v
 ```
 
-### Specifying versions
+### Especificando versões
 
-The buildpacks we use default to Elixir, Erlang, and Node.js versions that are quite old and it's generally a good idea to run the same version in production as you do in development, so let's do that.
+Os buildpacks que usamos têm como padrão versões de Elixir, Erlang e Node.js bastante antigas, e geralmente é uma boa ideia executar a mesma versão em produção que você usa em desenvolvimento, então vamos fazer isso.
 
 ```console
 $ echo 'elixir_version=1.14.3' > elixir_buildpack.config
@@ -93,7 +93,7 @@ $ echo 'erlang_version=24.3' >> elixir_buildpack.config
 $ echo 'node_version=12.16.3' > phoenix_static_buildpack.config
 ```
 
-Phoenix v1.6 uses `esbuild` to compile your assets, but all Gigalixir images come with `npm`, so we will configure `npm` directly to deploy our assets. Add a `assets/package.json` file if you don't have any with the following:
+O Phoenix v1.6 usa `esbuild` para compilar seus assets, mas todas as imagens do Gigalixir vêm com `npm`, então vamos configurar o `npm` diretamente para implantar nossos assets. Adicione um arquivo `assets/package.json` se você não tiver nenhum, com o seguinte:
 
 ```json
 {
@@ -103,90 +103,90 @@ Phoenix v1.6 uses `esbuild` to compile your assets, but all Gigalixir images com
 }
 ```
 
-Finally, don't forget to commit:
+Finalmente, não se esqueça de fazer commit:
 
 ```console
 $ git add elixir_buildpack.config phoenix_static_buildpack.config assets/package.json
-$ git commit -m "Set Elixir, Erlang, and Node version"
+$ git commit -m "Definir versão do Elixir, Erlang e Node"
 ```
 
-## Making our Project ready for Gigalixir
+## Preparando nosso Projeto para o Gigalixir
 
-There's nothing we need to do to get our app running on Gigalixir, but for a production app, you probably want to enforce SSL. To do that, see [Force SSL](https://hexdocs.pm/phoenix/using_ssl.html#force-ssl)
+Não há nada que precisemos fazer para que nossa aplicação funcione no Gigalixir, mas para uma aplicação de produção, você provavelmente quer forçar SSL. Para fazer isso, consulte [Forçar SSL](https://hexdocs.pm/phoenix/using_ssl.html#force-ssl)
 
-You may also want to use SSL for your database connection. For that, uncomment the line `ssl: true` in your `Repo` config.
+Você também pode querer usar SSL para sua conexão com o banco de dados. Para isso, descomente a linha `ssl: true` na configuração do seu `Repo`.
 
-## Provisioning a database
+## Provisionando um banco de dados
 
-Let's provision a database for our app
+Vamos provisionar um banco de dados para nossa aplicação
 
 ```console
 $ gigalixir pg:create --free
 ```
 
-Verify the database was created
+Verifique se o banco de dados foi criado
 
 ```console
 $ gigalixir pg
 ```
 
-Verify that a `DATABASE_URL` and `POOL_SIZE` were created
+Verifique se `DATABASE_URL` e `POOL_SIZE` foram criados
 
 ```console
 $ gigalixir config
 ```
 
-## Deploy Time!
+## Hora do Deploy!
 
-Our project is now ready to be deployed on Gigalixir.
+Nosso projeto agora está pronto para ser implantado no Gigalixir.
 
 ```console
 $ git push gigalixir
 ```
 
-Check the status of your deploy and wait until the app is `Healthy`
+Verifique o status da sua implantação e aguarde até que a aplicação esteja `Healthy` (Saudável)
 
 ```console
 $ gigalixir ps
 ```
 
-Run migrations
+Execute migrações
 
 ```console
 $ gigalixir run mix ecto.migrate
 ```
 
-Check your app logs
+Verifique os logs da sua aplicação
 
 ```console
 $ gigalixir logs
 ```
 
-If everything looks good, let's take a look at your app running on Gigalixir
+Se tudo parecer bom, vamos dar uma olhada na sua aplicação rodando no Gigalixir
 
 ```console
 $ gigalixir open
 ```
 
-## Useful Gigalixir Commands
+## Comandos Úteis do Gigalixir
 
-Open a remote console
+Abrir um console remoto
 
 ```console
 $ gigalixir account:ssh_keys:add "$(cat ~/.ssh/id_rsa.pub)"
 $ gigalixir ps:remote_console
 ```
 
-To open a remote observer, see [Remote Observer](https://gigalixir.readthedocs.io/en/latest/runtime.html#how-to-launch-a-remote-observer)
+Para abrir um observador remoto, consulte [Observador Remoto](https://gigalixir.readthedocs.io/en/latest/runtime.html#how-to-launch-a-remote-observer)
 
-To set up clustering, see [Clustering Nodes](https://gigalixir.readthedocs.io/en/latest/cluster.html)
+Para configurar clustering, consulte [Clustering de Nós](https://gigalixir.readthedocs.io/en/latest/cluster.html)
 
-To hot upgrade, see [Hot Upgrades](https://gigalixir.readthedocs.io/en/latest/deploy.html#how-to-hot-upgrade-an-app)
+Para hot upgrade, consulte [Hot Upgrades](https://gigalixir.readthedocs.io/en/latest/deploy.html#how-to-hot-upgrade-an-app)
 
-For custom domains, scaling, jobs and other features, see the [Gigalixir Documentation](https://gigalixir.readthedocs.io/)
+Para domínios personalizados, escalonamento, jobs e outros recursos, consulte a [Documentação do Gigalixir](https://gigalixir.readthedocs.io/)
 
-## Troubleshooting
+## Solução de Problemas
 
-See [Troubleshooting](https://gigalixir.readthedocs.io/en/latest/troubleshooting.html)
+Consulte [Solução de Problemas](https://gigalixir.readthedocs.io/en/latest/troubleshooting.html)
 
-Also, don't hesitate to email [help@gigalixir.com](mailto:help@gigalixir.com) or [request an invitation](https://elixir-lang.slack.com/join/shared_invite/zt-1f13hz7mb-N4KGjF523ONLCcHfb8jYgA#/shared-invite/email) and join the #gigalixir channel on [Slack](https://elixir-lang.slack.com).
+Além disso, não hesite em enviar um e-mail para [help@gigalixir.com](mailto:help@gigalixir.com) ou [solicitar um convite](https://elixir-lang.slack.com/join/shared_invite/zt-1f13hz7mb-N4KGjF523ONLCcHfb8jYgA#/shared-invite/email) e junte-se ao canal #gigalixir no [Slack](https://elixir-lang.slack.com).

@@ -1,35 +1,35 @@
-# Routing cheatsheet
+# Guia rápido de roteamento
 
-> Those need to be declared in the correct router module and scope.
+> Estas rotas precisam ser declaradas no módulo e escopo de roteamento corretos.
 
-A quick reference to the common routing features' syntax. For an exhaustive overview, refer to the [routing guides](routing.md).
+Uma referência rápida para a sintaxe de recursos comuns de roteamento. Para uma visão geral completa, consulte os [guias de roteamento](routing.md).
 
-## Routing declaration
+## Declaração de rotas
 {: .col-2}
 
-### Single route
+### Rota única
 
 ```elixir
 get "/users", UserController, :index
 patch "/users/:id", UserController, :update
 ```
 ```elixir
-# generated routes
+# rotas geradas
 ~p"/users"
-~p"/users/9" # user_id is 9
+~p"/users/9" # user_id é 9
 ```
-Also accepts `put`, `patch`, `options`, `delete` and `head`.
+Também aceita `put`, `patch`, `options`, `delete` e `head`.
 
-### Resources
+### Recursos
 
-#### Simple
+#### Simples
 
 ```elixir
 resources "/users", UserController
 ```
-Generates `:index`, `:edit`, `:new`, `:show`, `:create`, `:update` and `:delete`.
+Gera `:index`, `:edit`, `:new`, `:show`, `:create`, `:update` e `:delete`.
 
-#### Options
+#### Opções
 
 ```elixir
 resources "/users", UserController, only: [:show]
@@ -37,7 +37,7 @@ resources "/users", UserController, except: [:create, :delete]
 resources "/users", UserController, as: :person # ~p"/person"
 ```
 
-#### Nested
+#### Aninhados
 
 ```elixir
 resources "/users", UserController do
@@ -45,15 +45,15 @@ resources "/users", UserController do
 end
 ```
 ```elixir
-# generated routes
-~p"/users/3/posts" # user_id is 3
-~p"/users/3/posts/17" # user_id is 3 and post_id = 17
+# rotas geradas
+~p"/users/3/posts" # user_id é 3
+~p"/users/3/posts/17" # user_id é 3 e post_id = 17
 ```
-For more info check the [resources docs.](routing-1.html#resources)
+Para mais informações, consulte a [documentação de recursos.](routing-1.html#resources)
 
-### Scopes
+### Escopos
 
-#### Simple
+#### Simples
 ```elixir
 scope "/admin", HelloWeb.Admin do
   pipe_through :browser
@@ -62,11 +62,11 @@ scope "/admin", HelloWeb.Admin do
 end
 ```
 ```elixir
-# generated path helpers
+# auxiliares de caminho gerados
 ~p"/admin/users"
 ```
 
-#### Nested
+#### Aninhados
 ```elixir
 scope "/api", HelloWeb.Api, as: :api do
   pipe_through :api
@@ -77,7 +77,7 @@ scope "/api", HelloWeb.Api, as: :api do
 end
 ```
 ```elixir
-# generated path helpers
+# auxiliares de caminho gerados
 ~p"/api/v1/users"
 ```
-For more info check the [scoped routes](routing.md#scoped-routes) docs.
+Para mais informações, consulte a documentação de [rotas com escopo](routing.md#scoped-routes).

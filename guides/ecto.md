@@ -1,10 +1,10 @@
 # Ecto
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você tenha passado pelos [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-Most web applications today need some form of data validation and persistence. In the Elixir ecosystem, we have `Ecto` to enable this. Before we jump into building database-backed web features, we're going to focus on the finer details of Ecto to give a solid base to build our web features on top of. Let's get started!
+A maioria das aplicações web atuais necessita de alguma forma de validação e persistência de dados. No ecossistema Elixir, temos o `Ecto` para permitir isso. Antes de mergulharmos na construção de recursos web com banco de dados, vamos nos concentrar nos detalhes do Ecto para estabelecer uma base sólida sobre a qual construiremos nossos recursos web. Vamos começar!
 
-Phoenix uses Ecto to provide builtin support to the following databases:
+O Phoenix usa o Ecto para fornecer suporte integrado aos seguintes bancos de dados:
 
 * PostgreSQL (via [`postgrex`](https://github.com/elixir-ecto/postgrex))
 * MySQL (via [`myxql`](https://github.com/elixir-ecto/myxql))
@@ -12,15 +12,15 @@ Phoenix uses Ecto to provide builtin support to the following databases:
 * ETS (via [`etso`](https://github.com/evadne/etso))
 * SQLite3 (via [`ecto_sqlite3`](https://github.com/elixir-sqlite/ecto_sqlite3))
 
-Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. You can pass the `--database` option to change or `--no-ecto` flag to exclude this.
+Novos projetos Phoenix incluem o Ecto com o adaptador PostgreSQL por padrão. Você pode passar a opção `--database` para alterar ou a flag `--no-ecto` para excluir isso.
 
-Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README](https://github.com/elixir-ecto/ecto) for general information.
+O Ecto também fornece suporte para outros bancos de dados e tem muitos recursos de aprendizado disponíveis. Por favor, consulte o [README do Ecto](https://github.com/elixir-ecto/ecto) para informações gerais.
 
-This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For using other databases, see the [Using other databases](#using-other-databases) section.
+Este guia presume que geramos nossa nova aplicação com integração do Ecto e que usaremos PostgreSQL. Os guias introdutórios explicam como fazer sua primeira aplicação funcionar. Para usar outros bancos de dados, consulte a seção [Usando outros bancos de dados](#usando-outros-bancos-de-dados).
 
-## Using the schema and migration generator
+## Usando o gerador de schema e migração
 
-Once we have Ecto and PostgreSQL installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
+Uma vez que temos o Ecto e o PostgreSQL instalados e configurados, a maneira mais fácil de usar o Ecto é gerar um *schema* do Ecto através da tarefa `phx.gen.schema`. Os schemas do Ecto são uma maneira de especificarmos como os tipos de dados do Elixir mapeiam para e de fontes externas, como tabelas de banco de dados. Vamos gerar um schema `User` com os campos `name`, `email`, `bio` e `number_of_pets`.
 
 ```console
 $ mix phx.gen.schema User users name:string email:string \
@@ -34,9 +34,9 @@ Remember to update your repository by running migrations:
    $ mix ecto.migrate
 ```
 
-A couple of files were generated with this task. First, we have a `user.ex` file, containing our Ecto schema with our schema definition of the fields we passed to the task. Next, a migration file was generated inside `priv/repo/migrations/` which will create our database table that our schema maps to.
+Alguns arquivos foram gerados com esta tarefa. Primeiro, temos um arquivo `user.ex`, contendo nosso schema do Ecto com nossa definição de schema dos campos que passamos para a tarefa. Em seguida, um arquivo de migração foi gerado dentro de `priv/repo/migrations/` que criará nossa tabela de banco de dados para a qual nosso schema mapeia.
 
-With our files in place, let's follow the instructions and run our migration:
+Com nossos arquivos criados, vamos seguir as instruções e executar nossa migração:
 
 ```console
 $ mix ecto.migrate
@@ -50,9 +50,9 @@ Generated hello app
 [info] == Migrated in 0.0s
 ```
 
-Mix assumes that we are in the development environment unless we tell it otherwise with `MIX_ENV=prod mix ecto.migrate`.
+O Mix assume que estamos no ambiente de desenvolvimento, a menos que digamos o contrário com `MIX_ENV=prod mix ecto.migrate`.
 
-If we log in to our database server, and connect to our `hello_dev` database, we should see our `users` table. Ecto assumes that we want an integer column called `id` as our primary key, so we should see a sequence generated for that as well.
+Se fizermos login no nosso servidor de banco de dados e nos conectarmos ao nosso banco de dados `hello_dev`, deveremos ver nossa tabela `users`. O Ecto assume que queremos uma coluna de inteiros chamada `id` como nossa chave primária, então devemos ver uma sequência gerada para isso também.
 
 ```console
 $ psql -U postgres
@@ -72,7 +72,7 @@ hello_dev=# \d
 hello_dev=# \q
 ```
 
-If we take a look at the migration generated by `phx.gen.schema` in `priv/repo/migrations/`, we'll see that it will add the columns we specified. It will also add timestamp columns for `inserted_at` and `updated_at` which come from the [`timestamps/1`] function.
+Se olharmos a migração gerada por `phx.gen.schema` em `priv/repo/migrations/`, veremos que ela adicionará as colunas que especificamos. Também adicionará colunas de timestamp para `inserted_at` e `updated_at` que vêm da função [`timestamps/1`].
 
 ```elixir
 defmodule Hello.Repo.Migrations.CreateUsers do
@@ -91,7 +91,7 @@ defmodule Hello.Repo.Migrations.CreateUsers do
 end
 ```
 
-And here's what that translates to in the actual `users` table.
+E aqui está como isso se traduz na tabela real `users`.
 
 ```console
 $ psql
@@ -110,11 +110,11 @@ Indexes:
 "users_pkey" PRIMARY KEY, btree (id)
 ```
 
-Notice that we do get an `id` column as our primary key by default, even though it isn't listed as a field in our migration.
+Observe que obtemos uma coluna `id` como nossa chave primária por padrão, mesmo que não esteja listada como um campo em nossa migração.
 
-## Repo configuration
+## Configuração do Repo
 
-Our `Hello.Repo` module is the foundation we need to work with databases in a Phoenix application. Phoenix generated it for us in `lib/hello/repo.ex`, and this is what it looks like.
+Nosso módulo `Hello.Repo` é a base de que precisamos para trabalhar com bancos de dados em uma aplicação Phoenix. O Phoenix o gerou para nós em `lib/hello/repo.ex`, e é assim que ele se parece.
 
 ```elixir
 defmodule Hello.Repo do
@@ -124,11 +124,11 @@ defmodule Hello.Repo do
 end
 ```
 
-It begins by defining the repository module. Then it configures our `otp_app` name, and the `adapter` – `Postgres`, in our case.
+Ele começa definindo o módulo do repositório. Em seguida, configura o nome do nosso `otp_app` e o `adapter` - `Postgres`, no nosso caso.
 
-Our repo has three main tasks - to bring in all the common query functions from [`Ecto.Repo`], to set the `otp_app` name equal to our application name, and to configure our database adapter. We'll talk more about how to use `Hello.Repo` in a bit.
+Nosso repo tem três tarefas principais - trazer todas as funções de consulta comuns de [`Ecto.Repo`], definir o nome do `otp_app` igual ao nome da nossa aplicação e configurar nosso adaptador de banco de dados. Falaremos mais sobre como usar o `Hello.Repo` em breve.
 
-When `phx.new` generated our application, it included some basic repository configuration as well. Let's look at `config/dev.exs`.
+Quando `phx.new` gerou nossa aplicação, ele incluiu também alguma configuração básica do repositório. Vamos olhar o `config/dev.exs`.
 
 ```elixir
 ...
@@ -143,13 +143,13 @@ config :hello, Hello.Repo,
 ...
 ```
 
-We also have similar configuration in `config/test.exs` and `config/runtime.exs` (formerly `config/prod.secret.exs`) which can also be changed to match your actual credentials.
+Também temos configuração similar em `config/test.exs` e `config/runtime.exs` (anteriormente `config/prod.secret.exs`) que também podem ser alterados para corresponder às suas credenciais reais.
 
-## The schema
+## O schema
 
-Ecto schemas are responsible for mapping Elixir values to external data sources, as well as mapping external data back into Elixir data structures. We can also define relationships to other schemas in our applications. For example, our `User` schema might have many posts, and each post would belong to a user. Ecto also handles data validation and type casting with changesets, which we'll discuss in a moment.
+Os schemas do Ecto são responsáveis por mapear valores do Elixir para fontes de dados externas, bem como mapear dados externos de volta para estruturas de dados do Elixir. Também podemos definir relacionamentos com outros schemas em nossas aplicações. Por exemplo, nosso schema `User` pode ter muitos posts, e cada post pertenceria a um usuário. O Ecto também lida com validação de dados e conversão de tipos com changesets, o que discutiremos em breve.
 
-Here's the `User` schema that Phoenix generated for us.
+Aqui está o schema `User` que o Phoenix gerou para nós.
 
 ```elixir
 defmodule Hello.User do
@@ -174,13 +174,13 @@ defmodule Hello.User do
 end
 ```
 
-Ecto schemas at their core are simply Elixir structs. Our `schema` block is what tells Ecto how to cast our `%User{}` struct fields to and from the external `users` table. Often, the ability to simply cast data to and from the database isn't enough and extra data validation is required. This is where Ecto changesets come in. Let's dive in!
+Os schemas do Ecto, em seu núcleo, são simplesmente structs do Elixir. Nosso bloco `schema` é o que diz ao Ecto como converter os campos do nosso struct `%User{}` para e da tabela externa `users`. Muitas vezes, a capacidade de simplesmente converter dados para e do banco de dados não é suficiente e é necessária uma validação de dados adicional. É aí que os changesets do Ecto entram. Vamos mergulhar!
 
-## Changesets and validations
+## Changesets e validações
 
-Changesets define a pipeline of transformations our data needs to undergo before it will be ready for our application to use. These transformations might include type-casting, user input validation, and filtering out any extraneous parameters. Often we'll use changesets to validate user input before writing it to the database. Ecto repositories are also changeset-aware, which allows them not only to refuse invalid data, but also perform the minimal database updates possible by inspecting the changeset to know which fields have changed.
+Changesets definem um pipeline de transformações pelos quais nossos dados precisam passar antes de estarem prontos para serem usados por nossa aplicação. Essas transformações podem incluir conversão de tipo, validação de entrada do usuário e filtragem de parâmetros estranhos. Frequentemente usaremos changesets para validar entradas do usuário antes de gravá-las no banco de dados. Os repositórios do Ecto também estão cientes dos changesets, o que lhes permite não apenas recusar dados inválidos, mas também realizar as atualizações mínimas possíveis no banco de dados ao inspecionar o changeset para saber quais campos foram alterados.
 
-Let's take a closer look at our default changeset function.
+Vamos dar uma olhada mais detalhada em nossa função de changeset padrão.
 
 ```elixir
 def changeset(user, attrs) do
@@ -190,13 +190,13 @@ def changeset(user, attrs) do
 end
 ```
 
-Right now, we have two transformations in our pipeline. In the first call, we invoke `Ecto.Changeset.cast/3`, passing in our external parameters and marking which fields are required for validation.
+No momento, temos duas transformações em nosso pipeline. Na primeira chamada, invocamos `Ecto.Changeset.cast/3`, passando nossos parâmetros externos e marcando quais campos são necessários para validação.
 
-[`cast/3`] first takes a struct, then the parameters (the proposed updates), and then the final field is the list of columns to be updated. [`cast/3`] also will only take fields that exist in the schema.
+[`cast/3`] primeiro recebe um struct, depois os parâmetros (as atualizações propostas) e, em seguida, o campo final é a lista de colunas a serem atualizadas. [`cast/3`] também só aceitará campos que existam no schema.
 
-Next, `Ecto.Changeset.validate_required/3` checks that this list of fields is present in the changeset that [`cast/3`] returns. By default with the generator, all fields are required.
+Em seguida, `Ecto.Changeset.validate_required/3` verifica se esta lista de campos está presente no changeset que [`cast/3`] retorna. Por padrão, com o gerador, todos os campos são obrigatórios.
 
-We can verify this functionality in `IEx`. Let's fire up our application inside IEx by running `iex -S mix`. In order to minimize typing and make this easier to read, let's alias our `Hello.User` struct.
+Podemos verificar essa funcionalidade no `IEx`. Vamos iniciar nossa aplicação dentro do IEx executando `iex -S mix`. Para minimizar a digitação e tornar isso mais fácil de ler, vamos criar um alias para nosso struct `Hello.User`.
 
 ```console
 $ iex -S mix
@@ -205,7 +205,7 @@ iex> alias Hello.User
 Hello.User
 ```
 
-Next, let's build a changeset from our schema with an empty `User` struct, and an empty map of parameters.
+Em seguida, vamos construir um changeset a partir do nosso schema com um struct `User` vazio e um mapa vazio de parâmetros.
 
 ```elixir
 iex> changeset = User.changeset(%User{}, %{})
@@ -223,14 +223,14 @@ iex> changeset = User.changeset(%User{}, %{})
 >
 ```
 
-Once we have a changeset, we can check if it is valid.
+Uma vez que temos um changeset, podemos verificar se ele é válido.
 
 ```elixir
 iex> changeset.valid?
 false
 ```
 
-Since this one is not valid, we can ask it what the errors are.
+Como este não é válido, podemos perguntar quais são os erros.
 
 ```elixir
 iex> changeset.errors
@@ -242,13 +242,13 @@ iex> changeset.errors
 ]
 ```
 
-Now, let's make `number_of_pets` optional. In order to do this, we simply remove it from the list in the `changeset/2` function, in `Hello.User`.
+Agora, vamos tornar `number_of_pets` opcional. Para fazer isso, simplesmente o removemos da lista na função `changeset/2`, em `Hello.User`.
 
 ```elixir
     |> validate_required([:name, :email, :bio])
 ```
 
-Now casting the changeset should tell us that only `name`, `email`, and `bio` can't be blank. We can test that by running `recompile()` inside IEx and then rebuilding our changeset.
+Agora, ao criar o changeset, ele deve nos dizer que apenas `name`, `email` e `bio` não podem estar em branco. Podemos testar isso executando `recompile()` dentro do IEx e depois reconstruindo nosso changeset.
 
 ```elixir
 iex> recompile()
@@ -276,9 +276,9 @@ iex> changeset.errors
 ]
 ```
 
-What happens if we pass a key-value pair that is neither defined in the schema nor required?
+O que acontece se passarmos um par chave-valor que não está definido no schema nem é obrigatório?
 
-Inside our existing IEx shell, let's create a `params` map with valid values plus an extra `random_key: "random value"`.
+Dentro do nosso shell IEx existente, vamos criar um mapa `params` com valores válidos mais um `random_key: "random value"` extra.
 
 ```elixir
 iex> params = %{name: "Joe Example", email: "joe@example.com", bio: "An example to all", number_of_pets: 5, random_key: "random value"}
@@ -291,7 +291,7 @@ iex> params = %{name: "Joe Example", email: "joe@example.com", bio: "An example 
 }
 ```
 
-Next, let's use our new `params` map to create another changeset.
+Em seguida, vamos usar nosso novo mapa `params` para criar outro changeset.
 
 ```elixir
 iex> changeset = User.changeset(%User{}, params)
@@ -309,14 +309,14 @@ iex> changeset = User.changeset(%User{}, params)
 >
 ```
 
-Our new changeset is valid.
+Nosso novo changeset é válido.
 
 ```elixir
 iex> changeset.valid?
 true
 ```
 
-We can also check the changeset's changes - the map we get after all of the transformations are complete.
+Também podemos verificar as alterações do changeset - o mapa que obtemos após todas as transformações serem concluídas.
 
 ```elixir
 iex(9)> changeset.changes
@@ -324,11 +324,11 @@ iex(9)> changeset.changes
   number_of_pets: 5}
 ```
 
-Notice that our `random_key` key and `"random_value"` value have been removed from the final changeset. Changesets allow us to cast external data, such as user input on a web form or data from a CSV file into valid data into our system. Invalid parameters will be stripped and bad data that is unable to be cast according to our schema will be highlighted in the changeset errors.
+Observe que nossa chave `random_key` e o valor `"random value"` foram removidos do changeset final. Os changesets nos permitem converter dados externos, como entrada do usuário em um formulário web ou dados de um arquivo CSV, em dados válidos para nosso sistema. Parâmetros inválidos serão removidos e dados incorretos que não podem ser convertidos de acordo com nosso schema serão destacados nos erros do changeset.
 
-We can validate more than just whether a field is required or not. Let's take a look at some finer-grained validations.
+Podemos validar mais do que apenas se um campo é obrigatório ou não. Vamos dar uma olhada em algumas validações mais refinadas.
 
-What if we had a requirement that all biographies in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `bio` field.
+E se tivéssemos um requisito de que todas as biografias em nosso sistema devem ter pelo menos dois caracteres? Podemos fazer isso facilmente adicionando outra transformação ao pipeline em nosso changeset que valida o comprimento do campo `bio`.
 
 ```elixir
 def changeset(user, attrs) do
@@ -339,7 +339,7 @@ def changeset(user, attrs) do
 end
 ```
 
-Now, if we try to cast data containing a value of `"A"` for our user's `bio`, we should see the failed validation in the changeset's errors.
+Agora, se tentarmos converter dados contendo um valor de `"A"` para o `bio` do nosso usuário, deveríamos ver a validação falhar nos erros do changeset.
 
 ```elixir
 iex> recompile()
@@ -351,7 +351,7 @@ iex> changeset.errors[:bio]
  [count: 2, validation: :length, kind: :min, type: :string]}
 ```
 
-If we also have a requirement for the maximum length that a bio can have, we can simply add another validation.
+Se também tivermos um requisito para o comprimento máximo que uma bio pode ter, podemos simplesmente adicionar outra validação.
 
 ```elixir
 def changeset(user, attrs) do
@@ -363,7 +363,7 @@ def changeset(user, attrs) do
 end
 ```
 
-Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the `@`. The `Ecto.Changeset.validate_format/3` function is just what we need.
+Digamos que queremos realizar pelo menos alguma validação de formato rudimentar no campo `email`. Tudo o que queremos verificar é a presença do `@`. A função `Ecto.Changeset.validate_format/3` é exatamente o que precisamos.
 
 ```elixir
 def changeset(user, attrs) do
@@ -376,7 +376,7 @@ def changeset(user, attrs) do
 end
 ```
 
-If we try to cast a user with an email of `"example.com"`, we should see an error message like the following:
+Se tentarmos converter um usuário com um email de `"example.com"`, devemos ver uma mensagem de erro como a seguinte:
 
 ```elixir
 iex> recompile()
@@ -387,15 +387,15 @@ iex> changeset.errors[:email]
 {"has invalid format", [validation: :format]}
 ```
 
-There are many more validations and transformations we can perform in a changeset. Please see the [Ecto Changeset documentation](https://hexdocs.pm/ecto/Ecto.Changeset.html) for more information.
+Existem muitas mais validações e transformações que podemos realizar em um changeset. Consulte a [documentação do Ecto Changeset](https://hexdocs.pm/ecto/Ecto.Changeset.html) para mais informações.
 
-## Data persistence
+## Persistência de dados
 
-We've explored migrations and schemas, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repository module in `lib/hello/repo.ex` earlier, and now it's time to put it to use.
+Exploramos migrações e schemas, mas ainda não persistimos nenhum de nossos schemas ou changesets. Olhamos brevemente para nosso módulo de repositório em `lib/hello/repo.ex` anteriormente, e agora é hora de colocá-lo em uso.
 
-Ecto repositories are the interface into a storage system, be it a database like PostgreSQL or an external service like a RESTful API. The `Repo` module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The `Repo` module takes care of the underlying database adapter communication, connection pooling, and error translation for database constraint violations.
+Os repositórios do Ecto são a interface para um sistema de armazenamento, seja um banco de dados como PostgreSQL ou um serviço externo como uma API RESTful. O propósito do módulo `Repo` é cuidar dos detalhes mais finos da persistência e consulta de dados para nós. Como chamadores, só nos preocupamos em buscar e persistir dados. O módulo `Repo` cuida da comunicação do adaptador de banco de dados subjacente, do pool de conexões e da tradução de erros para violações de restrições do banco de dados.
 
-Let's head back over to IEx with `iex -S mix`, and insert a couple of users into the database.
+Vamos voltar ao IEx com `iex -S mix`, e inserir alguns usuários no banco de dados.
 
 ```elixir
 iex> alias Hello.{Repo, User}
@@ -432,11 +432,11 @@ INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETUR
  }}
 ```
 
-We started by aliasing our `User` and `Repo` modules for easy access. Next, we called [`Repo.insert/2`] with a User struct. Since we are in the `dev` environment, we can see the debug logs for the query our repository performed when inserting the underlying `%User{}` data. We received a two-element tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful.
+Começamos criando um alias para nossos módulos `User` e `Repo` para facilitar o acesso. Em seguida, chamamos [`Repo.insert/2`] com um struct User. Como estamos no ambiente `dev`, podemos ver os logs de depuração para a consulta que nosso repositório executou ao inserir os dados subjacentes `%User{}`. Recebemos uma tupla de dois elementos de volta com `{:ok, %User{}}`, o que nos informa que a inserção foi bem-sucedida.
 
-We could also insert a user by passing a changeset to [`Repo.insert/2`]. If the changeset is valid, the repository will use an optimized database query to insert the record, and return a two-element tuple back, as above. If the changeset is not valid, we receive a two-element tuple consisting of `:error` plus the invalid changeset.
+Também poderíamos inserir um usuário passando um changeset para [`Repo.insert/2`]. Se o changeset for válido, o repositório usará uma consulta de banco de dados otimizada para inserir o registro e retornará uma tupla de dois elementos, como acima. Se o changeset não for válido, receberemos uma tupla de dois elementos que consiste em `:error` mais o changeset inválido.
 
-With a couple of users inserted, let's fetch them back out of the repo.
+Com alguns usuários inseridos, vamos buscá-los de volta do repositório.
 
 ```elixir
 iex> Repo.all(User)
@@ -466,7 +466,7 @@ SELECT u0."id", u0."bio", u0."email", u0."name", u0."number_of_pets", u0."insert
 ]
 ```
 
-That was easy! `Repo.all/1` takes a data source, our `User` schema in this case, and translates that to an underlying SQL query against our database. After it fetches the data, the Repo then uses our Ecto schema to map the database values back into Elixir data structures according to our `User` schema. We're not just limited to basic querying – Ecto includes a full-fledged query DSL for advanced SQL generation. In addition to a natural Elixir DSL, Ecto's query engine gives us multiple great features, such as SQL injection protection and compile-time optimization of queries. Let's try it out.
+Isso foi fácil! `Repo.all/1` recebe uma fonte de dados, nosso schema `User` neste caso, e traduz isso para uma consulta SQL subjacente contra nosso banco de dados. Depois de buscar os dados, o Repo então usa nosso schema Ecto para mapear os valores do banco de dados de volta para estruturas de dados Elixir de acordo com nosso schema `User`. Não estamos limitados apenas a consultas básicas - o Ecto inclui uma DSL completa para geração avançada de SQL. Além de uma DSL natural do Elixir, o mecanismo de consulta do Ecto nos oferece vários recursos excelentes, como proteção contra injeção de SQL e otimização de consultas em tempo de compilação. Vamos experimentá-lo.
 
 ```elixir
 iex> import Ecto.Query
@@ -478,7 +478,7 @@ SELECT u0."email" FROM "users" AS u0 []
 ["user1@example.com", "user2@example.com"]
 ```
 
-First, we imported [`Ecto.Query`], which imports the [`from/2`] macro of Ecto's Query DSL. Next, we built a query which selects all the email addresses in our users table. Let's try another example.
+Primeiro, importamos [`Ecto.Query`], que importa a macro [`from/2`] da DSL de Consulta do Ecto. Em seguida, construímos uma consulta que seleciona todos os endereços de e-mail em nossa tabela de usuários. Vamos tentar outro exemplo.
 
 ```elixir
 iex> Repo.one(from u in User, where: ilike(u.email, "%1%"),
@@ -487,7 +487,7 @@ iex> Repo.one(from u in User, where: ilike(u.email, "%1%"),
 1
 ```
 
-Now we're starting to get a taste of Ecto's rich querying capabilities. We used [`Repo.one/2`] to fetch the count of all users with an email address containing `1`, and received the expected count in return. This just scratches the surface of Ecto's query interface, and much more is supported such as sub-querying, interval queries, and advanced select statements. For example, let's build a query to fetch a map of all user id's to their email addresses.
+Agora estamos começando a ter uma ideia das ricas capacidades de consulta do Ecto. Usamos [`Repo.one/2`] para buscar a contagem de todos os usuários com um endereço de e-mail contendo `1`, e recebemos a contagem esperada em retorno. Isso apenas arranha a superfície da interface de consulta do Ecto, e muito mais é suportado, como subconsultas, consultas de intervalo e instruções select avançadas. Por exemplo, vamos construir uma consulta para buscar um mapa de todos os IDs de usuário para seus endereços de e-mail.
 
 ```elixir
 iex> Repo.all(from u in User, select: %{u.id => u.email})
@@ -499,31 +499,31 @@ SELECT u0."id", u0."email" FROM "users" AS u0 []
 ]
 ```
 
-That little query packed a big punch. It both fetched all user emails from the database and efficiently built a map of the results in one go. You should browse the [Ecto.Query documentation](https://hexdocs.pm/ecto/Ecto.Query.html#content) to see the breadth of supported query features.
+Essa pequena consulta deu um grande resultado. Ela buscou todos os e-mails de usuário do banco de dados e construiu eficientemente um mapa dos resultados de uma só vez. Você deve navegar pela [documentação do Ecto.Query](https://hexdocs.pm/ecto/Ecto.Query.html#content) para ver a amplitude dos recursos de consulta suportados.
 
-In addition to inserts, we can also perform updates and deletes with [`Repo.update/2`] and [`Repo.delete/2`] to update or delete a single schema. Ecto also supports bulk persistence with the [`Repo.insert_all/3`], [`Repo.update_all/3`], and [`Repo.delete_all/2`] functions.
+Além de inserções, também podemos realizar atualizações e exclusões com [`Repo.update/2`] e [`Repo.delete/2`] para atualizar ou excluir um único schema. O Ecto também suporta persistência em massa com as funções [`Repo.insert_all/3`], [`Repo.update_all/3`] e [`Repo.delete_all/2`].
 
-There is quite a bit more that Ecto can do and we've only barely scratched the surface. With a solid Ecto foundation in place, we're now ready to continue building our app and integrate the web-facing application with our backend persistence. Along the way, we'll expand our Ecto knowledge and learn how to properly isolate our web interface from the underlying details of our system. Please take a look at the [Ecto documentation](https://hexdocs.pm/ecto/) for the rest of the story.
+Há muito mais que o Ecto pode fazer e apenas arranhamos a superfície. Com uma base sólida do Ecto estabelecida, agora estamos prontos para continuar construindo nosso aplicativo e integrar a aplicação voltada para a web com nossa persistência de back-end. Ao longo do caminho, expandiremos nosso conhecimento do Ecto e aprenderemos como isolar adequadamente nossa interface web dos detalhes subjacentes do nosso sistema. Por favor, dê uma olhada na [documentação do Ecto](https://hexdocs.pm/ecto/) para o resto da história.
 
-In our [contexts guide](contexts.html), we'll find out how to wrap up our Ecto access and business logic behind modules that group related functionality. We'll see how Phoenix helps us design maintainable applications, and we'll find out about other neat Ecto features along the way.
+Em nosso [guia de contextos](contexts.html), descobriremos como encapsular nosso acesso ao Ecto e lógica de negócios por trás de módulos que agrupam funcionalidades relacionadas. Veremos como o Phoenix nos ajuda a projetar aplicações de fácil manutenção, e descobriremos outros recursos interessantes do Ecto ao longo do caminho.
 
-## Using other databases
+## Usando outros bancos de dados
 
-Phoenix applications are configured to use PostgreSQL by default, but what if we want to use another database, such as MySQL? In this section, we'll walk through changing that default whether we are about to create a new application, or whether we have an existing one configured for PostgreSQL.
+As aplicações Phoenix são configuradas para usar PostgreSQL por padrão, mas e se quisermos usar outro banco de dados, como MySQL? Nesta seção, veremos como mudar esse padrão, seja quando estamos prestes a criar uma nova aplicação, seja quando temos uma existente configurada para PostgreSQL.
 
-If we are about to create a new application, configuring our application to use MySQL is easy. We can simply pass the `--database mysql` flag to `phx.new` and everything will be configured correctly.
+Se estamos prestes a criar uma nova aplicação, configurá-la para usar MySQL é fácil. Podemos simplesmente passar a flag `--database mysql` para `phx.new` e tudo será configurado corretamente.
 
 ```console
 $ mix phx.new hello_phoenix --database mysql
 ```
 
-This will set up all the correct dependencies and configuration for us automatically. Once we install those dependencies with `mix deps.get`, we'll be ready to begin working with Ecto in our application.
+Isso configurará todas as dependências e configurações corretas para nós automaticamente. Depois de instalar essas dependências com `mix deps.get`, estaremos prontos para começar a trabalhar com o Ecto em nossa aplicação.
 
-If we have an existing application, all we need to do is switch adapters and make some small configuration changes.
+Se temos uma aplicação existente, tudo o que precisamos fazer é mudar os adaptadores e fazer algumas pequenas alterações de configuração.
 
-To switch adapters, we need to remove the Postgrex dependency and add a new one for MyXQL instead.
+Para mudar de adaptador, precisamos remover a dependência do Postgrex e adicionar uma nova para o MyXQL.
 
-Let's open up our `mix.exs` file and do that now.
+Vamos abrir nosso arquivo `mix.exs` e fazer isso agora.
 
 ```elixir
 defmodule HelloPhoenix.MixProject do
@@ -545,7 +545,7 @@ defmodule HelloPhoenix.MixProject do
 end
 ```
 
-Next, we need to configure our adapter to use the default MySQL credentials by updating `config/dev.exs`:
+Em seguida, precisamos configurar nosso adaptador para usar as credenciais padrão do MySQL atualizando `config/dev.exs`:
 
 ```elixir
 config :hello_phoenix, HelloPhoenix.Repo,
@@ -554,24 +554,24 @@ config :hello_phoenix, HelloPhoenix.Repo,
   database: "hello_phoenix_dev"
 ```
 
-If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. You also need to configure the correct values in the `config/test.exs` and `config/runtime.exs` (formerly `config/prod.secret.exs`) files as well.
+Se já temos um bloco de configuração para nosso `HelloPhoenix.Repo`, podemos simplesmente alterar os valores para corresponder aos nossos novos valores. Você também precisa configurar os valores corretos nos arquivos `config/test.exs` e `config/runtime.exs` (anteriormente `config/prod.secret.exs`) também.
 
-The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set the `:adapter` to `Ecto.Adapters.MyXQL`.
+A última alteração é abrir `lib/hello_phoenix/repo.ex` e garantir que o `:adapter` seja definido como `Ecto.Adapters.MyXQL`.
 
-Now all we need to do is fetch our new dependency, and we'll be ready to go.
+Agora tudo o que precisamos fazer é buscar nossa nova dependência, e estaremos prontos para começar.
 
 ```console
 $ mix deps.get
 ```
 
-With our new adapter installed and configured, we're ready to create our database.
+Com nosso novo adaptador instalado e configurado, estamos prontos para criar nosso banco de dados.
 
 ```console
 $ mix ecto.create
 ```
 
-The database for HelloPhoenix.Repo has been created.
-We're also ready to run any migrations, or do anything else with Ecto that we may choose.
+O banco de dados para HelloPhoenix.Repo foi criado.
+Também estamos prontos para executar quaisquer migrações ou fazer qualquer outra coisa com o Ecto que possamos escolher.
 
 ```console
 $ mix ecto.migrate
@@ -580,11 +580,11 @@ $ mix ecto.migrate
 [info] == Migrated in 0.2s
 ```
 
-## Other options
+## Outras opções
 
-While Phoenix uses the `Ecto` project to interact with the data access layer, there are many other data access options, some even built into the Erlang standard library. [ETS](https://www.erlang.org/doc/man/ets.html) – available in Ecto via [`etso`](https://hexdocs.pm/etso/) – and [DETS](https://www.erlang.org/doc/man/dets.html) are key-value data stores built into [OTP](https://www.erlang.org/doc/). OTP also provides a relational database called [Mnesia](https://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
+Enquanto o Phoenix usa o projeto `Ecto` para interagir com a camada de acesso a dados, existem muitas outras opções de acesso a dados, algumas até incorporadas na biblioteca padrão do Erlang. [ETS](https://www.erlang.org/doc/man/ets.html) – disponível no Ecto via [`etso`](https://hexdocs.pm/etso/) – e [DETS](https://www.erlang.org/doc/man/dets.html) são armazenamentos de dados chave-valor incorporados ao [OTP](https://www.erlang.org/doc/). O OTP também fornece um banco de dados relacional chamado [Mnesia](https://www.erlang.org/doc/man/mnesia.html) com sua própria linguagem de consulta chamada QLC. Tanto o Elixir quanto o Erlang também têm várias bibliotecas para trabalhar com uma ampla gama de armazenamentos de dados populares.
 
-The data world is your oyster, but we won't be covering these options in these guides.
+O mundo dos dados é sua ostra, mas não cobriremos essas opções nestes guias.
 
 [`cast/3`]: `Ecto.Changeset.cast/3`
 [`from/2`]: `Ecto.Query.from/2`

@@ -1,43 +1,43 @@
 # Plug
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia espera que você tenha passado pelos [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
+> **Requisito**: Este guia espera que você tenha passado pelo [guia do ciclo de vida da requisição](request_lifecycle.html).
 
-Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and center. We interact with plugs at every step of the request life-cycle, and the core Phoenix components like endpoints, routers, and controllers are all just plugs internally. Let's jump in and find out just what makes Plug so special.
+O Plug está no coração da camada HTTP do Phoenix, e o Phoenix coloca o Plug em destaque. Nós interagimos com plugs em cada etapa do ciclo de vida da requisição, e os componentes principais do Phoenix como endpoints, roteadores e controladores são internamente apenas plugs. Vamos mergulhar e descobrir o que torna o Plug tão especial.
 
-[Plug](https://github.com/elixir-lang/plug) is a specification for composable modules in between web applications. It is also an abstraction layer for connection adapters of different web servers. The basic idea of Plug is to unify the concept of a "connection" that we operate on. This differs from other HTTP middleware layers such as Rack, where the request and response are separated in the middleware stack.
+[Plug](https://github.com/elixir-lang/plug) é uma especificação para módulos componíveis entre aplicações web. Também é uma camada de abstração para adaptadores de conexão de diferentes servidores web. A ideia básica do Plug é unificar o conceito de "conexão" com o qual operamos. Isso difere de outras camadas de middleware HTTP como o Rack, onde a requisição e a resposta são separadas na pilha de middleware.
 
-At the simplest level, the Plug specification comes in two flavors: *function plugs* and *module plugs*.
+No nível mais simples, a especificação Plug vem em dois sabores: *plugs de função* e *plugs de módulo*.
 
-## Function plugs
+## Plugs de função
 
-In order to act as a plug, a function needs to:
+Para atuar como um plug, uma função precisa:
 
-1. accept a connection struct (`%Plug.Conn{}`) as its first argument, and connection options as its second one;
-2. return a connection struct.
+1. aceitar uma struct de conexão (`%Plug.Conn{}`) como seu primeiro argumento e opções de conexão como seu segundo;
+2. retornar uma struct de conexão.
 
-Any function that meets these two criteria will do. Here's an example.
+Qualquer função que atenda a esses dois critérios servirá. Aqui está um exemplo.
 
 ```elixir
 def introspect(conn, _opts) do
   IO.puts """
-  Verb: #{inspect(conn.method)}
+  Verbo: #{inspect(conn.method)}
   Host: #{inspect(conn.host)}
-  Headers: #{inspect(conn.req_headers)}
+  Cabeçalhos: #{inspect(conn.req_headers)}
   """
 
   conn
 end
 ```
 
-This function does the following:
+Esta função faz o seguinte:
 
-  1. It receives a connection and options (that we do not use)
-  2. It prints some connection information to the terminal
-  3. It returns the connection
+  1. Ela recebe uma conexão e opções (que não utilizamos)
+  2. Imprime algumas informações da conexão no terminal
+  3. Retorna a conexão
 
-Pretty simple, right? Let's see this function in action by adding it to our endpoint in `lib/hello_web/endpoint.ex`. We can plug it anywhere, so let's do it by inserting `plug :introspect` right before we delegate the request to the router:
+Bem simples, certo? Vamos ver esta função em ação adicionando-a ao nosso endpoint em `lib/hello_web/endpoint.ex`. Podemos conectá-la em qualquer lugar, então vamos fazer isso inserindo `plug :introspect` logo antes de delegarmos a requisição ao roteador:
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -48,9 +48,9 @@ defmodule HelloWeb.Endpoint do
 
   def introspect(conn, _opts) do
     IO.puts """
-    Verb: #{inspect(conn.method)}
+    Verbo: #{inspect(conn.method)}
     Host: #{inspect(conn.host)}
-    Headers: #{inspect(conn.req_headers)}
+    Cabeçalhos: #{inspect(conn.req_headers)}
     """
 
     conn
@@ -58,26 +58,26 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-Function plugs are plugged by passing the function name as an atom. To try the plug out, go back to your browser and fetch [http://localhost:4000](http://localhost:4000). You should see something like this printed in your shell terminal:
+Os plugs de função são conectados passando o nome da função como um átomo. Para testar o plug, volte ao seu navegador e acesse [http://localhost:4000](http://localhost:4000). Você deverá ver algo como isto impresso no seu terminal shell:
 
 ```console
-Verb: "GET"
+Verbo: "GET"
 Host: "localhost"
-Headers: [...]
+Cabeçalhos: [...]
 ```
 
-Our plug simply prints information from the connection. Although our initial plug is very simple, you can do virtually anything you want inside of it. To learn about all fields available in the connection and all of the functionality associated to it, see the [documentation for `Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html).
+Nosso plug simplesmente imprime informações da conexão. Embora nosso plug inicial seja muito simples, você pode fazer praticamente qualquer coisa que quiser dentro dele. Para aprender sobre todos os campos disponíveis na conexão e todas as funcionalidades associadas a ela, consulte a [documentação de `Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html).
 
-Now let's look at the other plug variant, the module plugs.
+Agora vamos olhar a outra variante de plug, os plugs de módulo.
 
-## Module plugs
+## Plugs de módulo
 
-Module plugs are another type of plug that let us define a connection transformation in a module. The module only needs to implement two functions:
+Plugs de módulo são outro tipo de plug que nos permite definir uma transformação de conexão em um módulo. O módulo só precisa implementar duas funções:
 
-- [`init/1`] which initializes any arguments or options to be passed to [`call/2`]
-- [`call/2`] which carries out the connection transformation. [`call/2`] is just a function plug that we saw earlier
+- [`init/1`] que inicializa quaisquer argumentos ou opções a serem passados para [`call/2`]
+- [`call/2`] que realiza a transformação da conexão. [`call/2`] é apenas um plug de função que vimos anteriormente
 
-To see this in action, let's write a module plug that puts the `:locale` key and value into the connection for downstream use in other plugs, controller actions, and our views. Put the contents below in a file named `lib/hello_web/plugs/locale.ex`:
+Para ver isso em ação, vamos escrever um plug de módulo que coloca a chave e o valor `:locale` na conexão para uso downstream em outros plugs, ações do controlador e nossas views. Coloque o conteúdo abaixo em um arquivo chamado `lib/hello_web/plugs/locale.ex`:
 
 ```elixir
 defmodule HelloWeb.Plugs.Locale do
@@ -97,7 +97,7 @@ defmodule HelloWeb.Plugs.Locale do
 end
 ```
 
-To give it a try, let's add this module plug to our router, by appending `plug HelloWeb.Plugs.Locale, "en"`  to our `:browser` pipeline in `lib/hello_web/router.ex`:
+Para experimentá-lo, vamos adicionar este plug de módulo ao nosso roteador, anexando `plug HelloWeb.Plugs.Locale, "en"` ao nosso pipeline `:browser` em `lib/hello_web/router.ex`:
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -114,25 +114,25 @@ defmodule HelloWeb.Router do
   ...
 ```
 
-In the [`init/1`] callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple [`call/2`] function heads to validate the locale in the params, and fall back to `"en"` if there is no match. The [`assign/3`] is a part of the `Plug.Conn` module and it's how we store values in the `conn` data structure.
+No callback [`init/1`], passamos um locale padrão para usar se nenhum estiver presente nos parâmetros. Também usamos pattern matching para definir múltiplas cabeças de função [`call/2`] para validar o locale nos parâmetros e recorrer a `"en"` se não houver uma correspondência. O [`assign/3`] é parte do módulo `Plug.Conn` e é como armazenamos valores na estrutura de dados `conn`.
 
-To see the assign in action, go to the template in `lib/hello_web/controllers/page_html/home.html.heex` and add the following code after the closing of the `</h1>` tag:
+Para ver a atribuição em ação, vá para o template em `lib/hello_web/controllers/page_html/home.html.heex` e adicione o seguinte código após o fechamento da tag `</h1>`:
 
 ```heex
 <p>Locale: {@locale}</p>
 ```
 
-Go to [http://localhost:4000/](http://localhost:4000/) and you should see the locale exhibited. Visit [http://localhost:4000/?locale=fr](http://localhost:4000/?locale=fr) and you should see the assign changed to `"fr"`. Someone can use this information alongside [Gettext](https://hexdocs.pm/gettext/Gettext.html) to provide a fully internationalized web application.
+Vá para [http://localhost:4000/](http://localhost:4000/) e você deverá ver o locale exibido. Visite [http://localhost:4000/?locale=fr](http://localhost:4000/?locale=fr) e deverá ver a atribuição alterada para `"fr"`. Alguém pode usar essa informação junto com [Gettext](https://hexdocs.pm/gettext/Gettext.html) para fornecer uma aplicação web totalmente internacionalizada.
 
-That's all there is to Plug. Phoenix embraces the plug design of composable transformations all the way up and down the stack. Let's see some examples!
+Isso é tudo que há para o Plug. O Phoenix abraça o design de plug de transformações componíveis em toda a pilha. Vamos ver alguns exemplos!
 
-## Where to plug
+## Onde conectar (plug)
 
-The endpoint, router, and controllers in Phoenix accept plugs.
+O endpoint, o roteador e os controladores no Phoenix aceitam plugs.
 
-### Endpoint plugs
+### Plugs de endpoint
 
-Endpoints organize all the plugs common to every request, and apply them before dispatching into the router with its custom pipelines. We added a plug to the endpoint like this:
+Os endpoints organizam todos os plugs comuns a cada requisição e os aplicam antes de despachar para o roteador com seus pipelines personalizados. Adicionamos um plug ao endpoint assim:
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -142,25 +142,25 @@ defmodule HelloWeb.Endpoint do
   plug HelloWeb.Router
 ```
 
-The default endpoint plugs do quite a lot of work. Here they are in order:
+Os plugs de endpoint padrão fazem bastante trabalho. Aqui estão eles em ordem:
 
-- `Plug.Static` - serves static assets. Since this plug comes before the logger, requests for static assets are not logged.
+- `Plug.Static` - serve ativos estáticos. Como este plug vem antes do logger, as requisições de ativos estáticos não são registradas.
 
-- `Phoenix.LiveDashboard.RequestLogger` - sets up the *Request Logger* for Phoenix LiveDashboard, this will allow you to have the option to either pass a query parameter to stream requests logs or to enable/disable a cookie that streams requests logs from your dashboard.
+- `Phoenix.LiveDashboard.RequestLogger` - configura o *Request Logger* para o Phoenix LiveDashboard, isso permitirá que você tenha a opção de passar um parâmetro de consulta para transmitir logs de requisições ou ativar/desativar um cookie que transmite logs de requisições do seu painel.
 
-- `Plug.RequestId` - generates a unique request ID for each request.
+- `Plug.RequestId` - gera um ID de requisição único para cada requisição.
 
-- `Plug.Telemetry` - adds instrumentation points so Phoenix can log the request path, status code and request time by default.
+- `Plug.Telemetry` - adiciona pontos de instrumentação para que o Phoenix possa registrar o caminho da requisição, código de status e tempo de requisição por padrão.
 
-- `Plug.Parsers` - parses the request body when a known parser is available. By default, this plug can handle URL-encoded, multipart and JSON content (with `Jason`). The request body is left untouched if the request content-type cannot be parsed.
+- `Plug.Parsers` - analisa o corpo da requisição quando um analisador conhecido está disponível. Por padrão, este plug pode lidar com conteúdo codificado em URL, multipart e JSON (com `Jason`). O corpo da requisição fica intocado se o tipo de conteúdo da requisição não puder ser analisado.
 
-- `Plug.MethodOverride` - converts the request method to PUT, PATCH or DELETE for POST requests with a valid `_method` parameter.
+- `Plug.MethodOverride` - converte o método da requisição para PUT, PATCH ou DELETE para requisições POST com um parâmetro `_method` válido.
 
-- `Plug.Head` - converts HEAD requests to GET requests.
+- `Plug.Head` - converte requisições HEAD para requisições GET.
 
-- `Plug.Session` - a plug that sets up session management. Note that `fetch_session/2` must still be explicitly called before using the session, as this plug just sets up how the session is fetched.
+- `Plug.Session` - um plug que configura o gerenciamento de sessão. Observe que `fetch_session/2` ainda deve ser explicitamente chamado antes de usar a sessão, pois este plug apenas configura como a sessão é buscada.
 
-In the middle of the endpoint, there is also a conditional block:
+No meio do endpoint, há também um bloco condicional:
 
 ```elixir
   if code_reloading? do
@@ -171,15 +171,15 @@ In the middle of the endpoint, there is also a conditional block:
   end
 ```
 
-This block is only executed in development. It enables:
+Este bloco é executado apenas em desenvolvimento. Ele habilita:
 
-* live reloading - if you change a CSS file, they are updated in-browser without refreshing the page;
-* [code reloading](`Phoenix.CodeReloader`) - so we can see changes to our application without restarting the server;
-* check repo status - which makes sure our database is up to date, raising a readable and actionable error otherwise.
+* recarregamento ao vivo - se você alterar um arquivo CSS, eles são atualizados no navegador sem atualizar a página;
+* [recarregamento de código](`Phoenix.CodeReloader`) - para que possamos ver mudanças em nossa aplicação sem reiniciar o servidor;
+* verificação do status do repositório - que garante que nosso banco de dados esteja atualizado, levantando um erro legível e acionável caso contrário.
 
-### Router plugs
+### Plugs de roteador
 
-In the router, we can declare plugs inside pipelines:
+No roteador, podemos declarar plugs dentro de pipelines:
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -202,13 +202,13 @@ defmodule HelloWeb.Router do
   end
 ```
 
-Routes are defined inside scopes and scopes may pipe through multiple pipelines. Once a route matches, Phoenix invokes all plugs defined in all pipelines associated to that route. For example, accessing "/" will pipe through the `:browser` pipeline, consequently invoking all of its plugs.
+As rotas são definidas dentro de escopos e os escopos podem passar por múltiplos pipelines. Uma vez que uma rota corresponde, o Phoenix invoca todos os plugs definidos em todos os pipelines associados a essa rota. Por exemplo, acessar "/" passará pelo pipeline `:browser`, consequentemente invocando todos os seus plugs.
 
-As we will see in the [routing guide](routing.html), the pipelines themselves are plugs. There, we will also discuss all plugs in the `:browser` pipeline.
+Como veremos no [guia de roteamento](routing.html), os próprios pipelines são plugs. Lá, também discutiremos todos os plugs no pipeline `:browser`.
 
-### Controller plugs
+### Plugs de controlador
 
-Finally, controllers are plugs too, so we can do:
+Finalmente, os controladores também são plugs, então podemos fazer:
 
 ```elixir
 defmodule HelloWeb.PageController do
@@ -217,7 +217,7 @@ defmodule HelloWeb.PageController do
   plug HelloWeb.Plugs.Locale, "en"
 ```
 
-In particular, controller plugs provide a feature that allows us to execute plugs only within certain actions. For example, you can do:
+Em particular, os plugs de controlador fornecem um recurso que nos permite executar plugs apenas dentro de certas ações. Por exemplo, você pode fazer:
 
 ```elixir
 defmodule HelloWeb.PageController do
@@ -226,11 +226,11 @@ defmodule HelloWeb.PageController do
   plug HelloWeb.Plugs.Locale, "en" when action in [:index]
 ```
 
-And the plug will only be executed for the `index` action.
+E o plug será executado apenas para a ação `index`.
 
-## Plugs as composition
+## Plugs como composição
 
-By abiding by the plug contract, we turn an application request into a series of explicit transformations. It doesn't stop there. To really see how effective Plug's design is, let's imagine a scenario where we need to check a series of conditions and then either redirect or halt if a condition fails. Without plug, we would end up with something like this:
+Ao aderir ao contrato de plug, transformamos uma requisição de aplicação em uma série de transformações explícitas. Não para por aí. Para realmente ver quão eficaz é o design do Plug, vamos imaginar um cenário onde precisamos verificar uma série de condições e então redirecionar ou parar se uma condição falhar. Sem plug, acabaríamos com algo como isso:
 
 ```elixir
 defmodule HelloWeb.MessageController do
@@ -241,22 +241,22 @@ defmodule HelloWeb.MessageController do
       {:ok, user} ->
         case find_message(params["id"]) do
           nil ->
-            conn |> put_flash(:info, "That message wasn't found") |> redirect(to: ~p"/")
+            conn |> put_flash(:info, "Essa mensagem não foi encontrada") |> redirect(to: ~p"/")
           message ->
             if Authorizer.can_access?(user, message) do
               render(conn, :show, page: message)
             else
-              conn |> put_flash(:info, "You can't access that page") |> redirect(to: ~p"/")
+              conn |> put_flash(:info, "Você não pode acessar essa página") |> redirect(to: ~p"/")
             end
         end
       :error ->
-        conn |> put_flash(:info, "You must be logged in") |> redirect(to: ~p"/")
+        conn |> put_flash(:info, "Você deve estar logado") |> redirect(to: ~p"/")
     end
   end
 end
 ```
 
-Notice how just a few steps of authentication and authorization require complicated nesting and duplication? Let's improve this with a couple of plugs.
+Perceba como apenas alguns passos de autenticação e autorização requerem aninhamento e duplicação complicados? Vamos melhorar isso com alguns plugs.
 
 ```elixir
 defmodule HelloWeb.MessageController do
@@ -275,14 +275,14 @@ defmodule HelloWeb.MessageController do
       {:ok, user} ->
         assign(conn, :user, user)
       :error ->
-        conn |> put_flash(:info, "You must be logged in") |> redirect(to: ~p"/") |> halt()
+        conn |> put_flash(:info, "Você deve estar logado") |> redirect(to: ~p"/") |> halt()
     end
   end
 
   defp fetch_message(conn, _) do
     case find_message(conn.params["id"]) do
       nil ->
-        conn |> put_flash(:info, "That message wasn't found") |> redirect(to: ~p"/") |> halt()
+        conn |> put_flash(:info, "Essa mensagem não foi encontrada") |> redirect(to: ~p"/") |> halt()
       message ->
         assign(conn, :message, message)
     end
@@ -292,17 +292,17 @@ defmodule HelloWeb.MessageController do
     if Authorizer.can_access?(conn.assigns[:user], conn.assigns[:message]) do
       conn
     else
-      conn |> put_flash(:info, "You can't access that page") |> redirect(to: ~p"/") |> halt()
+      conn |> put_flash(:info, "Você não pode acessar essa página") |> redirect(to: ~p"/") |> halt()
     end
   end
 end
 ```
 
-To make this all work, we converted the nested blocks of code and used `halt(conn)` whenever we reached a failure path. The `halt(conn)` functionality is essential here: it tells Plug that the next plug should not be invoked.
+Para fazer tudo isso funcionar, convertemos os blocos aninhados de código e usamos `halt(conn)` sempre que chegávamos a um caminho de falha. A funcionalidade `halt(conn)` é essencial aqui: ela diz ao Plug que o próximo plug não deve ser invocado.
 
-At the end of the day, by replacing the nested blocks of code with a flattened series of plug transformations, we are able to achieve the same functionality in a much more composable, clear, and reusable way.
+No final do dia, ao substituir os blocos aninhados de código por uma série plana de transformações de plug, somos capazes de alcançar a mesma funcionalidade de uma maneira muito mais componível, clara e reutilizável.
 
-To learn more about plugs, see the documentation for the [Plug project](`Plug`), which provides many built-in plugs and functionalities.
+Para saber mais sobre plugs, consulte a documentação do [projeto Plug](`Plug`), que fornece muitos plugs e funcionalidades integradas.
 
 [`init/1`]: `c:Plug.init/1`
 [`call/2`]: `c:Plug.call/2`

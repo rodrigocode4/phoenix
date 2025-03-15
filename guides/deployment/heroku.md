@@ -1,82 +1,82 @@
-# Deploying on Heroku
+# Implantação no Heroku
 
-## What we'll need
+## O que vamos precisar
 
-The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
+A única coisa que vamos precisar para este guia é uma aplicação Phoenix funcionando. Para aqueles que precisam de uma aplicação simples para implantar, por favor siga o guia [Up and Running](https://hexdocs.pm/phoenix/up_and_running.html).
 
-## Goals
+## Objetivos
 
-Our main goal for this guide is to get a Phoenix application running on Heroku.
+Nosso principal objetivo para este guia é colocar uma aplicação Phoenix em funcionamento no Heroku.
 
-## Limitations
+## Limitações
 
-Heroku is a great platform and Elixir performs well on it. However, you may run into limitations if you plan to leverage advanced features provided by Elixir and Phoenix, such as:
+O Heroku é uma excelente plataforma e o Elixir funciona bem nela. No entanto, você pode encontrar limitações se planeja utilizar recursos avançados fornecidos pelo Elixir e Phoenix, como:
 
-- Connections are limited.
-  - Heroku [limits the number of simultaneous connections](https://devcenter.heroku.com/articles/http-routing#request-concurrency) as well as the [duration of each connection](https://devcenter.heroku.com/articles/limits#http-timeouts). It is common to use Elixir for real-time apps which need lots of concurrent, persistent connections, and Phoenix is capable of [handling over 2 million connections on a single server](https://www.phoenixframework.org/blog/the-road-to-2-million-websocket-connections).
+- As conexões são limitadas.
+  - O Heroku [limita o número de conexões simultâneas](https://devcenter.heroku.com/articles/http-routing#request-concurrency) bem como a [duração de cada conexão](https://devcenter.heroku.com/articles/limits#http-timeouts). É comum usar Elixir para aplicativos em tempo real que precisam de muitas conexões persistentes e simultâneas, e o Phoenix é capaz de [lidar com mais de 2 milhões de conexões em um único servidor](https://www.phoenixframework.org/blog/the-road-to-2-million-websocket-connections).
 
-- Distributed clustering is not possible.
-  - Heroku [firewalls dynos off from one another](https://devcenter.heroku.com/articles/dynos#networking). This means things like [distributed Phoenix channels](https://dockyard.com/blog/2016/01/28/running-elixir-and-phoenix-projects-on-a-cluster-of-nodes) and [distributed tasks](https://hexdocs.pm/elixir/distributed-tasks.html) will need to rely on something like Redis instead of Elixir's built-in distribution.
+- Clustering distribuído não é possível.
+  - O Heroku [isola os dynos uns dos outros com firewall](https://devcenter.heroku.com/articles/dynos#networking). Isso significa que coisas como [canais Phoenix distribuídos](https://dockyard.com/blog/2016/01/28/running-elixir-and-phoenix-projects-on-a-cluster-of-nodes) e [tarefas distribuídas](https://hexdocs.pm/elixir/distributed-tasks.html) precisarão confiar em algo como Redis em vez da distribuição incorporada do Elixir.
 
-- In-memory state such as those in [Agents](https://hexdocs.pm/elixir/agents.html), [GenServers](https://hexdocs.pm/elixir/genservers.html), and [ETS](https://hexdocs.pm/elixir/erlang-term-storage.html) will be lost every 24 hours.
-  - Heroku [restarts dynos](https://devcenter.heroku.com/articles/dynos#restarting) every 24 hours regardless of whether the node is healthy.
+- Estados em memória como aqueles em [Agents](https://hexdocs.pm/elixir/agents.html), [GenServers](https://hexdocs.pm/elixir/genservers.html) e [ETS](https://hexdocs.pm/elixir/erlang-term-storage.html) serão perdidos a cada 24 horas.
+  - O Heroku [reinicia os dynos](https://devcenter.heroku.com/articles/dynos#restarting) a cada 24 horas, independentemente de o nó estar saudável ou não.
 
-- [The built-in observer](https://hexdocs.pm/elixir/debugging.html#observer) can't be used with Heroku.
-  - Heroku does allow for connection into your dyno, but you won't be able to use the observer to watch the state of your dyno.
+- [O observer integrado](https://hexdocs.pm/elixir/debugging.html#observer) não pode ser usado com o Heroku.
+  - O Heroku permite a conexão ao seu dyno, mas você não poderá usar o observer para monitorar o estado do seu dyno.
 
-If you are just getting started, or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
+Se você está apenas começando, ou não espera usar os recursos acima, o Heroku deve ser suficiente para suas necessidades. Por exemplo, se você está migrando uma aplicação existente rodando no Heroku para Phoenix, mantendo um conjunto semelhante de recursos, o Elixir funcionará tão bem ou até melhor que sua stack atual.
 
-If you want a platform-as-a-service without these limitations, try [Gigalixir](gigalixir.html). If you would rather deploy to a cloud platform, such as EC2, Google Cloud, etc, consider using `mix release`.
+Se você quer um serviço de plataforma sem essas limitações, experimente [Gigalixir](gigalixir.html). Se você prefere implantar em uma plataforma de nuvem, como EC2, Google Cloud, etc., considere usar `mix release`.
 
-## Steps
+## Passos
 
-Let's separate this process into a few steps, so we can keep track of where we are.
+Vamos separar este processo em algumas etapas, para que possamos acompanhar onde estamos.
 
-- Initialize Git repository
-- Sign up for Heroku
-- Install the Heroku Toolbelt
-- Create and set up Heroku application
-- Make our project ready for Heroku
-- Deploy time!
-- Useful Heroku commands
+- Inicializar repositório Git
+- Cadastrar-se no Heroku
+- Instalar o Heroku Toolbelt
+- Criar e configurar a aplicação Heroku
+- Preparar nosso projeto para o Heroku
+- Hora da implantação!
+- Comandos úteis do Heroku
 
-## Initializing Git repository
+## Inicializando repositório Git
 
-[Git](https://git-scm.com/) is a popular decentralized revision control system and is also used to deploy apps to Heroku.
+[Git](https://git-scm.com/) é um popular sistema de controle de revisão descentralizado e também é usado para implantar aplicativos no Heroku.
 
-Before we can push to Heroku, we'll need to initialize a local Git repository and commit our files to it. We can do so by running the following commands in our project directory:
+Antes de podermos enviar para o Heroku, precisaremos inicializar um repositório Git local e confirmar nossos arquivos nele. Podemos fazer isso executando os seguintes comandos em nosso diretório de projeto:
 
 ```console
 $ git init
 $ git add .
-$ git commit -m "Initial commit"
+$ git commit -m "Commit inicial"
 ```
 
-Heroku offers some great information on how it is using Git [here](https://devcenter.heroku.com/articles/git#prerequisites-install-git-and-the-heroku-cli).
+O Heroku oferece algumas ótimas informações sobre como está usando o Git [aqui](https://devcenter.heroku.com/articles/git#prerequisites-install-git-and-the-heroku-cli).
 
-## Signing up for Heroku
+## Cadastrando-se no Heroku
 
-Signing up to Heroku is very simple, just head over to [https://signup.heroku.com/](https://signup.heroku.com/) and fill in the form.
+Cadastrar-se no Heroku é muito simples, basta acessar [https://signup.heroku.com/](https://signup.heroku.com/) e preencher o formulário.
 
-The Free plan will give us one web [dyno](https://devcenter.heroku.com/articles/dynos) and one worker dyno, as well as a PostgreSQL and Redis instance for free.
+O plano gratuito nos dará um [dyno](https://devcenter.heroku.com/articles/dynos) web e um dyno worker, bem como uma instância PostgreSQL e Redis de graça.
 
-These are meant to be used for testing and development, and come with some limitations. In order to run a production application, please consider upgrading to a paid plan.
+Estes são destinados a serem usados para testes e desenvolvimento, e vêm com algumas limitações. Para executar uma aplicação de produção, considere atualizar para um plano pago.
 
-## Installing the Heroku Toolbelt
+## Instalando o Heroku Toolbelt
 
-Once we have signed up, we can download the correct version of the Heroku Toolbelt for our system [here](https://toolbelt.heroku.com/).
+Depois de nos cadastrarmos, podemos baixar a versão correta do Heroku Toolbelt para nosso sistema [aqui](https://toolbelt.heroku.com/).
 
-The Heroku CLI, part of the Toolbelt, is useful to create Heroku applications, list currently running dynos for an existing application, tail logs or run one-off commands (mix tasks for instance).
+O Heroku CLI, parte do Toolbelt, é útil para criar aplicativos Heroku, listar dynos atualmente em execução para um aplicativo existente, ver logs ou executar comandos únicos (tarefas mix, por exemplo).
 
-## Create and Set Up Heroku Application
+## Criar e Configurar Aplicação Heroku
 
-There are two different ways to deploy a Phoenix app on Heroku. We could use Heroku buildpacks or their container stack. The difference between these two approaches is in how we tell Heroku to treat our build. In buildpack case, we need to update our apps configuration on Heroku to use Phoenix/Elixir specific buildpacks. On container approach, we have more control on how we want to set up our app, and we can define our container image using `Dockerfile` and `heroku.yml`. This section will explore the buildpack approach. In order to use Dockerfile, it is often recommended to convert our app to use releases, which we will describe later on.
+Existem duas maneiras diferentes de implantar um aplicativo Phoenix no Heroku. Podemos usar buildpacks do Heroku ou sua stack de contêiner. A diferença entre essas duas abordagens está em como dizemos ao Heroku para tratar nossa compilação. No caso do buildpack, precisamos atualizar a configuração dos nossos aplicativos no Heroku para usar buildpacks específicos de Phoenix/Elixir. Na abordagem de contêiner, temos mais controle sobre como queremos configurar nosso aplicativo, e podemos definir nossa imagem de contêiner usando `Dockerfile` e `heroku.yml`. Esta seção explorará a abordagem de buildpack. Para usar o Dockerfile, geralmente é recomendado converter nosso aplicativo para usar releases, o que descreveremos mais tarde.
 
-### Create Application
+### Criar Aplicação
 
-A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. Phoenix requires 2 buildpacks to run on Heroku, the first adds basic Elixir support and the second adds Phoenix specific commands.
+Um [buildpack](https://devcenter.heroku.com/articles/buildpacks) é uma maneira conveniente de empacotar suporte de framework e/ou runtime. Phoenix requer 2 buildpacks para rodar no Heroku, o primeiro adiciona suporte básico para Elixir e o segundo adiciona comandos específicos do Phoenix.
 
-With the Toolbelt installed, let's create the Heroku application. We will do so using the latest available version of the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir):
+Com o Toolbelt instalado, vamos criar a aplicação Heroku. Faremos isso usando a versão mais recente disponível do [buildpack Elixir](https://github.com/HashNuke/heroku-buildpack-elixir):
 
 ```console
 $ heroku create --buildpack hashnuke/elixir
@@ -85,38 +85,38 @@ Setting buildpack to hashnuke/elixir... done
 https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysterious-meadow-6277.git
 ```
 
-> Note: the first time we use a Heroku command, it may prompt us to log in. If this happens, just enter the email and password you specified during signup.
+> Nota: na primeira vez que usamos um comando Heroku, ele pode nos pedir para fazer login. Se isso acontecer, basta inserir o e-mail e a senha que você especificou durante o cadastro.
 
-> Note: the name of the Heroku application is the random string after "Creating" in the output above (mysterious-meadow-6277). This will be unique, so expect to see a different name from "mysterious-meadow-6277".
+> Nota: o nome da aplicação Heroku é a string aleatória após "Creating" na saída acima (mysterious-meadow-6277). Isso será único, então espere ver um nome diferente de "mysterious-meadow-6277".
 
-> Note: the URL in the output is the URL to our application. If we open it in our browser now, we will get the default Heroku welcome page.
+> Nota: a URL na saída é a URL para nossa aplicação. Se a abrirmos em nosso navegador agora, obteremos a página de boas-vindas padrão do Heroku.
 
-> Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
+> Nota: se não tivéssemos inicializado nosso repositório Git antes de executarmos o comando `heroku create`, não teríamos nosso repositório remoto Heroku configurado corretamente neste momento. Podemos configurar isso manualmente executando: `heroku git:remote -a [nome-do-nosso-app].`
 
-The buildpack uses a predefined Elixir and Erlang version, but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
+O buildpack usa uma versão predefinida de Elixir e Erlang, mas para evitar surpresas ao implantar, é melhor listar explicitamente a versão de Elixir e Erlang que queremos em produção para ser a mesma que estamos usando durante o desenvolvimento ou em seus servidores de integração contínua. Isso é feito criando um arquivo de configuração chamado `elixir_buildpack.config` no diretório raiz do seu projeto com sua versão alvo de Elixir e Erlang:
 
 ```console
-# Elixir version
+# Versão do Elixir
 elixir_version=1.14.0
 
-# Erlang version
+# Versão do Erlang
 # https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
 erlang_version=24.3
 
-# Invoke assets.deploy defined in your mix.exs to deploy assets with esbuild
-# Note we nuke the esbuild executable from the image
+# Invoca assets.deploy definido no seu mix.exs para implantar assets com esbuild
+# Note que eliminamos o executável esbuild da imagem
 hook_post_compile="eval mix assets.deploy && rm -f _build/esbuild*"
 ```
 
-Finally, let's tell the build pack how to start our webserver. Create a file named `Procfile` at the root of your project:
+Finalmente, vamos dizer ao buildpack como iniciar nosso servidor web. Crie um arquivo chamado `Procfile` na raiz do seu projeto:
 
 ```console
 web: mix phx.server
 ```
 
-### Optional: Node, npm, and the Phoenix Static buildpack
+### Opcional: Node, npm e o buildpack Phoenix Static
 
-By default, Phoenix uses `esbuild` and manages all assets for you. However, if you are using `node` and `npm`, you will need to install the [Phoenix Static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) to handle them:
+Por padrão, o Phoenix usa `esbuild` e gerencia todos os assets para você. No entanto, se você estiver usando `node` e `npm`, precisará instalar o [buildpack Phoenix Static](https://github.com/gjaldon/heroku-buildpack-phoenix-static) para lidar com eles:
 
 ```console
 $ heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
@@ -125,7 +125,7 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
   2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
 ```
 
-When using this buildpack, you want to delegate all asset bundling to `npm`. So you must remove the `hook_post_compile` configuration from your `elixir_buildpack.config` and move it to the deploy script of your `assets/package.json`. Something like this:
+Ao usar este buildpack, você quer delegar todo o empacotamento de assets para o `npm`. Portanto, você deve remover a configuração `hook_post_compile` do seu `elixir_buildpack.config` e movê-la para o script de implantação do seu `assets/package.json`. Algo assim:
 
 ```javascript
 {
@@ -137,29 +137,29 @@ When using this buildpack, you want to delegate all asset bundling to `npm`. So 
 }
 ```
 
-The Phoenix Static buildpack uses a predefined Node.js version, but to avoid surprises when deploying, it is best to explicitly list the Node.js version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node.js:
+O buildpack Phoenix Static usa uma versão predefinida do Node.js, mas para evitar surpresas ao implantar, é melhor listar explicitamente a versão do Node.js que queremos em produção para ser a mesma que estamos usando durante o desenvolvimento ou em seus servidores de integração contínua. Isso é feito criando um arquivo de configuração chamado `phoenix_static_buildpack.config` no diretório raiz do seu projeto com sua versão alvo do Node.js:
 
 ```text
-# Node.js version
+# Versão do Node.js
 node_version=10.20.1
 ```
 
-Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+Consulte a [seção de configuração](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) para obter detalhes completos. Você pode fazer seu próprio script de compilação personalizado, mas por enquanto, usaremos o [padrão fornecido](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
 
-Finally, note that since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure the Phoenix Static buildpack comes last.
+Finalmente, observe que, como estamos usando vários buildpacks, você pode encontrar um problema em que a sequência está fora de ordem (o buildpack Elixir precisa ser executado antes do buildpack Phoenix Static). [A documentação do Heroku](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explica isso melhor, mas você precisará garantir que o buildpack Phoenix Static venha por último.
 
-## Making our Project ready for Heroku
+## Preparando nosso Projeto para o Heroku
 
-Every new Phoenix project ships with a config file `config/runtime.exs` (formerly `config/prod.secret.exs`) which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices ([12-factor apps](https://12factor.net/)), so the only work left for us to do is to configure URLs and SSL.
+Todo novo projeto Phoenix vem com um arquivo de configuração `config/runtime.exs` (anteriormente `config/prod.secret.exs`) que carrega configurações e segredos de [variáveis de ambiente](https://devcenter.heroku.com/articles/config-vars). Isso está alinhado com as melhores práticas do Heroku ([apps 12-factor](https://12factor.net/)), então o único trabalho que resta para nós é configurar URLs e SSL.
 
-First let's tell Phoenix to only use the SSL version of the website. Find the endpoint config in your `config/prod.exs`:
+Primeiro, vamos dizer ao Phoenix para usar apenas a versão SSL do site. Encontre a configuração do endpoint em seu `config/prod.exs`:
 
 ```elixir
 config :scaffold, ScaffoldWeb.Endpoint,
   url: [port: 443, scheme: "https"],
 ```
 
-... and add `force_ssl`
+... e adicione `force_ssl`
 
 ```elixir
 config :scaffold, ScaffoldWeb.Endpoint,
@@ -167,18 +167,18 @@ config :scaffold, ScaffoldWeb.Endpoint,
   force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
-`force_ssl` need to be set here because it is a _compile_ time config. It will not work when set from `runtime.exs`.
+`force_ssl` precisa ser definido aqui porque é uma configuração de _compilação_. Não funcionará quando definido a partir de `runtime.exs`.
 
-Then in your `config/runtime.exs` (formerly `config/prod.secret.exs`):
+Então, em seu `config/runtime.exs` (anteriormente `config/prod.secret.exs`):
 
-... add `host`
+... adicione `host`
 
 ```elixir
 config :scaffold, ScaffoldWeb.Endpoint,
   url: [host: host, port: 443, scheme: "https"]
 ```
 
-and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
+e descomente a linha `# ssl: true,` em sua configuração de repositório. Ficará assim:
 
 ```elixir
 config :hello, Hello.Repo,
@@ -187,7 +187,7 @@ config :hello, Hello.Repo,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 ```
 
-Finally, if you plan on using websockets, then we will need to decrease the timeout for the websocket transport in `lib/hello_web/endpoint.ex`. If you do not plan on using websockets, then leaving it set to false is fine. You can find further explanation of the options available at the [documentation](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#socket/3-websocket-configuration).
+Finalmente, se você planeja usar websockets, então precisaremos diminuir o tempo limite para o transporte websocket em `lib/hello_web/endpoint.ex`. Se você não planeja usar websockets, então deixá-lo definido como falso está bem. Você pode encontrar mais explicações sobre as opções disponíveis na [documentação](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#socket/3-websocket-configuration).
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -200,48 +200,48 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-Also set the host in Heroku:
+Defina também o host no Heroku:
 
 ```console
 $ heroku config:set PHX_HOST="mysterious-meadow-6277.herokuapp.com"
 ```
 
-This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55-second timeout window.
+Isso garante que quaisquer conexões ociosas sejam fechadas pelo Phoenix antes de atingirem a janela de tempo limite de 55 segundos do Heroku.
 
-## Creating Environment Variables in Heroku
+## Criando Variáveis de Ambiente no Heroku
 
-The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the Heroku toolbelt:
+A variável de configuração `DATABASE_URL` é criada automaticamente pelo Heroku quando adicionamos o [addon Heroku Postgres](https://elements.heroku.com/addons/heroku-postgresql). Podemos criar o banco de dados via Heroku toolbelt:
 
 ```console
 $ heroku addons:create heroku-postgresql:mini
 ```
 
-Now we set the `POOL_SIZE` config var:
+Agora definimos a variável de configuração `POOL_SIZE`:
 
 ```console
 $ heroku config:set POOL_SIZE=18
 ```
 
-This value should be just under the number of available connections, leaving a couple open for migrations and mix tasks. The mini database allows 20 connections, so we set this number to 18. If additional dynos will share the database, reduce the `POOL_SIZE` to give each dyno an equal share.
+Este valor deve ser um pouco abaixo do número de conexões disponíveis, deixando algumas abertas para migrações e tarefas mix. O banco de dados mini permite 20 conexões, então definimos esse número para 18. Se dynos adicionais compartilharem o banco de dados, reduza o `POOL_SIZE` para dar a cada dyno uma parte igual.
 
-When running a mix task later (after we have pushed the project to Heroku) you will also want to limit its pool size like so:
+Ao executar uma tarefa mix posteriormente (depois de termos enviado o projeto para o Heroku), você também desejará limitar o tamanho do pool assim:
 
 ```console
 $ heroku run "POOL_SIZE=2 mix hello.task"
 ```
 
-So that Ecto does not attempt to open more than the available connections.
+Para que o Ecto não tente abrir mais do que as conexões disponíveis.
 
-We still have to create the `SECRET_KEY_BASE` config based on a random string. First, use `mix phx.gen.secret` to get a new secret:
+Ainda precisamos criar a configuração `SECRET_KEY_BASE` com base em uma string aleatória. Primeiro, use `mix phx.gen.secret` para obter um novo segredo:
 
 ```console
 $ mix phx.gen.secret
 xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
 
-Your random string will be different; don't use this example value.
+Sua string aleatória será diferente; não use este valor de exemplo.
 
-Now set it in Heroku:
+Agora defina-o no Heroku:
 
 ```console
 $ heroku config:set SECRET_KEY_BASE="xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53"
@@ -249,18 +249,18 @@ Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
 
-## Deploy Time!
+## Hora da Implantação!
 
-Our project is now ready to be deployed on Heroku.
+Nosso projeto agora está pronto para ser implantado no Heroku.
 
-Let's commit all our changes:
+Vamos confirmar todas as nossas alterações:
 
 ```console
 $ git add elixir_buildpack.config
-$ git commit -a -m "Use production config from Heroku ENV variables and decrease socket timeout"
+$ git commit -a -m "Usar configuração de produção de variáveis ENV do Heroku e diminuir o tempo limite do socket"
 ```
 
-And deploy:
+E implantar:
 
 ```console
 $ git push heroku main
@@ -326,19 +326,19 @@ To https://git.heroku.com/mysterious-meadow-6277.git
  * [new branch]      master -> master
 ```
 
-Typing `heroku open` in the terminal should launch a browser with the Phoenix welcome page opened. In the event that you are using Ecto to access a database, you will also need to run migrations after the first deploy:
+Digitar `heroku open` no terminal deve iniciar um navegador com a página de boas-vindas do Phoenix aberta. No caso de você estar usando Ecto para acessar um banco de dados, você também precisará executar migrações após a primeira implantação:
 
 ```console
 $ heroku run "POOL_SIZE=2 mix ecto.migrate"
 ```
 
-And that's it!
+E é isso!
 
-## Deploying to Heroku using the container stack
+## Implantando no Heroku usando a stack de contêiner
 
-### Create Heroku application
+### Criar aplicação Heroku
 
-Set the stack of your app to `container`, this allows us to use `Dockerfile` to define our app setup.
+Defina a stack do seu aplicativo para `container`, isso nos permite usar o `Dockerfile` para definir a configuração do nosso aplicativo.
 
 ```console
 $ heroku create
@@ -346,7 +346,7 @@ Creating app... done, ⬢ mysterious-meadow-6277
 $ heroku stack:set container
 ```
 
-Add a new `heroku.yml` file to your root folder. In this file you can define addons used by your app, how to build the image and what configs are passed to the image. You can learn more about Heroku's `heroku.yml` options [here](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml). Here is a sample:
+Adicione um novo arquivo `heroku.yml` à sua pasta raiz. Neste arquivo, você pode definir addons usados pelo seu aplicativo, como construir a imagem e quais configurações são passadas para a imagem. Você pode aprender mais sobre as opções do `heroku.yml` do Heroku [aqui](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml). Aqui está um exemplo:
 
 ```yaml
 setup:
@@ -362,53 +362,53 @@ build:
     DATABASE_URL: $DATABASE_URL
 ```
 
-### Set up releases and Dockerfile
+### Configurar releases e Dockerfile
 
-Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow the [releases docs](releases.html). At the end of the guide, there is a sample Dockerfile file you can use.
+Agora precisamos definir um `Dockerfile` na pasta raiz do seu projeto que contém sua aplicação. Recomendamos usar releases ao fazer isso, pois o release nos permitirá construir um contêiner apenas com as partes do Erlang e Elixir que realmente usamos. Siga a [documentação de releases](releases.html). No final do guia, há um exemplo de arquivo Dockerfile que você pode usar.
 
-Once you have the image definition set up, you can push your app to heroku and you can see it starts building the image and deploy it.
+Uma vez que você tenha a definição da imagem configurada, você pode enviar seu aplicativo para o Heroku e pode ver que ele começa a construir a imagem e implantá-la.
 
-## Useful Heroku Commands
+## Comandos Úteis do Heroku
 
-We can look at the logs of our application by running the following command in our project directory:
+Podemos olhar os logs da nossa aplicação executando o seguinte comando em nosso diretório de projeto:
 
 ```console
-$ heroku logs # use --tail if you want to tail them
+$ heroku logs # use --tail se quiser acompanhá-los
 ```
 
-We can also start an IEx session attached to our terminal for experimenting in our app's environment:
+Também podemos iniciar uma sessão IEx conectada ao nosso terminal para experimentar no ambiente do nosso aplicativo:
 
 ```console
 $ heroku run "POOL_SIZE=2 iex -S mix"
 ```
 
-In fact, we can run anything using the `heroku run` command, like the Ecto migration task from above:
+Na verdade, podemos executar qualquer coisa usando o comando `heroku run`, como a tarefa de migração do Ecto acima:
 
 ```console
 $ heroku run "POOL_SIZE=2 mix ecto.migrate"
 ```
 
-## Connecting to your dyno
+## Conectando-se ao seu dyno
 
-Heroku gives you the ability to connect to your dyno with an IEx shell which allows running Elixir code such as database queries.
+O Heroku oferece a capacidade de se conectar ao seu dyno com um shell IEx que permite executar código Elixir, como consultas de banco de dados.
 
-- Modify the `web` process in your Procfile to run a named node:
+- Modifique o processo `web` em seu Procfile para executar um nó nomeado:
 
   ```text
   web: elixir --sname server -S mix phx.server
   ```
 
-- Redeploy to Heroku
-- Connect to the dyno with `heroku ps:exec` (if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`)
-- Launch an iex session with `iex --sname console --remsh server`
+- Reimplante no Heroku
+- Conecte-se ao dyno com `heroku ps:exec` (se você tiver vários aplicativos no mesmo repositório, precisará especificar o nome do aplicativo ou o nome remoto com `--app NOME_APP` ou `--remote NOME_REMOTO`)
+- Inicie uma sessão iex com `iex --sname console --remsh server`
 
-You have an iex session into your dyno!
+Você tem uma sessão iex em seu dyno!
 
-## Troubleshooting
+## Solução de Problemas
 
-### Compilation Error
+### Erro de Compilação
 
-Occasionally, an application will compile locally, but not on Heroku. The compilation error on Heroku will look something like this:
+Ocasionalmente, um aplicativo será compilado localmente, mas não no Heroku. O erro de compilação no Heroku será algo como isto:
 
 ```console
 remote: == Compilation error on file lib/postgrex/connection.ex ==
@@ -428,17 +428,17 @@ remote:
 To https://git.heroku.com/mysterious-meadow-6277.git
 ```
 
-This has to do with stale dependencies which are not getting recompiled properly. It's possible to force Heroku to recompile all dependencies on each deploy, which should fix this problem. The way to do it is to add a new file called `elixir_buildpack.config` at the root of the application. The file should contain this line:
+Isso tem a ver com dependências obsoletas que não estão sendo recompiladas corretamente. É possível forçar o Heroku a recompilar todas as dependências em cada implantação, o que deve resolver esse problema. A maneira de fazer isso é adicionar um novo arquivo chamado `elixir_buildpack.config` na raiz da aplicação. O arquivo deve conter esta linha:
 
 ```text
 always_rebuild=true
 ```
 
-Commit this file to the repository and try to push again to Heroku.
+Confirme este arquivo no repositório e tente enviar novamente para o Heroku.
 
-### Connection Timeout Error
+### Erro de Tempo Limite de Conexão
 
-If you are constantly getting connection timeouts while running `heroku run` this could mean that your internet provider has blocked port number 5000:
+Se você estiver constantemente obtendo tempos limite de conexão ao executar `heroku run`, isso pode significar que seu provedor de internet bloqueou o número da porta 5000:
 
 ```console
 heroku run "POOL_SIZE=2 mix myapp.task"
@@ -446,7 +446,7 @@ Running POOL_SIZE=2 mix myapp.task on mysterious-meadow-6277... !
 ETIMEDOUT: connect ETIMEDOUT 50.19.103.36:5000
 ```
 
-You can overcome this by adding `detached` option to run command:
+Você pode superar isso adicionando a opção `detached` ao comando run:
 
 ```console
 heroku run:detached "POOL_SIZE=2 mix ecto.migrate"

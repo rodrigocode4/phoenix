@@ -1,48 +1,48 @@
-# Up and Running
+# Instalação e Execução
 
-There are two mechanisms to start a new Phoenix application: the express option, supported on some OSes, and via `mix phx.new`. Let's check it out.
+Existem dois mecanismos para iniciar uma nova aplicação Phoenix: a opção express, suportada em alguns sistemas operacionais, e via `mix phx.new`. Vamos verificar.
 
 ## Phoenix Express
 
-A single command will get you up and running in seconds:
+Um único comando vai colocá-lo em funcionamento em segundos:
 
-For macOS/Ubuntu:
+Para macOS/Ubuntu:
 
 ```bash
 $ curl https://new.phoenixframework.org/myapp | sh
 ```
 
-For Windows PowerShell:
+Para Windows PowerShell:
 
 ```cmd
 > curl.exe -fsSO https://new.phoenixframework.org/myapp.bat; .\myapp.bat
 ```
 
-The above will install Erlang, Elixir, and Phoenix, and generate a fresh Phoenix application. It will also automatically pick one of PostgreSQL or MySQL as the database, and fallback to SQLite if none of them are available. Once the command above, it will open up a Phoenix application, with the steps necessary to complete your installation.
+O comando acima instalará Erlang, Elixir e Phoenix, e gerará uma nova aplicação Phoenix. Também escolherá automaticamente PostgreSQL ou MySQL como banco de dados, e utilizará o SQLite como alternativa se nenhum dos anteriores estiver disponível. Uma vez que o comando acima for concluído, ele abrirá uma aplicação Phoenix, com os passos necessários para completar sua instalação.
 
-> Your Phoenix application name is taken from the path.
+> O nome de sua aplicação Phoenix é retirado do caminho.
 
-If your operating system is not supported, or the command above fails, don't fret! You can still start your Phoenix application using `mix phx.new`.
+Se o seu sistema operacional não for suportado, ou se o comando acima falhar, não se preocupe! Você ainda pode iniciar sua aplicação Phoenix usando `mix phx.new`.
 
 ## Via `mix phx.new`
 
-In order to create a new Phoenix application, you will need to install Erlang, Elixir, and Phoenix. See the [Installation Guide](installation.html) for more information. If you share your application with someone, they will also need to follow the Installation Guide steps to set it all up.
+Para criar uma nova aplicação Phoenix, você precisará instalar Erlang, Elixir e Phoenix. Veja o [Guia de Instalação](installation.html) para mais informações. Se você compartilhar sua aplicação com alguém, essa pessoa também precisará seguir os passos do Guia de Instalação para configurar tudo.
 
-Once you are ready, you can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
+Quando estiver pronto, você pode executar `mix phx.new` de qualquer diretório para iniciar nossa aplicação Phoenix. Phoenix aceitará um caminho absoluto ou relativo para o diretório do nosso novo projeto. Assumindo que o nome da nossa aplicação é `hello`, vamos executar o seguinte comando:
 
 ```console
 $ mix phx.new hello
 ```
 
-> By default, `mix phx.new` includes a number of optional dependencies, for example:
+> Por padrão, `mix phx.new` inclui várias dependências opcionais, por exemplo:
 >
-> - [Ecto](ecto.html) for communicating with a data store, such as PostgreSQL, MySQL, and others. You can skip this with `--no-ecto`.
+> - [Ecto](ecto.html) para comunicação com um armazenamento de dados, como PostgreSQL, MySQL e outros. Você pode pular isso com `--no-ecto`.
 >
-> - [Phoenix.HTML](https://hexdocs.pm/phoenix_html/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com), and [Esbuild](https://esbuild.github.io) for HTML applications. You can skip them with the `--no-html` and `--no-assets` flags.
+> - [Phoenix.HTML](https://hexdocs.pm/phoenix_html/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com) e [Esbuild](https://esbuild.github.io) para aplicações HTML. Você pode pular eles com as flags `--no-html` e `--no-assets`.
 >
-> - [Phoenix.LiveView](https://hexdocs.pm/phoenix_live_view/) for building realtime and interactive web applications. You can skip this with `--no-live`.
+> - [Phoenix.LiveView](https://hexdocs.pm/phoenix_live_view/) para construir aplicações web em tempo real e interativas. Você pode pular isso com `--no-live`.
 >
-> Read the [Mix Tasks Guide](mix_tasks.html#phoenix-specific-mix-tasks) for the full list of things that can be excluded, among other options.
+> Leia o [Guia de Tarefas Mix](mix_tasks.html#phoenix-specific-mix-tasks) para a lista completa de coisas que podem ser excluídas, entre outras opções.
 
 ```console
 mix phx.new hello
@@ -54,11 +54,11 @@ mix phx.new hello
 Fetch and install dependencies? [Yn]
 ```
 
-Phoenix generates the directory structure and all the files we will need for our application.
+Phoenix gera a estrutura de diretórios e todos os arquivos que precisaremos para nossa aplicação.
 
-> Phoenix promotes the usage of git as version control software: among the generated files we find a `.gitignore`. We can `git init` our repository, and immediately add and commit all that hasn't been marked ignored.
+> Phoenix promove o uso do git como software de controle de versão: entre os arquivos gerados encontramos um `.gitignore`. Podemos iniciar nosso repositório com `git init`, e imediatamente adicionar e commitar tudo o que não foi marcado como ignorado.
 
-When it's done, it will ask us if we want it to install our dependencies for us. Let's say yes to that.
+Quando terminar, ele nos perguntará se queremos que ele instale nossas dependências. Vamos dizer sim a isso.
 
 ```console
 Fetch and install dependencies? [Yn] Y
@@ -83,17 +83,17 @@ You can also run your app inside IEx (Interactive Elixir) as:
     $ iex -S mix phx.server
 ```
 
-Once our dependencies are installed, the task will prompt us to change into our project directory and start our application.
+Uma vez que nossas dependências são instaladas, a tarefa nos pedirá para mudar para o diretório do nosso projeto e iniciar nossa aplicação.
 
-Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the [Mix Tasks Guide](mix_tasks.html#ecto-specific-mix-tasks) to learn more about the `mix ecto.create` task.
+Phoenix assume que nosso banco de dados PostgreSQL terá uma conta de usuário `postgres` com as permissões corretas e uma senha "postgres". Se esse não for o caso, consulte o [Guia de Tarefas Mix](mix_tasks.html#ecto-specific-mix-tasks) para saber mais sobre a tarefa `mix ecto.create`.
 
-Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've just created:
+Ok, vamos tentar. Primeiro, vamos mudar para o diretório `hello/` que acabamos de criar:
 
 ```console
 $ cd hello
 ```
 
-Now we'll create our database:
+Agora vamos criar nosso banco de dados:
 
 ```console
 $ mix ecto.create
@@ -102,21 +102,21 @@ Generated hello app
 The database for Hello.Repo has been created
 ```
 
-In case the database could not be created, see the guides for the [`mix ecto.create`](mix_tasks.html#mix-ecto-create) for general troubleshooting.
+Caso o banco de dados não possa ser criado, consulte os guias para o [`mix ecto.create`](mix_tasks.html#mix-ecto-create) para solução geral de problemas.
 
-> Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
+> Nota: se esta é a primeira vez que você está executando este comando, o Phoenix também pode pedir para instalar o Rebar. Prossiga com a instalação, pois o Rebar é usado para construir pacotes Erlang.
 
-And finally, we'll start the Phoenix server:
+E finalmente, vamos iniciar o servidor Phoenix:
 
 ```console
 $ mix phx.server
-[info] Running HelloWeb.Endpoint with cowboy 2.9.0 at 127.0.0.1:4000 (http)
+[info] Running HelloWeb.Endpoint with Bandit 1.5.7 at 127.0.0.1:4000 (http)
 [info] Access HelloWeb.Endpoint at http://localhost:4000
 [watch] build finished, watching for changes...
 ...
 ```
 
-If we choose not to have Phoenix install our dependencies when we generate a new application, the `mix phx.new` task will prompt us to take the necessary steps when we do want to install them.
+Se optarmos por não deixar o Phoenix instalar nossas dependências quando geramos uma nova aplicação, a tarefa `mix phx.new` nos solicitará que tomemos as medidas necessárias quando quisermos instalá-las.
 
 ```console
 Fetch and install dependencies? [Yn] n
@@ -139,14 +139,14 @@ You can also run your app inside IEx (Interactive Elixir) as:
     $ iex -S mix phx.server
 ```
 
-By default, Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
+Por padrão, Phoenix aceita requisições na porta 4000. Se apontarmos nosso navegador favorito para [http://localhost:4000](http://localhost:4000), devemos ver a página de boas-vindas do Phoenix Framework.
 
 ![Phoenix Welcome Page](assets/images/welcome-to-phoenix.png)
 
-If your screen looks like the image above, congratulations! You now have a working Phoenix application. In case you can't see the page above, try accessing it via [http://127.0.0.1:4000](http://127.0.0.1:4000) and later make sure your OS has defined "localhost" as "127.0.0.1".
+Se sua tela se parece com a imagem acima, parabéns! Agora você tem uma aplicação Phoenix funcionando. Caso você não consiga ver a página acima, tente acessá-la via [http://127.0.0.1:4000](http://127.0.0.1:4000) e posteriormente verifique se seu sistema operacional definiu "localhost" como "127.0.0.1".
 
-To stop it, we hit `ctrl-c` twice.
+Para pará-lo, pressionamos `ctrl-c` duas vezes.
 
-Now you are ready to explore the world provided by Phoenix! See [our community page](community.html) for books, screencasts, courses, and more.
+Agora você está pronto para explorar o mundo fornecido pelo Phoenix! Veja [nossa página da comunidade](community.html) para livros, screencasts, cursos e mais.
 
-Alternatively, you can continue reading these guides to have a quick introduction into all the parts that make your Phoenix application. If that's the case, you can read the guides in any order or start with our guide that explains the [Phoenix directory structure](directory_structure.html).
+Alternativamente, você pode continuar lendo estes guias para ter uma rápida introdução a todas as partes que compõem sua aplicação Phoenix. Se for o caso, você pode ler os guias em qualquer ordem ou começar com nosso guia que explica a [estrutura de diretórios do Phoenix](directory_structure.html).

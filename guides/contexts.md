@@ -1,43 +1,42 @@
-# Contexts
+# Contextos
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia espera que você tenha passado pelos [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
+> **Requisito**: Este guia espera que você tenha passado pelo [guia de ciclo de vida da requisição](request_lifecycle.html).
 
-> **Requirement**: This guide expects that you have gone through the [Ecto guide](ecto.html).
+> **Requisito**: Este guia espera que você tenha passado pelo [guia do Ecto](ecto.html).
 
-So far, we've built pages, wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
+Até agora, construímos páginas, conectamos ações do controlador através de nossos roteadores e aprendemos como o Ecto permite que os dados sejam validados e persistidos. Agora é hora de amarrar tudo isso escrevendo recursos voltados para a web que interagem com nossa aplicação Elixir mais ampla.
 
-When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but we often assign specific responsibilities to certain modules and give them names: such as controllers, routers, and live views.
+Ao construir um projeto Phoenix, estamos, antes de tudo, construindo uma aplicação Elixir. O trabalho do Phoenix é fornecer uma interface web para nossa aplicação Elixir. Naturalmente, compomos nossas aplicações com módulos e funções, mas frequentemente atribuímos responsabilidades específicas a certos módulos e lhes damos nomes: como controladores, roteadores e live views.
 
-As everything else, contexts in Phoenix are modules, but with the distinct reponsibility of drawing boundaries and grouping functionality. In other words, they allow us to reason and discuss about application design.
+Como todo o resto, contextos no Phoenix são módulos, mas com a responsabilidade distinta de estabelecer limites e agrupar funcionalidades. Em outras palavras, eles nos permitem raciocinar e discutir sobre o design da aplicação.
 
-## Thinking about contexts
+## Pensando sobre contextos
 
-Contexts are dedicated modules that expose and group related functionality. For example, anytime you call Elixir's standard library, be it `Logger.info/1` or `Stream.map/2`, you are accessing different contexts. Internally, Elixir's logger is made of multiple modules, but we never interact with those modules directly. We call the `Logger` module the context, exactly because it exposes and groups all of the logging functionality.
+Contextos são módulos dedicados que expõem e agrupam funcionalidades relacionadas. Por exemplo, sempre que você chama a biblioteca padrão do Elixir, seja `Logger.info/1` ou `Stream.map/2`, você está acessando diferentes contextos. Internamente, o logger do Elixir é composto por vários módulos, mas nunca interagimos com esses módulos diretamente. Chamamos o módulo `Logger` de contexto, exatamente porque ele expõe e agrupa toda a funcionalidade de logging.
 
-By giving modules that expose and group related functionality the name **contexts**, we help developers identify these patterns and talk about them. At the end of the day, contexts are just modules, as are your controllers, views, etc.
+Ao dar aos módulos que expõem e agrupam funcionalidades relacionadas o nome de **contextos**, ajudamos os desenvolvedores a identificar esses padrões e falar sobre eles. No final das contas, contextos são apenas módulos, assim como seus controladores, views, etc.
 
-In Phoenix, contexts often encapsulate data access and data validation. They often talk to a database or APIs. Overall, think of them as boundaries to decouple and isolate parts of your application. Let's use these ideas to build out our web application. Our goal is to build an ecommerce system where we can showcase products, allow users to add products to their cart, and complete their orders.
+No Phoenix, contextos frequentemente encapsulam acesso a dados e validação de dados. Eles frequentemente se comunicam com um banco de dados ou APIs. Em geral, pense neles como limites para desacoplar e isolar partes de sua aplicação. Vamos usar essas ideias para construir nossa aplicação web. Nosso objetivo é construir um sistema de e-commerce onde possamos mostrar produtos, permitir que os usuários adicionem produtos ao carrinho e completem seus pedidos.
 
-> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully writing their applications. This guide focuses on those readers.
+### Adicionando um Contexto de Catálogo
 
-### Adding a Catalog Context
+Uma plataforma de e-commerce tem acoplamento de amplo alcance em todo o código, por isso é importante pensar em escrever módulos bem definidos. Com isso em mente, nosso objetivo é construir uma API de catálogo de produtos que lide com a criação, atualização e exclusão dos produtos disponíveis em nosso sistema. Começaremos com os recursos básicos de exibição de nossos produtos, e adicionaremos recursos de carrinho de compras mais tarde. Veremos como começar com uma base sólida com limites isolados nos permite crescer nossa aplicação naturalmente à medida que adicionamos funcionalidades.
 
-An ecommerce platform has wide-reaching coupling across a codebase so it's important to think about writing well-defined modules. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, and we will add shopping cart features later. We'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
+O Phoenix inclui os geradores `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, e `mix phx.gen.context` que aplicam as ideias de isolar funcionalidades em nossas aplicações em contextos. Esses geradores são uma ótima maneira de começar rapidamente enquanto o Phoenix nos orienta na direção certa para crescer nossa aplicação. Vamos usar essas ferramentas para nosso novo contexto de catálogo de produtos.
 
-Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new product catalog context.
+Para executar os geradores de contexto, precisamos criar um nome de módulo que agrupe a funcionalidade relacionada que estamos construindo. No [guia do Ecto](ecto.html), vimos como podemos usar Changesets e Repos para validar e persistir esquemas de usuário, mas não integramos isso com nossa aplicação como um todo. Na verdade, não pensamos sobre onde um "usuário" em nossa aplicação deveria viver. Vamos dar um passo atrás e pensar nas diferentes partes do nosso sistema. Sabemos que teremos produtos para mostrar nas páginas para venda, junto com descrições, preços, etc. Junto com a venda de produtos, sabemos que precisaremos suportar carrinhos, checkout de pedidos e assim por diante. Embora os produtos que estão sendo comprados estejam relacionados aos processos de carrinho e checkout, exibir um produto e gerenciar a *exibição* de nossos produtos é claramente diferente de rastrear o que um usuário colocou em seu carrinho ou como um pedido é feito. Um contexto `Catalog` é um lugar natural para o gerenciamento dos detalhes de nosso produto e a exibição desses produtos que temos à venda.
 
-In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have products to showcase on pages for sale, along with descriptions, pricing, etc. Along with selling products, we know we'll need to support carting, order checkout, and so on. While the products being purchased are related to the cart and checkout processes, showcasing a product and managing the *exhibition* of our products is distinctly different than tracking what a user has placed in their cart or how an order is placed. A `Catalog` context is a natural place for the management of our product details and the showcasing of those products we have for sale.
+> #### Uma nota sobre escopos {: .info}
+>
+> Muitos geradores suportam a opção `--scope` para gerar recursos com escopo. Por exemplo, um escopo pode ser a conta de usuário logada da sua aplicação. Recursos com escopo são úteis quando diferentes entidades devem ver diferentes recursos. Se um recurso tiver escopo por usuário, o usuário só poderá gerenciar e ver seus próprios recursos. Para nosso catálogo, queremos que todos vejam os mesmos produtos, portanto usamos `--no-scope`. Note que se nenhum escopo for configurado, `--no-scope` é o padrão. Veremos escopos em usuário mais tarde neste guia. Você também pode aprender mais sobre escopos no guia [Escopos](scopes.html).
 
-> #### Naming things is hard {: .tip}
-> If you're stuck when trying to come up with a context name when the grouped functionality in your system isn't yet clear, you can simply use the plural form of the resource you're creating. For example, a `Products` context for managing products. As you grow your application and the parts of your system become clear, you can simply rename the context to a more refined one.
-
-To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting products, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
+Para iniciar nosso contexto de catálogo, usaremos `mix phx.gen.html` que cria um módulo de contexto que envolve o acesso ao Ecto para criar, atualizar e excluir produtos, junto com arquivos web como controladores e templates para a interface web em nosso contexto. Execute o seguinte comando na raiz do seu projeto:
 
 ```console
 $ mix phx.gen.html Catalog Product products title:string \
-description:string price:decimal views:integer
+description:string price:decimal views:integer --no-scope
 
 * creating lib/hello_web/controllers/product_controller.ex
 * creating lib/hello_web/controllers/product_html/edit.html.heex
@@ -48,7 +47,7 @@ description:string price:decimal views:integer
 * creating lib/hello_web/controllers/product_html.ex
 * creating test/hello_web/controllers/product_controller_test.exs
 * creating lib/hello/catalog/product.ex
-* creating priv/repo/migrations/20210201185747_create_products.exs
+* creating priv/repo/migrations/20250201185747_create_products.exs
 * creating lib/hello/catalog.ex
 * injecting lib/hello/catalog.ex
 * creating test/hello/catalog_test.exs
@@ -60,13 +59,12 @@ Add the resource to your browser scope in lib/hello_web/router.ex:
 
     resources "/products", ProductController
 
-
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
 ```
 
-Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/catalog.ex` file and our product schema in the directory of the same name. Note the difference between `lib/hello` and `lib/hello_web`. We have a `Catalog` module to serve as the public API for product catalog functionality, as well as a `Catalog.Product` struct, which is an Ecto schema for casting and validating product data. Phoenix also provided web and context tests for us, it also included test helpers for creating entities via the `Hello.Catalog` context, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
+O Phoenix gerou os arquivos web conforme esperado em `lib/hello_web/`. Também podemos ver que nossos arquivos de contexto foram gerados dentro de um arquivo `lib/hello/catalog.ex` e nosso esquema de produto no diretório de mesmo nome. Observe a diferença entre `lib/hello` e `lib/hello_web`. Temos um módulo `Catalog` para servir como API pública para a funcionalidade do catálogo de produtos, bem como uma estrutura `Catalog.Product`, que é um esquema Ecto para lançar e validar dados de produtos. O Phoenix também forneceu testes web e de contexto para nós, incluiu auxiliares de teste para criar entidades via contexto `Hello.Catalog`, que veremos mais tarde. Por enquanto, vamos seguir as instruções e adicionar a rota de acordo com as instruções do console, em `lib/hello_web/router.ex`:
 
 ```diff
   scope "/", HelloWeb do
@@ -77,9 +75,9 @@ Phoenix generated the web files as expected in `lib/hello_web/`. We can also see
   end
 ```
 
-With the new route in place, Phoenix reminds us to update our repo by running `mix ecto.migrate`, but first we need to make a few tweaks to the generated migration in `priv/repo/migrations/*_create_products.exs`:
+Com a nova rota no lugar, o Phoenix nos lembra de atualizar nosso repositório executando `mix ecto.migrate`, mas primeiro precisamos fazer alguns ajustes na migração gerada em `priv/repo/migrations/*_create_products.exs`:
 
-```elixir
+```diff
   def change do
     create table(:products) do
       add :title, :string
@@ -93,24 +91,24 @@ With the new route in place, Phoenix reminds us to update our repo by running `m
     end
 ```
 
-We modified our price column to a specific precision of 15, scale of 6, along with a not-null constraint. This ensures we store currency with proper precision for any mathematical operations we may perform. Next, we added a default value and not-null constraint to our views count. With our changes in place, we're ready to migrate up our database. Let's do that now:
+Modificamos nossa coluna de preço para uma precisão específica de 15, escala de 6, junto com uma restrição não-nula. Isso garante que armazenemos moeda com precisão adequada para quaisquer operações matemáticas que possamos realizar. Em seguida, adicionamos um valor padrão e restrição não-nula para nossa contagem de visualizações. Com nossas mudanças no lugar, estamos prontos para migrar nosso banco de dados. Vamos fazer isso agora:
 
 ```console
 $ mix ecto.migrate
-14:09:02.260 [info] == Running 20210201185747 Hello.Repo.Migrations.CreateProducts.change/0 forward
+14:09:02.260 [info] == Running 20250201185747 Hello.Repo.Migrations.CreateProducts.change/0 forward
 
 14:09:02.262 [info] create table products
 
-14:09:02.273 [info] == Migrated 20210201185747 in 0.0s
+14:09:02.273 [info] == Migrated 20250201185747 in 0.0s
 ```
 
-Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/products](http://localhost:4000/products). Let's follow the "New Product" link and click the "Save" button without providing any input. We should be greeted with the following output:
+Antes de mergulharmos no código gerado, vamos iniciar o servidor com `mix phx.server` e visitar [http://localhost:4000/products](http://localhost:4000/products). Vamos seguir o link "New Product" e clicar no botão "Save" sem fornecer nenhum input. Devemos ser recebidos com a seguinte saída:
 
 ```text
 Oops, something went wrong! Please check the errors below.
 ```
 
-When we submit the form, we can see all the validation errors inline with the inputs. Nice! Out of the box, the context generator included the schema fields in our form template and we can see our default validations for required inputs are in effect. Let's enter some example product data and resubmit the form:
+Quando enviamos o formulário, podemos ver todos os erros de validação em linha com os inputs. Legal! De cara, o gerador de contexto incluiu os campos do esquema em nosso template de formulário e podemos ver que nossas validações padrão para inputs obrigatórios estão em vigor. Vamos inserir alguns dados de exemplo do produto e reenviar o formulário:
 
 ```text
 Product created successfully.
@@ -121,13 +119,21 @@ Price: 15.000000
 Views: 0
 ```
 
-If we follow the "Back" link, we get a list of all products, which should contain the one we just created. Likewise, we can update this record or delete it. Now that we've seen how it works in the browser, it's time to take a look at the generated code.
+Se seguirmos o link "Back", obteremos uma lista de todos os produtos, que deve conter o que acabamos de criar. Da mesma forma, podemos atualizar este registro ou excluí-lo. Agora que vimos como funciona no navegador, é hora de dar uma olhada no código gerado.
 
-## Starting with generators
+> #### Nomear coisas é difícil {: .tip}
+>
+> Ao iniciar uma aplicação web, pode ser difícil traçar linhas ou nomear seus diferentes contextos, especialmente quando o domínio com o qual você está trabalhando não é tão bem estabelecido quanto o e-commerce.
+>
+> Se você está preso ao definir ou nomear um contexto, você pode simplesmente criar um novo contexto usando a forma plural do recurso que está criando. Por exemplo, um contexto `Products` para gerenciar produtos. Você descobrirá que, mesmo nesses casos, você descobrirá organicamente outros recursos que pertencem ao contexto `Products`, como categorias ou galerias de imagens.
+>
+> À medida que suas aplicações crescem e as diferentes partes do seu sistema se tornam claras, você pode simplesmente renomear o contexto ou mover recursos. A beleza dos módulos Elixir é que eles são stateless, então movê-los deve ser simplesmente uma questão de renomear os nomes dos módulos (e renomear os arquivos para consistência).
 
-That little `mix phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting products in our catalog. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mindset when designing your application.
+## Começando com geradores
 
-Let's first check out the `ProductController` that was generated in `lib/hello_web/controllers/product_controller.ex`:
+Aquele pequeno comando `mix phx.gen.html` trouxe uma surpresa. Obtivemos muita funcionalidade pronta para uso para criar, atualizar e excluir produtos em nosso catálogo. Isso está longe de ser um aplicativo completo, mas lembre-se, geradores são, antes de tudo, ferramentas de aprendizado e um ponto de partida para você começar a construir recursos reais. A geração de código não pode resolver todos os seus problemas, mas ensinará a você os pormenores do Phoenix e o orientará para a mentalidade adequada ao projetar sua aplicação.
+
+Vamos primeiro verificar o `ProductController` que foi gerado em `lib/hello_web/controllers/product_controller.ex`:
 
 ```elixir
 defmodule HelloWeb.ProductController do
@@ -166,11 +172,11 @@ defmodule HelloWeb.ProductController do
 end
 ```
 
-We've seen how controllers work in our [controller guide](controllers.html), so the code probably isn't too surprising. What is worth noticing is how our controller calls into the `Catalog` context. We can see that the `index` action fetches a list of products with `Catalog.list_products/0`, and how products are persisted in the `create` action with `Catalog.create_product/1`. We haven't yet looked at the catalog context, so we don't yet know how product fetching and creation is happening under the hood – *but that's the point*. Our Phoenix controller is the web interface into our greater application. It shouldn't be concerned with the details of how products are fetched from the database or persisted into storage. We only care about telling our application to perform some work for us. This is great because our business logic and storage details are decoupled from the web layer of our application. If we move to a full-text storage engine later for fetching products instead of a SQL query, our controller doesn't need to be changed. Likewise, we can reuse our context code from any other interface in our application, be it a channel, mix task, or long-running process importing CSV data.
+Vimos como os controladores funcionam em nosso [guia de controladores](controllers.html), então o código provavelmente não é muito surpreendente. O que vale a pena notar é como nosso controlador chama o contexto `Catalog`. Podemos ver que a ação `index` busca uma lista de produtos com `Catalog.list_products/0`, e como os produtos são persistidos na ação `create` com `Catalog.create_product/1`. Ainda não olhamos para o contexto do catálogo, então ainda não sabemos como a busca e a criação de produtos estão acontecendo sob o capô – *mas esse é o ponto*. Nosso controlador Phoenix é a interface web para nossa aplicação maior. Ele não deve se preocupar com os detalhes de como os produtos são buscados do banco de dados ou persistidos no armazenamento. Só nos preocupamos em dizer à nossa aplicação para realizar algum trabalho para nós. Isso é ótimo porque nossa lógica de negócios e detalhes de armazenamento estão desacoplados da camada web de nossa aplicação. Se mudarmos mais tarde para um mecanismo de armazenamento de texto completo para buscar produtos em vez de uma consulta SQL, nosso controlador não precisa ser alterado. Da mesma forma, podemos reutilizar nosso código de contexto de qualquer outra interface em nossa aplicação, seja um canal, uma tarefa de mix ou um processo de longa duração importando dados CSV.
 
-In the case of our `create` action, when we successfully create a product, we use `Phoenix.Controller.put_flash/3` to show a success message, and then we redirect to the router's product show page. Conversely, if `Catalog.create_product/1` fails, we render our `"new.html"` template and pass along the Ecto changeset for the template to lift error messages from.
+No caso de nossa ação `create`, quando criamos um produto com sucesso, usamos `Phoenix.Controller.put_flash/3` para mostrar uma mensagem de sucesso e, em seguida, redirecionamos para a página de exibição do produto no roteador. Por outro lado, se `Catalog.create_product/1` falhar, renderizamos nosso template `"new.html"` e passamos o changeset do Ecto para que o template extraia mensagens de erro.
 
-Next, let's dig deeper and check out our `Catalog` context in `lib/hello/catalog.ex`:
+Em seguida, vamos nos aprofundar e verificar nosso contexto `Catalog` em `lib/hello/catalog.ex`:
 
 ```elixir
 defmodule Hello.Catalog do
@@ -199,9 +205,9 @@ defmodule Hello.Catalog do
 end
 ```
 
-This module will be the public API for all product catalog functionality in our system. For example, in addition to product detail management, we may also handle product category classification and product variants for things like optional sizing, trims, etc. If we look at the `list_products/0` function, we can see the private details of product fetching. And it's super simple. We have a call to `Repo.all(Product)`. We saw how Ecto repo queries worked in the [Ecto guide](ecto.html), so this call should look familiar. Our `list_products` function is a generalized function name specifying the *intent* of our code – namely to list products. The details of that intent where we use our Repo to fetch the products from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
+Este módulo será a API pública para todas as funcionalidades do catálogo de produtos em nosso sistema. Por exemplo, além do gerenciamento de detalhes do produto, também podemos lidar com a classificação de categorias de produtos e variantes de produtos para coisas como dimensionamento opcional, acabamentos, etc. Se olharmos para a função `list_products/0`, podemos ver os detalhes privados da busca de produtos. E é super simples. Temos uma chamada para `Repo.all(Product)`. Vimos como as consultas do repo Ecto funcionavam no [guia do Ecto](ecto.html), então esta chamada deve parecer familiar. Nossa função `list_products` é um nome de função generalizado especificando a *intenção* do nosso código – ou seja, listar produtos. Os detalhes dessa intenção, onde usamos nosso Repo para buscar os produtos do nosso banco de dados PostgreSQL, estão ocultos de nossos chamadores. Este é um tema comum que veremos reiterado ao usar os geradores do Phoenix. O Phoenix nos empurrará a pensar sobre onde temos diferentes responsabilidades em nossa aplicação e, em seguida, a envolver essas diferentes áreas com módulos e funções bem nomeados que tornam a intenção do nosso código clara, ao mesmo tempo em que encapsulam os detalhes.
 
-Now we know how data is fetched, but how are products persisted? Let's take a look at the `Catalog.create_product/1` function:
+Agora sabemos como os dados são buscados, mas como os produtos são persistidos? Vamos dar uma olhada na função `Catalog.create_product/1`:
 
 ```elixir
   @doc """
@@ -223,9 +229,9 @@ Now we know how data is fetched, but how are products persisted? Let's take a lo
   end
 ```
 
-There's more documentation than code here, but a couple of things are important to highlight. First, we can see again that our Ecto Repo is used under the hood for database access. You probably also noticed the call to `Product.changeset/2`. We talked about changesets before, and now we see them in action in our context.
+Há mais documentação do que código aqui, mas algumas coisas são importantes de destacar. Primeiro, podemos ver novamente que nosso Ecto Repo é usado sob o capô para acesso ao banco de dados. Você provavelmente também notou a chamada para `Product.changeset/2`. Falamos sobre changesets antes, e agora os vemos em ação em nosso contexto.
 
-If we open up the `Product` schema in `lib/hello/catalog/product.ex`, it will look immediately familiar:
+Se abrirmos o esquema `Product` em `lib/hello/catalog/product.ex`, ele parecerá imediatamente familiar:
 
 ```elixir
 defmodule Hello.Catalog.Product do
@@ -250,39 +256,39 @@ defmodule Hello.Catalog.Product do
 end
 ```
 
-This is just what we saw before when we ran `mix phx.gen.schema`, except here we see a `@doc false` above our `changeset/2` function. This tells us that while this function is publicly callable, it's not part of the public context API. Callers that build changesets do so via the context API. For example, `Catalog.create_product/1` calls into our `Product.changeset/2` to build the changeset from user input. Callers, such as our controller actions, do not access `Product.changeset/2` directly. All interaction with our product changesets is done through the public `Catalog` context.
+Isso é exatamente o que vimos antes quando executamos `mix phx.gen.schema`, exceto que aqui vemos um `@doc false` acima da nossa função `changeset/2`. Isso nos diz que, embora esta função seja publicamente chamável, ela não faz parte da API pública do contexto. Os chamadores que constroem changesets o fazem através da API de contexto. Por exemplo, `Catalog.create_product/1` chama nosso `Product.changeset/2` para construir o changeset a partir da entrada do usuário. Os chamadores, como nossas ações de controlador, não acessam `Product.changeset/2` diretamente. Toda interação com nossos changesets de produto é feita através do contexto público `Catalog`.
 
-## Adding Catalog functions
+## Adicionando funções ao Catálogo
 
-As we've seen, your context modules are dedicated modules that expose and group related functionality. Phoenix generates generic functions, such as `list_products` and `update_product`, but they only serve as a basis for you to grow your business logic and application from. Let's add one of the basic features of our catalog by tracking product page view count.
+Como vimos, seus módulos de contexto são módulos dedicados que expõem e agrupam funcionalidades relacionadas. O Phoenix gera funções genéricas, como `list_products` e `update_product`, mas elas servem apenas como base para você desenvolver sua lógica de negócios e aplicação. Vamos adicionar uma das características básicas do nosso catálogo, rastreando a contagem de visualizações de páginas de produtos.
 
-For any ecommerce system, the ability to track how many times a product page has been viewed is essential for marketing, suggestions, ranking, etc. While we could try to use the existing `Catalog.update_product` function, along the lines of `Catalog.update_product(product, %{views: product.views + 1})`, this would not only be prone to race conditions, but it would also require the caller to know too much about our Catalog system. To see why the race condition exists, let's walk through the possible execution of events:
+Para qualquer sistema de e-commerce, a capacidade de rastrear quantas vezes uma página de produto foi visualizada é essencial para marketing, sugestões, classificação, etc. Embora pudéssemos tentar usar a função `Catalog.update_product` existente, algo como `Catalog.update_product(product, %{views: product.views + 1})`, isso não só seria propenso a condições de corrida, mas também exigiria que o chamador soubesse demais sobre nosso sistema de Catálogo. Para ver por que a condição de corrida existe, vamos percorrer a possível execução de eventos:
 
-Intuitively, you would assume the following events:
+Intuitivamente, você assumiria os seguintes eventos:
 
-  1. User 1 loads the product page with count of 13
-  2. User 1 saves the product page with count of 14
-  3. User 2 loads the product page with count of 14
-  4. User 2 saves the product page with count of 15
+  1. Usuário 1 carrega a página do produto com contagem de 13
+  2. Usuário 1 salva a página do produto com contagem de 14
+  3. Usuário 2 carrega a página do produto com contagem de 14
+  4. Usuário 2 salva a página do produto com contagem de 15
 
-While in practice this would happen:
+Enquanto na prática isso aconteceria:
 
-  1. User 1 loads the product page with count of 13
-  2. User 2 loads the product page with count of 13
-  3. User 1 saves the product page with count of 14
-  4. User 2 saves the product page with count of 14
+  1. Usuário 1 carrega a página do produto com contagem de 13
+  2. Usuário 2 carrega a página do produto com contagem de 13
+  3. Usuário 1 salva a página do produto com contagem de 14
+  4. Usuário 2 salva a página do produto com contagem de 14
 
-The race conditions would make this an unreliable way to update the existing table since multiple callers may be updating out of date view values. There's a better way.
+As condições de corrida tornariam essa uma maneira não confiável de atualizar a tabela existente, uma vez que vários chamadores podem estar atualizando valores de visualização desatualizados. Há uma maneira melhor.
 
-Let's think of a function that describes what we want to accomplish. Here's how we would like to use it:
+Vamos pensar em uma função que descreva o que queremos realizar. Veja como gostaríamos de usá-la:
 
 ```elixir
 product = Catalog.inc_page_views(product)
 ```
 
-That looks great. Our callers will have no confusion over what this function does, and we can wrap up the increment in an atomic operation to prevent race conditions.
+Isso parece ótimo. Nossos chamadores não terão nenhuma confusão sobre o que essa função faz, e podemos envolver o incremento em uma operação atômica para evitar condições de corrida.
 
-Open up your catalog context (`lib/hello/catalog.ex`), and add this new function:
+Abra seu contexto de catálogo (`lib/hello/catalog.ex`) e adicione esta nova função:
 
 ```elixir
   def inc_page_views(%Product{} = product) do
@@ -294,9 +300,9 @@ Open up your catalog context (`lib/hello/catalog.ex`), and add this new function
   end
 ```
 
-We built a query for fetching the current product given its ID which we pass to `Repo.update_all`. Ecto's `Repo.update_all` allows us to perform batch updates against the database, and is perfect for atomically updating values, such as incrementing our views count. The result of the repo operation returns the number of updated records, along with the selected schema values specified by the `select` option. When we receive the new product views, we use `put_in(product.views, views)` to place the new view count within the product struct.
+Construímos uma consulta para buscar o produto atual dado seu ID, que passamos para `Repo.update_all`. O `Repo.update_all` do Ecto nos permite realizar atualizações em lote no banco de dados, e é perfeito para atualizar atomicamente valores, como incrementar nossa contagem de visualizações. O resultado da operação do repo retorna o número de registros atualizados, junto com os valores do esquema selecionados especificados pela opção `select`. Quando recebemos as novas visualizações do produto, usamos `put_in(product.views, views)` para colocar a nova contagem de visualizações dentro da estrutura do produto.
 
-With our context function in place, let's make use of it in our product controller. Update your `show` action in `lib/hello_web/controllers/product_controller.ex` to call our new function:
+Com nossa função de contexto no lugar, vamos utilizá-la em nosso controlador de produto. Atualize sua ação `show` em `lib/hello_web/controllers/product_controller.ex` para chamar nossa nova função:
 
 ```elixir
   def show(conn, %{"id" => id}) do
@@ -309,36 +315,36 @@ With our context function in place, let's make use of it in our product controll
   end
 ```
 
-We modified our `show` action to pipe our fetched product into `Catalog.inc_page_views/1`, which will return the updated product. Then we rendered our template just as before. Let's try it out. Refresh one of your product pages a few times and watch the view count increase.
+Modificamos nossa ação `show` para canalizar nosso produto buscado para `Catalog.inc_page_views/1`, que retornará o produto atualizado. Em seguida, renderizamos nosso template como antes. Vamos tentar. Atualize uma de suas páginas de produto algumas vezes e observe o contador de visualizações aumentar.
 
-We can also see our atomic update in action in the ecto debug logs:
+Também podemos ver nossa atualização atômica em ação nos logs de depuração do ecto:
 
 ```text
 [debug] QUERY OK source="products" db=0.5ms idle=834.5ms
 UPDATE "products" AS p0 SET "views" = p0."views" + $1 WHERE (p0."id" = $2) RETURNING p0."views" [1, 1]
 ```
 
-Good work!
+Bom trabalho!
 
-As we've seen, designing with contexts gives you a solid foundation to grow your application from. Using discrete, well-defined APIs that expose the intent of your system allows you to write more maintainable applications with reusable code. Now that we know how to start extending our context API, lets explore handling relationships within a context.
+Como vimos, projetar com contextos dá a você uma base sólida para crescer sua aplicação. Usar APIs discretas e bem definidas que expõem a intenção do seu sistema permite que você escreva aplicações mais fáceis de manter com código reutilizável. Agora que sabemos como começar a estender nossa API de contexto, vamos explorar o tratamento de relacionamentos dentro de um contexto.
 
-## In-context relationships
+## Relacionamentos dentro do contexto
 
-Our basic catalog features are nice, but let's take it up a notch by categorizing products. Many ecommerce solutions allow products to be categorized in different ways, such as a product being marked for fashion, power tools, and so on. Starting with a one-to-one relationship between product and categories will cause major code changes later if we need to start supporting multiple categories. Let's set up a category association that will allow us to start off tracking a single category per product, but easily support more later as we grow our features.
+Nossos recursos básicos de catálogo são bons, mas vamos elevar o nível categorizando produtos. Muitas soluções de e-commerce permitem que os produtos sejam categorizados de diferentes maneiras, como um produto ser marcado para moda, ferramentas elétricas e assim por diante. Começar com um relacionamento um-para-um entre produto e categorias causará grandes mudanças de código mais tarde se precisarmos começar a suportar várias categorias. Vamos configurar uma associação de categoria que nos permitirá começar rastreando uma única categoria por produto, mas facilmente suportar mais depois, à medida que expandimos nossos recursos.
 
-For now, categories will contain only textual information. Our first order of business is to decide where categories live in the application. We have our `Catalog` context, which manages the exhibition of our products. Product categorization is a natural fit here. Phoenix is also smart enough to generate code inside an existing context, which makes adding new resources to a context a breeze. Run the following command at your project root:
+Por enquanto, as categorias conterão apenas informações textuais. Nossa primeira ordem de negócios é decidir onde as categorias vivem na aplicação. Temos nosso contexto `Catalog`, que gerencia a exibição de nossos produtos. A categorização de produtos é um encaixe natural aqui. O Phoenix também é inteligente o suficiente para gerar código dentro de um contexto existente, o que facilita a adição de novos recursos a um contexto. Execute o seguinte comando na raiz do seu projeto:
 
-> Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end up with large contexts of loosely related entities. Also keep in mind that the fact two resources are related does not necessarily mean they belong to the same context, otherwise you would quickly end up with one large context, as the majority of resources in an application are connected to each other. To sum it up: if you are unsure, you should prefer separate modules (contexts).
+> Às vezes pode ser complicado determinar se dois recursos pertencem ao mesmo contexto ou não. Nesses casos, prefira contextos distintos por recurso e refatore mais tarde, se necessário. Caso contrário, você pode facilmente acabar com grandes contextos de entidades vagamente relacionadas. Tenha em mente também que o fato de dois recursos estarem relacionados não significa necessariamente que eles pertençam ao mesmo contexto, caso contrário, você rapidamente acabaria com um grande contexto, já que a maioria dos recursos em uma aplicação está conectada entre si. Resumindo: se você não tem certeza, deve preferir módulos separados (contextos).
 
 ```console
 $ mix phx.gen.context Catalog Category categories \
-title:string:unique
+title:string:unique --no-scope
 
 You are generating into an existing context.
 ...
 Would you like to proceed? [Yn] y
 * creating lib/hello/catalog/category.ex
-* creating priv/repo/migrations/20210203192325_create_categories.exs
+* creating priv/repo/migrations/20250203192325_create_categories.exs
 * injecting lib/hello/catalog.ex
 * injecting test/hello/catalog_test.exs
 * injecting test/support/fixtures/catalog_fixtures.ex
@@ -348,18 +354,17 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing products, we can integrate the new category features into our existing web form and product show page. We can see we now have a new `Category` schema alongside our product schema at `lib/hello/catalog/category.ex`, and Phoenix told us it was *injecting* new functions in our existing Catalog context for the category functionality. The injected functions will look very familiar to our product functions, with new functions like `create_category`, `list_categories`, and so on. Before we migrate up, we need to do a second bit of code generation. Our category schema is great for representing an individual category in the system, but we need to support a many-to-many relationship between products and categories. Fortunately, ecto allows us to do this simply with a join table, so let's generate that now with the `ecto.gen.migration` command:
+Desta vez, usamos `mix phx.gen.context`, que é como `mix phx.gen.html`, exceto que não gera os arquivos web para nós. Como já temos controladores e templates para gerenciar produtos, podemos integrar os novos recursos de categoria em nosso formulário web existente e página de exibição de produto. Podemos ver que agora temos um novo esquema `Category` ao lado do nosso esquema de produto em `lib/hello/catalog/category.ex`, e o Phoenix nos disse que estava *injetando* novas funções em nosso contexto Catalog existente para a funcionalidade de categoria. As funções injetadas parecerão muito familiares com nossas funções de produto, com novas funções como `create_category`, `list_categories` e assim por diante. Antes de migrar, precisamos fazer um segundo bit de geração de código. Nosso esquema de categoria é ótimo para representar uma categoria individual no sistema, mas precisamos suportar um relacionamento muitos-para-muitos entre produtos e categorias. Felizmente, o ecto nos permite fazer isso simplesmente com uma tabela de junção, então vamos gerar isso agora com o comando `ecto.gen.migration`:
 
 ```console
 $ mix ecto.gen.migration create_product_categories
 
-* creating priv/repo/migrations/20210203192958_create_product_categories.exs
+* creating priv/repo/migrations/20250203192958_create_product_categories.exs
 ```
 
-Next, let's open up the new migration file and add the following code to the `change` function:
+Em seguida, vamos abrir o novo arquivo de migração e adicionar o seguinte código à função `change`:
 
 ```elixir
-
 defmodule Hello.Repo.Migrations.CreateProductCategories do
   use Ecto.Migration
 
@@ -375,24 +380,24 @@ defmodule Hello.Repo.Migrations.CreateProductCategories do
 end
 ```
 
-We created a `product_categories` table and used the `primary_key: false` option since our join table does not need a primary key. Next we defined our `:product_id` and `:category_id` foreign key fields, and passed `on_delete: :delete_all` to ensure the database prunes our join table records if a linked product or category is deleted. By using a database constraint, we enforce data integrity at the database level, rather than relying on ad-hoc and error-prone application logic.
+Criamos uma tabela `product_categories` e usamos a opção `primary_key: false` já que nossa tabela de junção não precisa de uma chave primária. Em seguida, definimos nossos campos de chave estrangeira `:product_id` e `:category_id`, e passamos `on_delete: :delete_all` para garantir que o banco de dados elimine nossos registros de tabela de junção se um produto ou categoria vinculado for excluído. Ao usar uma restrição de banco de dados, impomos a integridade dos dados no nível do banco de dados, em vez de confiar em lógica de aplicação ad-hoc e propensa a erros.
 
-Next, we created indexes for our foreign keys, one of which is a unique index to ensure a product cannot have duplicate categories. Note that we do not necessarily need single-column index for `category_id` because it is in the leftmost prefix of multicolumn index, which is enough for the database optimizer. Adding a redundant index, on the other hand, only adds overhead on write.
+Em seguida, criamos índices para nossas chaves estrangeiras, um dos quais é um índice único para garantir que um produto não possa ter categorias duplicadas. Observe que não precisamos necessariamente de um índice de coluna única para `category_id` porque ele está no prefixo mais à esquerda do índice multicoluna, o que é suficiente para o otimizador do banco de dados. Adicionar um índice redundante, por outro lado, apenas adiciona sobrecarga na escrita.
 
-With our migrations in place, we can migrate up.
+Com nossas migrações no lugar, podemos migrar.
 
 ```console
 $ mix ecto.migrate
 
-18:20:36.489 [info] == Running 20210222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
+18:20:36.489 [info] == Running 20250222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
 
 18:20:36.493 [info] create table categories
 
 18:20:36.508 [info] create index categories_title_index
 
-18:20:36.512 [info] == Migrated 20210222231834 in 0.0s
+18:20:36.512 [info] == Migrated 20250222231834 in 0.0s
 
-18:20:36.547 [info] == Running 20210222231930 Hello.Repo.Migrations.CreateProductCategories.change/0 forward
+18:20:36.547 [info] == Running 20250222231930 Hello.Repo.Migrations.CreateProductCategories.change/0 forward
 
 18:20:36.547 [info] create table product_categories
 
@@ -400,10 +405,10 @@ $ mix ecto.migrate
 
 18:20:36.560 [info]  create index product_categories_category_id_product_id_index
 
-18:20:36.562 [info] == Migrated 20210222231930 in 0.0s
+18:20:36.562 [info] == Migrated 20250222231930 in 0.0s
 ```
 
-Now that we have a `Catalog.Product` schema and a join table to associate products and categories, we're nearly ready to start wiring up our new features. Before we dive in, we first need real categories to select in our web UI. Let's quickly seed some new categories in the application. Add the following code to your seeds file in `priv/repo/seeds.exs`:
+Agora que temos um esquema `Catalog.Product` e uma tabela de junção para associar produtos e categorias, estamos quase prontos para começar a implementar nossos novos recursos. Antes de mergulharmos, primeiro precisamos de categorias reais para selecionar em nossa interface de usuário web. Vamos rapidamente semear algumas novas categorias na aplicação. Adicione o seguinte código ao seu arquivo de sementes em `priv/repo/seeds.exs`:
 
 ```elixir
 for title <- ["Home Improvement", "Power Tools", "Gardening", "Books", "Education"] do
@@ -411,22 +416,22 @@ for title <- ["Home Improvement", "Power Tools", "Gardening", "Books", "Educatio
 end
 ```
 
-We simply enumerate over a list of category titles and use the generated `create_category/1` function of our catalog context to persist the new records. We can run the seeds with `mix run`:
+Simplesmente enumeramos sobre uma lista de títulos de categorias e usamos a função gerada `create_category/1` do nosso contexto de catálogo para persistir os novos registros. Podemos executar as sementes com `mix run`:
 
 ```console
 $ mix run priv/repo/seeds.exs
 
 [debug] QUERY OK db=3.1ms decode=1.1ms queue=0.7ms idle=2.2ms
-INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Home Improvement", ~N[2021-02-03 19:39:53], ~N[2021-02-03 19:39:53]]
+INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Home Improvement", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 [debug] QUERY OK db=1.2ms queue=1.3ms idle=12.3ms
-INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Power Tools", ~N[2021-02-03 19:39:53], ~N[2021-02-03 19:39:53]]
+INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Power Tools", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 [debug] QUERY OK db=1.1ms queue=1.1ms idle=15.1ms
-INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Gardening", ~N[2021-02-03 19:39:53], ~N[2021-02-03 19:39:53]]
+INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Gardening", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 [debug] QUERY OK db=2.4ms queue=1.0ms idle=17.6ms
-INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Books", ~N[2021-02-03 19:39:53], ~N[2021-02-03 19:39:53]]
+INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Books", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 ```
 
-Perfect. Before we integrate categories in the web layer, we need to let our context know how to associate products and categories. First, open up `lib/hello/catalog/product.ex` and add the following association:
+Perfeito. Antes de integrarmos categorias na camada web, precisamos informar ao nosso contexto como associar produtos e categorias. Primeiro, abra `lib/hello/catalog/product.ex` e adicione a seguinte associação:
 
 ```diff
 + alias Hello.Catalog.Category
@@ -444,9 +449,9 @@ Perfect. Before we integrate categories in the web layer, we need to let our con
 
 ```
 
-We used `Ecto.Schema`'s `many_to_many` macro to let Ecto know how to associate our product to multiple categories through the `"product_categories"` join table. We also used the `on_replace: :delete` option to declare that any existing join records should be deleted when we are changing our categories.
+Usamos a macro `many_to_many` do `Ecto.Schema` para permitir que o Ecto saiba como associar nosso produto a múltiplas categorias através da tabela de junção `"product_categories"`. Também usamos a opção `on_replace: :delete` para declarar que quaisquer registros de junção existentes devem ser excluídos quando estamos mudando nossas categorias.
 
-With our schema associations set up, we can implement the selection of categories in our product form. To do so, we need to translate the user input of catalog IDs from the front-end to our many-to-many association. Fortunately Ecto makes this a breeze now that our schema is set up. Open up your catalog context and make the following changes:
+Com nossas associações de esquema configuradas, podemos implementar a seleção de categorias em nosso formulário de produto. Para fazer isso, precisamos traduzir a entrada do usuário de IDs de catálogo da interface para nossa associação muitos-para-muitos. Felizmente, o Ecto torna isso muito fácil agora que nosso esquema está configurado. Abra seu contexto de catálogo e faça as seguintes alterações:
 
 ```diff
 + alias Hello.Catalog.Category
@@ -486,9 +491,9 @@ With our schema associations set up, we can implement the selection of categorie
 + end
 ```
 
-First, we added `Repo.preload` to preload our categories when we fetch a product. This will allow us to reference `product.categories` in our controllers, templates, and anywhere else we want to make use of category information. Next, we modified our `create_product` and `update_product` functions to call into our existing `change_product` function to produce a changeset. Within `change_product` we added a lookup to find all categories if the `"category_ids"` attribute is present. Then we preloaded categories and called `Ecto.Changeset.put_assoc` to place the fetched categories into the changeset. Finally, we implemented the `list_categories_by_id/1` function to query the categories matching the category IDs, or return an empty list if no `"category_ids"` attribute is present. Now our `create_product` and `update_product` functions receive a changeset with the category associations all ready to go once we attempt an insert or update against our repo.
+Primeiro, adicionamos `Repo.preload` para pré-carregar nossas categorias quando buscamos um produto. Isso nos permitirá referenciar `product.categories` em nossos controladores, templates e em qualquer outro lugar onde quisermos fazer uso de informações de categoria. Em seguida, modificamos nossas funções `create_product` e `update_product` para chamar nossa função `change_product` existente para produzir um changeset. Dentro de `change_product`, adicionamos uma busca para encontrar todas as categorias se o atributo `"category_ids"` estiver presente. Em seguida, pré-carregamos categorias e chamamos `Ecto.Changeset.put_assoc` para colocar as categorias buscadas no changeset. Finalmente, implementamos a função `list_categories_by_id/1` para consultar as categorias que correspondem aos IDs de categoria, ou retornar uma lista vazia se nenhum atributo `"category_ids"` estiver presente. Agora nossas funções `create_product` e `update_product` recebem um changeset com as associações de categoria todas prontas para ir uma vez que tentamos uma inserção ou atualização em nosso repo.
 
-Next, let's expose our new feature to the web by adding the category input to our product form. To keep our form template tidy, let's write a new function to wrap up the details of rendering a category select input for our product. Open up your `ProductHTML` view in `lib/hello_web/controllers/product_html.ex` and key this in:
+Em seguida, vamos expor nosso novo recurso para a web, adicionando a entrada de categoria ao nosso formulário de produto. Para manter nosso template de formulário organizado, vamos escrever uma nova função para envolver os detalhes de renderização de uma entrada select de categoria para nosso produto. Abra sua view `ProductHTML` em `lib/hello_web/controllers/product_html.ex` e digite isso:
 
 ```elixir
   def category_opts(changeset) do
@@ -497,29 +502,30 @@ Next, let's expose our new feature to the web by adding the category input to ou
       |> Ecto.Changeset.get_change(:categories, [])
       |> Enum.map(& &1.data.id)
 
-    for cat <- Hello.Catalog.list_categories(),
-        do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    for cat <- Hello.Catalog.list_categories() do
+      [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    end
   end
 ```
 
-We added a new `category_opts/1` function which generates the select options for a multiple select tag we will add soon. We calculated the existing category IDs from our changeset, then used those values when we generate the select options for the input tag. We did this by enumerating over all of our categories and returning the appropriate `key`, `value`, and `selected` values. We marked an option as selected if the category ID was found in those category IDs in our changeset.
+Adicionamos uma nova função `category_opts/1` que gera as opções de seleção para uma tag de seleção múltipla que adicionaremos em breve. Calculamos os IDs de categoria existentes do nosso changeset, e então usamos esses valores quando geramos as opções de seleção para a tag de input. Fizemos isso enumerando sobre todas as nossas categorias e retornando os valores apropriados de `key`, `value` e `selected`. Marcamos uma opção como selecionada se o ID da categoria foi encontrado nesses IDs de categoria em nosso changeset.
 
-With our `category_opts` function in place, we can open up `lib/hello_web/controllers/product_html/product_form.html.heex` and add:
+Com nossa função `category_opts` no lugar, podemos abrir `lib/hello_web/controllers/product_html/product_form.html.heex` e adicionar:
 
 ```diff
   ...
   <.input field={f[:views]} type="number" label="Views" />
 
-+ <.input field={f[:category_ids]} type="select" multiple={true} options={category_opts(@changeset)} />
++ <.input field={f[:category_ids]} type="select" multiple options={category_opts(@changeset)} />
 
   <:actions>
     <.button>Save Product</.button>
   </:actions>
 ```
 
-We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to the list in `lib/hello_web/controllers/product_html/show.html.heex`:
+Adicionamos um `category_select` acima do nosso botão de salvar. Agora vamos experimentá-lo. Em seguida, vamos mostrar as categorias do produto no template de exibição do produto. Adicione o seguinte código à lista em `lib/hello_web/controllers/product_html/show.html.heex`:
 
-```heex
+```diff
 <.list>
   ...
 + <:item title="Categories">
@@ -530,7 +536,7 @@ We added a `category_select` above our save button. Now let's try it out. Next, 
 </.list>
 ```
 
-Now if we start the server with `mix phx.server` and visit [http://localhost:4000/products/new](http://localhost:4000/products/new), we'll see the new category multiple select input. Enter some valid product details, select a category or two, and click save.
+Agora, se iniciarmos o servidor com `mix phx.server` e visitarmos [http://localhost:4000/products/new](http://localhost:4000/products/new), veremos a nova entrada de seleção múltipla de categoria. Digite alguns detalhes válidos do produto, selecione uma categoria ou duas e clique em salvar.
 
 ```text
 Title: Elixir Flashcards
@@ -542,73 +548,121 @@ Education
 Books
 ```
 
-It's not much to look at yet, but it works! We added relationships within our context complete with data integrity enforced by the database. Not bad. Let's keep building!
+Ainda não parece grande coisa, mas funciona! Adicionamos relacionamentos dentro do nosso contexto com integridade de dados imposta pelo banco de dados. Nada mal. Vamos continuar construindo!
 
-## Cross-context dependencies
+## Dependências entre contextos
 
-Now that we have the beginnings of our product catalog features, let's begin to work on the other main features of our application – carting products from the catalog. In order to properly track products that have been added to a user's cart, we'll need a new place to persist this information, along with point-in-time product information like the price at time of carting. This is necessary so we can detect product price changes in the future. We know what we need to build, but now we need to decide where the cart functionality lives in our application.
+Agora que temos o início das funcionalidades do nosso catálogo de produtos, vamos começar a trabalhar nas outras funcionalidades principais da nossa aplicação – adicionar produtos do catálogo ao carrinho. Para rastrear adequadamente os produtos que foram adicionados ao carrinho de um usuário, precisaremos de um novo local para persistir essas informações, juntamente com informações pontuais do produto, como o preço no momento da adição ao carrinho. Isso é necessário para que possamos detectar alterações de preço do produto no futuro. Sabemos o que precisamos construir, mas agora precisamos decidir onde a funcionalidade do carrinho vai ficar em nossa aplicação.
 
-If we take a step back and think about the isolation of our application, the exhibition of products in our catalog distinctly differs from the responsibilities of managing a user's cart. A product catalog shouldn't care about the rules of our shopping cart system, and vice-versa. There's a clear need here for a separate context to handle the new cart responsibilities. Let's call it `ShoppingCart`.
+Se dermos um passo atrás e pensarmos sobre o isolamento da nossa aplicação, a exibição de produtos em nosso catálogo difere claramente das responsabilidades de gerenciar o carrinho de um usuário. Um catálogo de produtos não deveria se preocupar com as regras do nosso sistema de carrinho de compras, e vice-versa. Existe uma clara necessidade aqui de um contexto separado para lidar com as novas responsabilidades do carrinho. Vamos chamá-lo de `ShoppingCart`.
 
-Let's create a `ShoppingCart` context to handle basic cart duties. Before we write code, let's imagine we have the following feature requirements:
+Vamos criar um contexto `ShoppingCart` para lidar com as tarefas básicas do carrinho. Antes de escrevermos código, vamos imaginar que temos os seguintes requisitos de funcionalidade:
 
-  1. Add products to a user's cart from the product show page
-  2. Store point-in-time product price information at time of carting
-  3. Store and update quantities in cart
-  4. Calculate and display sum of cart prices
+  1. Adicionar produtos ao carrinho de um usuário a partir da página de exibição do produto
+  2. Armazenar informações pontuais de preço do produto no momento da adição ao carrinho
+  3. Armazenar e atualizar quantidades no carrinho
+  4. Calcular e exibir a soma dos preços do carrinho
 
-From the description, it's clear we need a `Cart` resource for storing the user's cart, along with a `CartItem` to track products in the cart. With our plan set, let's get to work. Run the following command to generate our new context:
+Pela descrição, está claro que precisamos de um recurso `Cart` para armazenar o carrinho do usuário, junto com um `CartItem` para rastrear produtos no carrinho. Com nosso plano definido, vamos começar a trabalhar.
+
+Inicialmente, mencionamos que os geradores suportam escopo para recursos. Para nosso carrinho, queremos fazer o escopo por usuário. Um usuário só deve ser capaz de gerenciar seu próprio carrinho. Em nossa aplicação, não há sistema de autenticação e também nenhum escopo definido ainda. Embora seja possível criar um escopo do zero, usaremos o gerador de autenticação `mix phx.gen.auth` que criará um escopo de usuário para nós:
 
 ```console
-$ mix phx.gen.context ShoppingCart Cart carts user_uuid:uuid:unique
+mix phx.gen.auth Accounts User user
 
-* creating lib/hello/shopping_cart/cart.ex
-* creating priv/repo/migrations/20210205203128_create_carts.exs
-* creating lib/hello/shopping_cart.ex
-* injecting lib/hello/shopping_cart.ex
-* creating test/hello/shopping_cart_test.exs
-* injecting test/hello/shopping_cart_test.exs
-* creating test/support/fixtures/shopping_cart_fixtures.ex
-* injecting test/support/fixtures/shopping_cart_fixtures.ex
+Um sistema de autenticação pode ser criado de duas maneiras diferentes:
+- Usando Phoenix.LiveView (padrão)
+- Usando apenas Phoenix.Controller
+Você quer criar um sistema de autenticação baseado em LiveView? [Yn] n
 
-Some of the generated database columns are unique. Please provide
-unique implementations for the following fixture function(s) in
-test/support/fixtures/shopping_cart_fixtures.ex:
+...
+* criando lib/hello/accounts/scope.ex
+...
+* injetando config/config.exs
+...
 
-    def unique_cart_user_uuid do
-      raise "implement the logic to generate a unique cart user_uuid"
-    end
+Por favor, busque novamente suas dependências com o seguinte comando:
 
-Remember to update your repository by running migrations:
+    $ mix deps.get
+
+Lembre-se de atualizar seu repositório executando migrações:
+
+    $ mix ecto.migrate
+
+Quando estiver pronto, visite "/user/register"
+para criar sua conta e depois acesse "/dev/mailbox" para
+ver o e-mail de confirmação da conta.
+```
+
+Depois de seguir as instruções para buscar novamente as dependências e migrar o banco de dados, podemos iniciar o servidor com `mix phx.server` e revisitar a página inicial [`http://localhost:4000/`](http://localhost:4000/) e deveríamos ver novos links de registro e login no topo da página. Na página de registro, crie um novo usuário. No desenvolvimento, um e-mail de confirmação é enviado para a caixa de correio de desenvolvimento, que é acessível em [`http://localhost:4000/dev/mailbox`](http://localhost:4000/dev/mailbox). Depois de clicar no link de confirmação, você deve estar logado com sucesso.
+
+Examinando o arquivo de escopo gerado `lib/hello/accounts/scope.ex`:
+
+```elixir
+defmodule Hello.Accounts.Scope do
+  ...
+  alias Hello.Accounts.User
+
+  defstruct user: nil
+
+  @doc """
+  Cria um escopo para o usuário fornecido.
+
+  Retorna nil se nenhum usuário for fornecido.
+  """
+  def for_user(%User{} = user) do
+    %__MODULE__{user: user}
+  end
+
+  def for_user(nil), do: nil
+end
+```
+
+podemos ver que é simplesmente uma struct com um campo `user`. O sistema de autenticação garante que o assign `current_scope` seja definido como uma struct `%Scope{}` que identifica o usuário atual e nossos geradores podem contar com a struct para fazer o escopo adequado dos recursos.
+
+Vamos gerar nosso novo contexto:
+
+```console
+$ mix phx.gen.context ShoppingCart Cart carts
+
+* criando lib/hello/shopping_cart/cart.ex
+* criando priv/repo/migrations/20250205203128_create_carts.exs
+* criando lib/hello/shopping_cart.ex
+* injetando lib/hello/shopping_cart.ex
+* criando test/hello/shopping_cart_test.exs
+* injetando test/hello/shopping_cart_test.exs
+* criando test/support/fixtures/shopping_cart_fixtures.ex
+* injetando test/support/fixtures/shopping_cart_fixtures.ex
+
+Lembre-se de atualizar seu repositório executando migrações:
 
     $ mix ecto.migrate
 ```
 
-We generated our new context `ShoppingCart`, with a new `ShoppingCart.Cart` schema to tie a user to their cart which holds cart items. We don't have real users yet, so for now our cart will be tracked by an anonymous user UUID that we'll add to our plug session in a moment. With our cart in place, let's generate our cart items:
+Geramos nosso novo contexto `ShoppingCart`, com um novo esquema `ShoppingCart.Cart` para vincular um usuário ao seu carrinho que contém itens do carrinho. Com nosso carrinho no lugar, vamos gerar nossos itens do carrinho:
 
 ```console
 $ mix phx.gen.context ShoppingCart CartItem cart_items \
 cart_id:references:carts product_id:references:products \
-price_when_carted:decimal quantity:integer
+price_when_carted:decimal quantity:integer --no-scope
 
-You are generating into an existing context.
+Você está gerando em um contexto existente.
 ...
-Would you like to proceed? [Yn] y
-* creating lib/hello/shopping_cart/cart_item.ex
-* creating priv/repo/migrations/20210205213410_create_cart_items.exs
-* injecting lib/hello/shopping_cart.ex
-* injecting test/hello/shopping_cart_test.exs
-* injecting test/support/fixtures/shopping_cart_fixtures.ex
+Gostaria de prosseguir? [Yn] y
+* criando lib/hello/shopping_cart/cart_item.ex
+* criando priv/repo/migrations/20250205213410_create_cart_items.exs
+* injetando lib/hello/shopping_cart.ex
+* injetando test/hello/shopping_cart_test.exs
+* injetando test/support/fixtures/shopping_cart_fixtures.ex
 
-Remember to update your repository by running migrations:
+Lembre-se de atualizar seu repositório executando migrações:
 
     $ mix ecto.migrate
-
 ```
 
-We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
+Geramos um novo recurso dentro do nosso `ShoppingCart` chamado `CartItem`. Este esquema e tabela conterão referências a um carrinho e produto, junto com o preço no momento em que adicionamos o item ao nosso carrinho, e a quantidade que o usuário deseja comprar. Vamos retocar o arquivo de migração gerado em `priv/repo/migrations/*_create_cart_items.ex`:
 
-```elixir
+```diff
     create table(:cart_items) do
 -     add :price_when_carted, :decimal
 +     add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
@@ -626,20 +680,18 @@ We generated a new resource inside our `ShoppingCart` named `CartItem`. This sch
 +   create unique_index(:cart_items, [:cart_id, :product_id])
 ```
 
-We used the `:delete_all` strategy again to enforce data integrity. This way, when a cart or product is deleted from the application, we don't have to rely on application code in our `ShoppingCart` or `Catalog` contexts to worry about cleaning up the records. This keeps our application code decoupled and the data integrity enforcement where it belongs – in the database. We also added a unique constraint to ensure a duplicate product is not allowed to be added to a cart. As with the `product_categories` table, using a multi-column index lets us remove the separate index for the leftmost field (`cart_id`). With our database tables in place, we can now migrate up:
+Usamos a estratégia `:delete_all` novamente para garantir a integridade dos dados. Dessa forma, quando um carrinho ou produto é excluído da aplicação, não precisamos confiar no código da aplicação em nossos contextos `ShoppingCart` ou `Catalog` para se preocupar com a limpeza dos registros. Isso mantém nosso código de aplicação desacoplado e a aplicação da integridade de dados onde ela pertence – no banco de dados. Também adicionamos uma restrição única para garantir que um produto duplicado não possa ser adicionado a um carrinho. Assim como na tabela `product_categories`, usar um índice de várias colunas nos permite remover o índice separado para o campo mais à esquerda (`cart_id`). Com nossas tabelas de banco de dados no lugar, agora podemos migrar:
 
 ```console
 $ mix ecto.migrate
 
-16:59:51.941 [info] == Running 20210205203342 Hello.Repo.Migrations.CreateCarts.change/0 forward
+16:59:51.941 [info] == Executando 20250205203342 Hello.Repo.Migrations.CreateCarts.change/0 para frente
 
 16:59:51.945 [info] create table carts
 
-16:59:51.949 [info] create index carts_user_uuid_index
+16:59:51.952 [info] == Migrado 20250205203342 em 0.0s
 
-16:59:51.952 [info] == Migrated 20210205203342 in 0.0s
-
-16:59:51.988 [info] == Running 20210205213410 Hello.Repo.Migrations.CreateCartItems.change/0 forward
+16:59:51.988 [info] == Executando 20250205213410 Hello.Repo.Migrations.CreateCartItems.change/0 para frente
 
 16:59:51.988 [info] create table cart_items
 
@@ -649,32 +701,32 @@ $ mix ecto.migrate
 
 16:59:52.001 [info] create index cart_items_cart_id_product_id_index
 
-16:59:52.002 [info] == Migrated 20210205213410 in 0.0s
+16:59:52.002 [info] == Migrado 20250205213410 em 0.0s
 ```
 
-Our database is ready to go with new `carts` and `cart_items` tables, but now we need to map that back into application code. You may be wondering how we can mix database foreign keys across different tables and how that relates to the context pattern of isolated, grouped functionality. Let's jump in and discuss the approaches and their tradeoffs.
+Nosso banco de dados está pronto para funcionar com as novas tabelas `carts` e `cart_items`, mas agora precisamos mapear isso de volta para o código da aplicação. Você pode estar se perguntando como podemos misturar chaves estrangeiras de banco de dados entre diferentes tabelas e como isso se relaciona com o padrão de contexto de funcionalidade isolada e agrupada. Vamos entrar nisso e discutir as abordagens e suas compensações.
 
-### Cross-context data
+### Dados entre contextos
 
-So far, we've done a great job isolating the two main contexts of our application from each other, but now we have a necessary dependency to handle.
+Até agora, fizemos um ótimo trabalho isolando os dois principais contextos de nossa aplicação um do outro, mas agora temos uma dependência necessária para lidar.
 
-Our `Catalog.Product` resource serves to keep the responsibilities of representing a product inside the catalog, but ultimately for an item to exist in the cart, a product from the catalog must be present. Given this, our `ShoppingCart` context will have a data dependency on the `Catalog` context. With that in mind, we have two options. One is to expose APIs on the `Catalog` context that allows us to efficiently fetch product data for use in the `ShoppingCart` system, which we would manually stitch together. Or we can use database joins to fetch the dependent data. Both are valid options given your tradeoffs and application size, but joining data from the database when you have a hard data dependency is just fine for a large class of applications and is the approach we will take here.
+Nosso recurso `Catalog.Product` serve para manter as responsabilidades de representar um produto dentro do catálogo, mas, em última análise, para que um item exista no carrinho, um produto do catálogo deve estar presente. Dado isso, nosso contexto `ShoppingCart` terá uma dependência de dados no contexto `Catalog`. Com isso em mente, temos duas opções. Uma é expor APIs no contexto `Catalog` que nos permitem buscar dados de produtos de forma eficiente para uso no sistema `ShoppingCart`, que uniríamos manualmente. Ou podemos usar joins de banco de dados para buscar os dados dependentes. Ambas são opções válidas dadas suas compensações e tamanho da aplicação, mas juntar dados do banco de dados quando você tem uma dependência de dados forte é perfeitamente adequado para uma grande classe de aplicações e é a abordagem que tomaremos aqui.
 
-Now that we know where our data dependencies exist, let's add our schema associations so we can tie shopping cart items to products. First, let's make a quick change to our cart schema in `lib/hello/shopping_cart/cart.ex` to associate a cart to its items:
+Agora que sabemos onde existem nossas dependências de dados, vamos adicionar nossas associações de esquema para que possamos vincular itens do carrinho de compras a produtos. Primeiro, vamos fazer uma pequena alteração em nosso esquema de carrinho em `lib/hello/shopping_cart/cart.ex` para associar um carrinho aos seus itens:
 
-```elixir
+```diff
   schema "carts" do
-    field :user_uuid, Ecto.UUID
-
+-   field :user_id, :id
++   belongs_to :user, Hello.Accounts.User
 +   has_many :items, Hello.ShoppingCart.CartItem
 
     timestamps()
   end
 ```
 
-Now that our cart is associated to the items we place in it, let's set up the cart item associations inside `lib/hello/shopping_cart/cart_item.ex`:
+Agora que nosso carrinho está associado aos itens que colocamos nele, vamos configurar as associações de itens do carrinho dentro de `lib/hello/shopping_cart/cart_item.ex`:
 
-```elixir
+```diff
   schema "cart_items" do
     field :price_when_carted, :decimal
     field :quantity, :integer
@@ -696,17 +748,19 @@ Now that our cart is associated to the items we place in it, let's set up the ca
   end
 ```
 
-First, we replaced the `cart_id` field with a standard `belongs_to` pointing at our `ShoppingCart.Cart` schema. Next, we replaced our `product_id` field by adding our first cross-context data dependency with a `belongs_to` for the `Catalog.Product` schema. Here, we intentionally coupled the data boundaries because it provides exactly what we need: an isolated context API with the bare minimum knowledge necessary to reference a product in our system. Next, we added a new validation to our changeset. With `validate_number/3`, we ensure any quantity provided by user input is between 0 and 100.
+Primeiro, substituímos o campo `cart_id` por um `belongs_to` padrão apontando para nosso esquema `ShoppingCart.Cart`. Em seguida, substituímos nosso campo `product_id` adicionando nossa primeira dependência de dados entre contextos com um `belongs_to` para o esquema `Catalog.Product`. Aqui, intencionalmente acoplamos os limites de dados porque ele fornece exatamente o que precisamos: uma API de contexto isolada com o mínimo de conhecimento necessário para referenciar um produto em nosso sistema. Em seguida, adicionamos uma nova validação ao nosso changeset. Com `validate_number/3`, garantimos que qualquer quantidade fornecida pela entrada do usuário esteja entre 0 e 100.
 
-With our schemas in place, we can start integrating the new data structures and `ShoppingCart` context APIs into our web-facing features.
+Com nossos esquemas no lugar, podemos começar a integrar as novas estruturas de dados e APIs do contexto `ShoppingCart` em nossas funcionalidades voltadas para a web.
 
-### Adding Shopping Cart functions
+### Adicionando funções ao Carrinho de Compras
 
-As we mentioned before, the context generators are only a starting point for our application. We can and should write well-named, purpose built functions to accomplish the goals of our context. We have a few new features to implement. First, we need to ensure every user of our application is granted a cart if one does not yet exist. From there, we can then allow users to add items to their cart, update item quantities, and calculate cart totals. Let's get started!
+Como mencionamos anteriormente, os geradores de contexto são apenas um ponto de partida para nossa aplicação. Podemos e devemos escrever funções bem nomeadas e com propósitos específicos para atingir os objetivos do nosso contexto. Temos alguns novos recursos para implementar. Primeiro, precisamos garantir que cada usuário de nossa aplicação receba um carrinho caso ainda não exista um. A partir daí, podemos permitir que os usuários adicionem itens ao carrinho, atualizem as quantidades dos itens e calculem os totais do carrinho. Vamos começar!
 
-We won't focus on a real user authentication system at this point, but by the time we're done, you'll be able to naturally integrate one with what we've written here. To simulate a current user session, open up your `lib/hello_web/router.ex` and key this in:
+Não vamos focar em um sistema de autenticação de usuário real neste momento, mas quando terminarmos, você poderá integrar naturalmente um com o que escrevemos aqui. Para simular uma sessão de usuário atual, abra seu arquivo `lib/hello_web/router.ex` e insira o seguinte:
 
-```elixir
+Como usamos `mix phx.gen.auth`, já temos um sistema de autenticação real implementado. Podemos usar o assign `current_scope` para acessar o usuário autenticado no momento. Vamos adicionar um novo plug que atribui um carrinho se houver um usuário autenticado:
+
+```diff
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -714,55 +768,74 @@ We won't focus on a real user authentication system at this point, but by the ti
     plug :put_root_layout, html: {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-+   plug :fetch_current_user
+    plug :fetch_current_scope_for_user
 +   plug :fetch_current_cart
   end
 
-+ defp fetch_current_user(conn, _) do
-+   if user_uuid = get_session(conn, :current_uuid) do
-+     assign(conn, :current_uuid, user_uuid)
-+   else
-+     new_uuid = Ecto.UUID.generate()
-+
-+     conn
-+     |> assign(:current_uuid, new_uuid)
-+     |> put_session(:current_uuid, new_uuid)
-+   end
-+ end
-
 + alias Hello.ShoppingCart
 +
-+ defp fetch_current_cart(conn, _opts) do
-+   if cart = ShoppingCart.get_cart_by_user_uuid(conn.assigns.current_uuid) do
++ defp fetch_current_cart(%{assigns: %{current_scope: scope}} = conn, _opts) when not is_nil(scope) do
++   if cart = ShoppingCart.get_cart(scope) do
 +     assign(conn, :cart, cart)
 +   else
-+     {:ok, new_cart} = ShoppingCart.create_cart(conn.assigns.current_uuid)
++     {:ok, new_cart} = ShoppingCart.create_cart(scope)
 +     assign(conn, :cart, new_cart)
 +   end
 + end
++
++ defp fetch_current_cart(conn, _opts), do: conn
 ```
 
-We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our browser pipeline to run on all browser-based requests. Next, we implemented the `fetch_current_user` plug which simply checks the session for a user UUID that was previously added. If we find one, we add a `current_uuid` assign to the connection and we're done. In the case we haven't yet identified this visitor, we generate a unique UUID with `Ecto.UUID.generate()`, then we place that value in the `current_uuid` assign, along with a new session value to identify this visitor on future requests. A random, unique ID isn't much to represent a user, but it's enough for us to track and identify a visitor across requests, which is all we need for now. Later as our application becomes more complete, you'll be ready to migrate to a complete user authentication solution. With a guaranteed current user, we then implemented the `fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart_by_user_uuid/1` and modify the create cart function to accept a UUID, but let's add our routes first.
+Adicionamos um novo plug `:fetch_current_cart` que encontra um carrinho para o UUID do usuário ou cria um carrinho para o usuário atual e atribui o resultado nos assigns da conexão. Precisaremos implementar nosso `ShoppingCart.get_cart/1`, mas vamos adicionar nossas rotas primeiro.
 
-We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the following routes to your router in `lib/hello_web/router.ex`:
+Precisaremos implementar um controlador de carrinho para lidar com operações de carrinho como visualizar um carrinho, atualizar quantidades e iniciar o processo de checkout, além de um controlador de itens de carrinho para adicionar e remover itens individuais ao e do carrinho. O sistema de autenticação já gerou diferentes escopos de roteador que têm diferentes requisitos de autenticação:
+
+```elixir
+...
+  ## Rotas de autenticação
+
+  scope "/", HelloWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    get "/user/register", UserRegistrationController, :new
+    post "/user/register", UserRegistrationController, :create
+  end
+
+  scope "/", HelloWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    get "/user/settings", UserSettingsController, :edit
+    put "/user/settings", UserSettingsController, :update
+    get "/user/settings/confirm-email/:token", UserSettingsController, :confirm_email
+  end
+...
+```
+
+Como você pode ver, a rota de registro tem um plug `:redirect_if_user_is_authenticated`, o que significa que redirecionará para a página inicial se o usuário já estiver autenticado. As rotas de configurações do usuário usam um plug `:require_authenticated_user`, o que significa que redirecionarão para a página de login se o usuário não estiver autenticado. Esses plugs são definidos no módulo `lib/hello_web/user_auth.ex`.
+
+Para nossas rotas de carrinho, queremos permitir acesso apenas a usuários autenticados. Adicione as seguintes rotas ao seu roteador em `lib/hello_web/router.ex`:
 
 ```diff
-  scope "/", HelloWeb do
-    pipe_through :browser
+   scope "/", HelloWeb do
+     pipe_through :browser
 
-    get "/", PageController, :index
-    resources "/products", ProductController
+     get "/", PageController, :index
+     resources "/products", ProductController
+   end
 
-+   resources "/cart_items", CartItemController, only: [:create, :delete]
-
-+   get "/cart", CartController, :show
-+   put "/cart", CartController, :update
-  end
++  scope "/", HelloWeb do
++    pipe_through [:browser, :require_authenticated_user]
++
++    resources "/cart_items", CartItemController, only: [:create, :delete]
++
++    get "/cart", CartController, :show
++    put "/cart", CartController, :update
++  end
 ```
 
-We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and removing individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
+Adicionamos uma declaração `resources` para um `CartItemController`, que irá conectar as rotas para uma ação de criar e excluir para adicionar e remover itens individuais do carrinho. Em seguida, adicionamos duas novas rotas apontando para um `CartController`. A primeira rota, uma requisição GET, será mapeada para nossa ação de exibição, para mostrar o conteúdo do carrinho. A segunda rota, uma requisição PUT, irá lidar com o envio de um formulário para atualizar as quantidades do nosso carrinho.
 
-With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/controllers/cart_item_controller.ex` and key this in:
+Com nossas rotas em vigor, vamos adicionar a capacidade de adicionar um item ao nosso carrinho a partir da página de exibição do produto. Crie um novo arquivo em `lib/hello_web/controllers/cart_item_controller.ex` e insira o seguinte:
 
 ```elixir
 defmodule HelloWeb.CartItemController do
@@ -771,39 +844,40 @@ defmodule HelloWeb.CartItemController do
   alias Hello.ShoppingCart
 
   def create(conn, %{"product_id" => product_id}) do
-    case ShoppingCart.add_item_to_cart(conn.assigns.cart, product_id) do
+    case ShoppingCart.add_item_to_cart(conn.assigns.current_scope, conn.assigns.cart, product_id) do
       {:ok, _item} ->
         conn
-        |> put_flash(:info, "Item added to your cart")
+        |> put_flash(:info, "Item adicionado ao seu carrinho")
         |> redirect(to: ~p"/cart")
 
       {:error, _changeset} ->
         conn
-        |> put_flash(:error, "There was an error adding the item to your cart")
+        |> put_flash(:error, "Ocorreu um erro ao adicionar o item ao seu carrinho")
         |> redirect(to: ~p"/cart")
     end
   end
 
   def delete(conn, %{"id" => product_id}) do
-    {:ok, _cart} = ShoppingCart.remove_item_from_cart(conn.assigns.cart, product_id)
+    {:ok, _cart} = ShoppingCart.remove_item_from_cart(conn.assigns.current_scope, conn.assigns.cart, product_id)
     redirect(conn, to: ~p"/cart")
   end
 end
 ```
 
-We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec out our web layer and context APIs without thinking about all the implementation details at once.
+Definimos um novo `CartItemController` com as ações de criar e excluir que declaramos em nosso roteador. Para `create`, chamamos uma função `ShoppingCart.add_item_to_cart/2` que implementaremos em breve. Se bem-sucedido, mostramos uma mensagem flash de sucesso e redirecionamos para a página de exibição do carrinho; caso contrário, mostramos uma mensagem flash de erro e redirecionamos para a página de exibição do carrinho. Para `delete`, chamaremos uma função `remove_item_from_cart` que implementaremos em nosso contexto `ShoppingCart` e depois redirecionaremos de volta para a página de exibição do carrinho. Ainda não implementamos essas duas funções de carrinho de compras, mas observe como seus nomes expressam claramente sua intenção: `add_item_to_cart` e `remove_item_from_cart` deixam óbvio o que estamos realizando aqui. Isso também nos permite especificar nossa camada web e APIs de contexto sem pensar em todos os detalhes de implementação de uma vez.
 
-Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
+Vamos implementar a nova interface para a API de contexto do `ShoppingCart` em `lib/hello/shopping_cart.ex`:
 
-```elixir
+```diff
 +  alias Hello.Catalog
 -  alias Hello.ShoppingCart.Cart
 +  alias Hello.ShoppingCart.{Cart, CartItem}
+   alias Hello.Accounts.Scope
 
-+  def get_cart_by_user_uuid(user_uuid) do
++  def get_cart(%Scope{} = scope) do
 +    Repo.one(
 +      from(c in Cart,
-+        where: c.user_uuid == ^user_uuid,
++        where: c.user_id == ^scope.user.id,
 +        left_join: i in assoc(c, :items),
 +        left_join: p in assoc(i, :product),
 +        order_by: [asc: i.inserted_at],
@@ -812,22 +886,19 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +    )
 +  end
 
-- def create_cart(attrs \\ %{}) do
--   %Cart{}
--   |> Cart.changeset(attrs)
-+ def create_cart(user_uuid) do
-+   %Cart{user_uuid: user_uuid}
-+   |> Cart.changeset(%{})
-    |> Repo.insert()
-+   |> case do
-+     {:ok, cart} -> {:ok, reload_cart(cart)}
-+     {:error, changeset} -> {:error, changeset}
-+   end
-  end
-
-+  defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
+   def create_cart(%Scope{} = scope, attrs \\ %{}) do
+     with {:ok, cart = %Cart{}} <-
+            %Cart{}
+            |> Cart.changeset(attrs, scope)
+            |> Repo.insert() do
+       broadcast(scope, {:created, cart})
+-      {:ok, cart}
++      {:ok, get_cart!(scope, cart.id)}
+     end
+   end
 +
-+  def add_item_to_cart(%Cart{} = cart, product_id) do
++  def add_item_to_cart(%Scope{} = scope, %Cart{} = cart, product_id) do
++    true = cart.user_id == scope.user.id
 +    product = Catalog.get_product!(product_id)
 +
 +    %CartItem{quantity: 1, price_when_carted: product.price}
@@ -840,7 +911,9 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +    )
 +  end
 +
-+  def remove_item_from_cart(%Cart{} = cart, product_id) do
++  def remove_item_from_cart(%Scope{} = scope, %Cart{} = cart, product_id) do
++    true = cart.user_id == scope.user.id
++
 +    {1, _} =
 +      Repo.delete_all(
 +        from(i in CartItem,
@@ -849,58 +922,59 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +        )
 +      )
 +
-+    {:ok, reload_cart(cart)}
++    {:ok, get_cart(scope)}
 +  end
 ```
 
-We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data.
+Começamos implementando `get_cart/1`, que busca nosso carrinho e une os itens do carrinho e seus produtos para que tenhamos o carrinho completo preenchido com todos os dados pré-carregados. Em seguida, modificamos nossa função `create_cart` para usar `get_cart` para recarregar o conteúdo do carrinho.
 
-Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct and a product id. We proceed to fetch the product with `Catalog.get_product!/1`, showing how contexts can naturally invoke other contexts if required. You could also have chosen to receive the product as argument and you would achieve similar results. Then we used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict.
+Em seguida, escrevemos nossa nova função `add_item_to_cart/3`, que aceita um escopo, uma estrutura de carrinho e um ID de produto. Procedemos para buscar o produto com `Catalog.get_product!/1`, mostrando como os contextos podem naturalmente invocar outros contextos, se necessário. Você também poderia ter optado por receber o produto como argumento e obteria resultados semelhantes. Em seguida, usamos uma operação de upsert contra nosso repositório para inserir um novo item de carrinho no banco de dados ou aumentar a quantidade em um se ele já existir no carrinho. Isso é realizado através das opções `on_conflict` e `conflict_target`, que informa ao nosso repositório como lidar com um conflito de inserção.
 
-Finally, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `reload_cart/1`.
+Finalmente, implementamos `remove_item_from_cart/3`, onde simplesmente emitimos uma chamada `Repo.delete_all` com uma consulta para excluir o item do carrinho em nosso carrinho que corresponde ao ID do produto. Por fim, recarregamos o conteúdo do carrinho chamando `get_cart/1`.
 
-With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/controllers/product_html/show.html.heex` and make the following changes:
+Com nossas novas funções de carrinho em vigor, agora podemos expor o botão "Adicionar ao carrinho" na página de exibição do catálogo de produtos. Abra seu modelo em `lib/hello_web/controllers/product_html/show.html.heex` e faça as seguintes alterações:
 
 ```diff
 ...
      <.link href={~p"/products/#{@product}/edit"}>
-       <.button>Edit product</.button>
+       <.button>Editar produto</.button>
      </.link>
 +    <.link href={~p"/cart_items?product_id=#{@product.id}"} method="post">
-+      <.button>Add to cart</.button>
++      <.button>Adicionar ao carrinho</.button>
 +    </.link>
 ...
 ```
 
-The `link` function component from `Phoenix.Component` accepts a `:method` attribute to issue an HTTP verb when clicked, instead of the default GET request. With this link in place, the "Add to cart" link will issue a POST request, which will be matched by the route we defined in router which dispatches to the `CartItemController.create/2` function.
+O componente de função `link` de `Phoenix.Component` aceita um atributo `:method` para emitir um verbo HTTP quando clicado, em vez da solicitação GET padrão. Com este link em vigor, o link "Adicionar ao carrinho" emitirá uma solicitação POST, que será correspondida pela rota que definimos no roteador que despacha para a função `CartItemController.create/2`.
 
-Let's try it out. Start your server with `mix phx.server` and visit a product page. If we try clicking the add to cart link, we'll be greeted by an error page with the following logs in the console:
+Vamos testá-lo. Inicie seu servidor com `mix phx.server` e visite uma página de produto. Se tentarmos clicar no link de adicionar ao carrinho, seremos recebidos por uma página de erro. Se você estiver autenticado, os seguintes logs devem estar visíveis no console:
 
 ```text
 [info] POST /cart_items
 [debug] Processing with HelloWeb.CartItemController.create/2
   Parameters: %{"_method" => "post", "product_id" => "1", ...}
-  Pipelines: [:browser]
+  Pipelines: [:browser, :require_authenticated_user]
+[debug] QUERY OK source="user_tokens" db=2.4ms idle=1340.8ms
+...
+[debug] QUERY OK source="cart_items" db=2.5ms
 INSERT INTO "cart_items" ...
 [info] Sent 302 in 24ms
 [info] GET /cart
 [debug] Processing with HelloWeb.CartController.show/2
   Parameters: %{}
-  Pipelines: [:browser]
+  Pipelines: [:browser, :require_authenticated_user]
+[debug] QUERY OK source="user_tokens" db=1.6ms idle=430.2ms
+...
 [debug] QUERY OK source="carts" db=1.9ms idle=1798.5ms
-
-[error] #PID<0.856.0> running HelloWeb.Endpoint (connection #PID<0.841.0>, stream id 5) terminated
-Server: localhost:4000 (http)
-Request: GET /cart
-** (exit) an exception was raised:
-    ** (UndefinedFunctionError) function HelloWeb.CartController.init/1 is undefined
-       (module HelloWeb.CartController is not available)
-       ...
+...
+[info] Sent 500 in 18ms
+[error] ** (UndefinedFunctionError) function HelloWeb.CartController.init/1 is undefined (module HelloWeb.CartController is not available)
+    ...
 ```
 
-It's working! Kind of. If we follow the logs, we see our POST to the `/cart_items` path. Next, we can see our `ShoppingCart.add_item_to_cart` function successfully inserted a row into the `cart_items` table, and then we issued a redirect to `/cart`. Before our error, we also see a query to the `carts` table, which means we're fetching the current user's cart. So far so good. We know our `CartItem` controller and new `ShoppingCart` context functions are doing their jobs, but we've hit our next unimplemented feature when the router attempts to dispatch to a nonexistent cart controller. Let's create the cart controller, view, and template to display and manage user carts.
+Está funcionando! Mais ou menos. Se seguirmos os logs, veremos nosso POST para o caminho `/cart_items`. Em seguida, podemos ver que nossa função `ShoppingCart.add_item_to_cart` inseriu com sucesso uma linha na tabela `cart_items`, e então emitimos um redirecionamento para `/cart`. Antes do nosso erro, também vemos uma consulta à tabela `carts`, o que significa que estamos buscando o carrinho do usuário atual. Até agora, tudo bem. Sabemos que nosso controlador `CartItem` e as novas funções de contexto `ShoppingCart` estão fazendo seus trabalhos, mas encontramos nosso próximo recurso não implementado quando o roteador tenta despachar para um controlador de carrinho inexistente. Vamos criar o controlador de carrinho, view e template para exibir e gerenciar carrinhos de usuários.
 
-Create a new file at `lib/hello_web/controllers/cart_controller.ex` and key this in:
+Crie um novo arquivo em `lib/hello_web/controllers/cart_controller.ex` e insira o seguinte:
 
 ```elixir
 defmodule HelloWeb.CartController do
@@ -909,14 +983,14 @@ defmodule HelloWeb.CartController do
   alias Hello.ShoppingCart
 
   def show(conn, _params) do
-    render(conn, :show, changeset: ShoppingCart.change_cart(conn.assigns.cart))
+    render(conn, :show, changeset: ShoppingCart.change_cart(conn.assigns.current_scope, conn.assigns.cart))
   end
 end
 ```
 
-We defined a new cart controller to handle the `get "/cart"` route. For showing a cart, we render a `"show.html"` template which we'll create in a moment. We know we need to allow the cart items to be changed by quantity updates, so right away we know we'll need a cart changeset. Fortunately, the context generator included a `ShoppingCart.change_cart/1` function, which we'll use. We pass it our cart struct which is already in the connection assigns thanks to the `fetch_current_cart` plug we defined in the router.
+Definimos um novo controlador de carrinho para lidar com a rota `get "/cart"`. Para mostrar um carrinho, renderizamos um template `"show.html"` que criaremos em breve. Sabemos que precisamos permitir que os itens do carrinho sejam alterados por atualizações de quantidade, então já sabemos que precisaremos de um changeset de carrinho. Felizmente, o gerador de contexto incluiu uma função `ShoppingCart.change_cart/1`, que usaremos. Passamos a nossa estrutura de carrinho que já está nos assigns da conexão graças ao plug `fetch_current_cart` que definimos no roteador.
 
-Next, we can implement the view and template. Create a new view file at `lib/hello_web/controllers/cart_html.ex` with the following content:
+Em seguida, podemos implementar a view e o template. Crie um novo arquivo de view em `lib/hello_web/controllers/cart_html.ex` com o seguinte conteúdo:
 
 ```elixir
 defmodule HelloWeb.CartHTML do
@@ -930,14 +1004,14 @@ defmodule HelloWeb.CartHTML do
 end
 ```
 
-We created a view to render our `show.html` template and aliased our `ShoppingCart` context so it will be in scope for our template. We'll need to display the cart prices like product item price, cart total, etc, so we defined a `currency_to_str/1` which takes our decimal struct, rounds it properly for display, and prepends a USD dollar sign.
+Criamos uma view para renderizar nosso template `show.html` e criamos um alias para nosso contexto `ShoppingCart` para que esteja no escopo do nosso template. Precisaremos exibir os preços do carrinho, como preço do item do produto, total do carrinho, etc., então definimos um `currency_to_str/1` que pega nossa estrutura decimal, arredonda-a adequadamente para exibição e adiciona um cifrão USD.
 
-Next we can create the template at `lib/hello_web/controllers/cart_html/show.html.heex`:
+Em seguida, podemos criar o template em `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```heex
 <.header>
-  My Cart
-  <:subtitle :if={@cart.items == []}>Your cart is empty</:subtitle>
+  Meu Carrinho
+  <:subtitle :if={@cart.items == []}>Seu carrinho está vazio</:subtitle>
 </.header>
 
 <div :if={@cart.items !== []}>
@@ -947,18 +1021,18 @@ Next we can create the template at `lib/hello_web/controllers/cart_html/show.htm
       {currency_to_str(ShoppingCart.total_item_price(item))}
     </.inputs_for>
     <:actions>
-      <.button>Update cart</.button>
+      <.button>Atualizar carrinho</.button>
     </:actions>
   </.simple_form>
   <b>Total</b>: {currency_to_str(ShoppingCart.total_cart_price(@cart))}
 </div>
 
-<.back navigate={~p"/products"}>Back to products</.back>
+<.back navigate={~p"/products"}>Voltar aos produtos</.back>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](`Phoenix.Component.inputs_for/1`) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
+Começamos mostrando a mensagem de carrinho vazio se nossos `cart.items` pré-carregados estiverem vazios. Se tivermos itens, usamos o componente `simple_form` fornecido pelo nosso `HelloWeb.CoreComponents` para pegar nosso changeset de carrinho que atribuímos na ação `CartController.show/2` e criar um formulário que mapeia para nossa ação `update/2` do controlador de carrinho. Dentro do formulário, usamos o componente [`inputs_for`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) para renderizar entradas para os itens de carrinho aninhados. Isso nos permitirá mapear as entradas de itens de volta quando o formulário for enviado. Em seguida, exibimos uma entrada numérica para a quantidade do item e a rotulamos com o título do produto. Terminamos o formulário do item convertendo o preço do item para string. Ainda não escrevemos a função `ShoppingCart.total_item_price/1`, mas novamente empregamos a ideia de interfaces públicas claras e descritivas para nossos contextos. Depois de renderizar entradas para todos os itens do carrinho, mostramos um botão de envio "atualizar carrinho", junto com o preço total de todo o carrinho. Isso é realizado com outra nova função `ShoppingCart.total_cart_price/1` que implementaremos em breve. Finalmente, adicionamos um componente `back` para voltar à nossa página de produtos.
 
-We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
+Estamos quase prontos para experimentar nossa página de carrinho, mas primeiro precisamos implementar nossas novas funções de cálculo de moeda. Abra seu contexto de carrinho de compras em `lib/hello/shopping_cart.ex` e adicione estas novas funções:
 
 ```elixir
   def total_item_price(%CartItem{} = item) do
@@ -974,43 +1048,45 @@ We're almost ready to try out our cart page, but first we need to implement our 
   end
 ```
 
-We implemented `total_item_price/1` which accepts a `%CartItem{}` struct. To calculate the total price, we simply take the preloaded product's price and multiply it by the item's quantity. We used `Decimal.mult/2` to take our decimal currency struct and multiply it with proper precision. Similarly for calculating the total cart price, we implemented a `total_cart_price/1` function which accepts the cart and sums the preloaded product prices for items in the cart. We again make use of the `Decimal` functions to add our decimal structs together.
+Implementamos `total_item_price/1`, que aceita uma estrutura `%CartItem{}`. Para calcular o preço total, simplesmente pegamos o preço do produto pré-carregado e o multiplicamos pela quantidade do item. Usamos `Decimal.mult/2` para pegar nossa estrutura de moeda decimal e multiplicá-la com a precisão adequada. De maneira semelhante, para calcular o preço total do carrinho, implementamos uma função `total_cart_price/1` que aceita o carrinho e soma os preços dos produtos pré-carregados para os itens no carrinho. Novamente fazemos uso das funções `Decimal` para adicionar nossas estruturas decimais.
 
-Now that we can calculate price totals, let's try it out! Visit [`http://localhost:4000/cart`](http://localhost:4000/cart) and you should already see your first item in the cart. Going back to the same product and clicking "add to cart" will show our upsert in action. Your quantity should now be two. Nice work!
+Agora que podemos calcular os totais de preços, vamos testá-los! Visite [`http://localhost:4000/cart`](http://localhost:4000/cart) e você já deve ver seu primeiro item no carrinho. Voltando ao mesmo produto e clicando em "adicionar ao carrinho" mostrará nossa operação de upsert em ação. Sua quantidade agora deve ser dois. Bom trabalho!
 
-Our cart page is almost complete, but submitting the form will yield yet another error.
+Nossa página de carrinho está quase completa, mas enviar o formulário produzirá mais um erro.
 
 ```text
-Request: POST /cart
-** (exit) an exception was raised:
-    ** (UndefinedFunctionError) function HelloWeb.CartController.update/2 is undefined or private
+[info] POST /cart
+...
+[error] ** (UndefinedFunctionError) function HelloWeb.CartController.update/2 is undefined or private
 ```
 
-Let's head back to our `CartController` at `lib/hello_web/controllers/cart_controller.ex` and implement the update action:
+Vamos voltar ao nosso `CartController` em `lib/hello_web/controllers/cart_controller.ex` e implementar a ação de atualização:
 
 ```elixir
   def update(conn, %{"cart" => cart_params}) do
-    case ShoppingCart.update_cart(conn.assigns.cart, cart_params) do
+    case ShoppingCart.update_cart(conn.assigns.current_scope, conn.assigns.cart, cart_params) do
       {:ok, _cart} ->
         redirect(conn, to: ~p"/cart")
 
       {:error, _changeset} ->
         conn
-        |> put_flash(:error, "There was an error updating your cart")
+        |> put_flash(:error, "Ocorreu um erro ao atualizar seu carrinho")
         |> redirect(to: ~p"/cart")
     end
   end
 ```
 
-We started by plucking out the cart params from the form submit. Next, we call our existing `ShoppingCart.update_cart/2` function which was added by the context generator. We'll need to make some changes to this function, but the interface is good as is. If the update is successful, we redirect back to the cart page, otherwise we show a flash error message and send the user back to the cart page to fix any mistakes. Out-of-the-box, our `ShoppingCart.update_cart/2` function only concerned itself with casting the cart params into a changeset and updates it against our repo. For our purposes, we now need it to handle nested cart item associations, and most importantly, business logic for how to handle quantity updates like zero-quantity items being removed from the cart.
+Começamos extraindo os parâmetros do carrinho do envio do formulário. Em seguida, chamamos nossa função existente `ShoppingCart.update_cart/2` que foi adicionada pelo gerador de contexto. Precisaremos fazer algumas alterações nesta função, mas a interface está boa como está. Se a atualização for bem-sucedida, redirecionamos de volta à página do carrinho, caso contrário, mostramos uma mensagem de erro flash e enviamos o usuário de volta à página do carrinho para corrigir quaisquer erros. De imediato, nossa função `ShoppingCart.update_cart/2` só se preocupava em moldar os parâmetros do carrinho em um changeset e atualizá-lo contra nosso repositório. Para nossos propósitos, agora precisamos que ele lide com associações de itens de carrinho aninhadas e, o mais importante, lógica de negócios para como lidar com atualizações de quantidade, como itens de quantidade zero sendo removidos do carrinho.
 
-Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and replace your `update_cart/2` function with the following implementation:
+Volte ao seu contexto de carrinho de compras em `lib/hello/shopping_cart.ex` e substitua sua função `update_cart/2` pela seguinte implementação:
 
 ```elixir
-  def update_cart(%Cart{} = cart, attrs) do
+  def update_cart(%Scope{} = scope, %Cart{} = cart, attrs) do
+    true = cart.user_id == scope.user.id
+    
     changeset =
       cart
-      |> Cart.changeset(attrs)
+      |> Cart.changeset(attrs, scope)
       |> Ecto.Changeset.cast_assoc(:items, with: &CartItem.changeset/2)
 
     Ecto.Multi.new()
@@ -1020,31 +1096,35 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
     end)
     |> Repo.transaction()
     |> case do
-      {:ok, %{cart: cart}} -> {:ok, cart}
-      {:error, :cart, changeset, _changes_so_far} -> {:error, changeset}
+      {:ok, %{cart: cart}} ->
+        broadcast(scope, {:updated, cart})
+        {:ok, cart}
+  
+      {:error, :cart, changeset, _changes_so_far} ->
+        {:error, changeset}
     end
   end
 ```
 
-We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](`Phoenix.Component.inputs_for/1`) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
+Começamos muito parecido com o código inicial - pegamos a estrutura do carrinho e moldamos a entrada do usuário para um changeset de carrinho, exceto que desta vez usamos `Ecto.Changeset.cast_assoc/3` para moldar os dados de itens aninhados em changesets de `CartItem`. Lembra-se da chamada [`<.inputs_for />`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) em nosso template de formulário de carrinho? Esses dados de ID ocultos é o que permite que o `cast_assoc` do Ecto mapeie os dados do item de volta para as associações de itens existentes no carrinho. Em seguida, usamos `Ecto.Multi.new/0`, que você pode não ter visto antes. O `Multi` do Ecto é um recurso que permite definir preguiçosamente uma cadeia de operações nomeadas para eventualmente executar dentro de uma transação de banco de dados. Cada operação na cadeia multi recebe os valores das etapas anteriores e executa até que uma etapa com falha seja encontrada. Quando uma operação falha, a transação é revertida e um erro é retornado, caso contrário, a transação é confirmada.
 
-For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transaction/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
+Para nossas operações multi, começamos emitindo uma atualização do nosso carrinho, que nomeamos como `:cart`. Após a atualização do carrinho ser emitida, realizamos uma operação multi `delete_all`, que pega o carrinho atualizado e aplica nossa lógica de quantidade zero. Podamos quaisquer itens no carrinho com quantidade zero retornando uma consulta ecto que encontra todos os itens de carrinho para este carrinho com uma quantidade vazia. Chamar `Repo.transaction/1` com nosso multi executará as operações em uma nova transação e retornaremos o resultado de sucesso ou falha para o chamador, assim como a função original.
 
-Let's head back to the browser and try it out. Add a few products to your cart, update the quantities, and watch the values changes along with the price calculations. Setting any quantity to 0 will also remove the item. Pretty neat!
+Vamos voltar ao navegador e experimentá-lo. Adicione alguns produtos ao seu carrinho, atualize as quantidades e observe as mudanças de valores junto com os cálculos de preço. Definir qualquer quantidade como 0 também removerá o item. Você também pode tentar sair e registrar um novo usuário para ver como os carrinhos são limitados ao usuário atual. Muito legal!
 
-## Adding an Orders context
+## Adicionando um contexto de Pedidos
 
-With our `Catalog` and `ShoppingCart` contexts, we're seeing first-hand how our well-considered modules and function names are yielding clear and maintainable code. Our last order of business is to allow the user to initiate the checkout process. We won't go as far as integrating payment processing or order fulfillment, but we'll get you started in that direction. Like before, we need to decide where code for completing an order should live. Is it part of the catalog? Clearly not, but what about the shopping cart? Shopping carts are related to orders – after all, the user has to add items in order to purchase any products – but should the order checkout process be grouped here?
+Com nossos contextos `Catalog` e `ShoppingCart`, estamos vendo em primeira mão como nossos módulos e nomes de funções bem considerados estão resultando em código claro e fácil de manter. Nossa última tarefa é permitir que o usuário inicie o processo de checkout. Não iremos tão longe quanto integrar o processamento de pagamentos ou o cumprimento de pedidos, mas vamos iniciá-lo nessa direção. Como antes, precisamos decidir onde o código para completar um pedido deve ficar. É parte do catálogo? Claramente não, mas e quanto ao carrinho de compras? Os carrinhos de compras estão relacionados a pedidos – afinal, o usuário precisa adicionar itens para comprar produtos – mas o processo de checkout do pedido deveria ser agrupado aqui?
 
-If we stop and consider the order process, we'll see that orders involve related, but distinctly different data from the cart contents. Also, business rules around the checkout process are much different than carting. For example, we may allow a user to add a back-ordered item to their cart, but we could not allow an order with no inventory to be completed. Additionally, we need to capture point-in-time product information when an order is completed, such as the price of the items *at payment transaction time*. This is essential because a product price may change in the future, but the line items in our order must always record and display what we charged at time of purchase. For these reasons, we can start to see that ordering can stand on its own with its own data concerns and business rules.
+Se pararmos para considerar o processo de pedido, veremos que os pedidos envolvem dados relacionados, mas distintamente diferentes dos conteúdos do carrinho. Além disso, as regras de negócio em torno do processo de checkout são muito diferentes das do carrinho. Por exemplo, podemos permitir que um usuário adicione um item em espera ao seu carrinho, mas não poderíamos permitir que um pedido sem estoque seja concluído. Adicionalmente, precisamos capturar informações do produto em tempo real quando um pedido é concluído, como o preço dos itens *no momento da transação de pagamento*. Isso é essencial porque o preço de um produto pode mudar no futuro, mas os itens de linha em nosso pedido devem sempre registrar e exibir o que cobramos no momento da compra. Por essas razões, podemos começar a ver que o processo de pedidos pode existir por si só, com suas próprias preocupações de dados e regras de negócio.
 
-Naming wise, `Orders` clearly defines the scope of our context, so let's get started by again taking advantage of the context generators. Run the following command in your console:
+Em termos de nomenclatura, `Orders` define claramente nosso contexto, então vamos começar aproveitando novamente os geradores de contexto. Observe que o escopo `user` gerado por `mix phx.gen.auth` está marcado como escopo padrão (no seu `config/config.exs`), portanto não precisamos especificá-lo em nosso comando. Pode haver diferentes escopos em uma aplicação, caso em que a opção `--scope` pode ser usada ao executar os geradores. Execute o seguinte comando no seu console:
 
 ```console
-$ mix phx.gen.context Orders Order orders user_uuid:uuid total_price:decimal
+$ mix phx.gen.context Orders Order orders total_price:decimal
 
 * creating lib/hello/orders/order.ex
-* creating priv/repo/migrations/20210209214612_create_orders.exs
+* creating priv/repo/migrations/20250209214612_create_orders.exs
 * creating lib/hello/orders.ex
 * injecting lib/hello/orders.ex
 * creating test/hello/orders_test.exs
@@ -1057,34 +1137,34 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-We generated an `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
+Geramos um contexto `Orders`. O pedido é automaticamente vinculado ao usuário atual e adicionamos uma coluna `total_price`. Com nosso ponto de partida no lugar, vamos abrir a nova migração criada em `priv/repo/migrations/*_create_orders.exs` e fazer as seguintes alterações:
 
-```elixir
+```diff
   def change do
     create table(:orders) do
-      add :user_uuid, :uuid
 -     add :total_price, :decimal
 +     add :total_price, :decimal, precision: 15, scale: 6, null: false
+      add :user_id, references(:user, type: :id, on_delete: :delete_all)
 
       timestamps()
     end
   end
 ```
 
-Like we did previously, we gave appropriate precision and scale options for our decimal column which will allow us to store currency without precision loss. We also added a not-null constraint to enforce all orders to have a price.
+Como fizemos anteriormente, demos opções apropriadas de precisão e escala para nossa coluna decimal, o que nos permitirá armazenar moeda sem perda de precisão. Também adicionamos uma restrição não-nula para garantir que todos os pedidos tenham um preço.
 
-The orders table alone doesn't hold much information, but we know we'll need to store point-in-time product price information of all the items in the order. For that, we'll add an additional struct for this context named `LineItem`. Line items will capture the price of the product *at payment transaction time*. Please run the following command:
+A tabela de pedidos sozinha não contém muita informação, mas sabemos que precisaremos armazenar informações de preço do produto em tempo real de todos os itens no pedido. Para isso, adicionaremos uma estrutura adicional para este contexto chamada `LineItem`. Os itens de linha capturarão o preço do produto *no momento da transação de pagamento*. Execute o seguinte comando:
 
 ```console
 $ mix phx.gen.context Orders LineItem order_line_items \
 price:decimal quantity:integer \
-order_id:references:orders product_id:references:products
+order_id:references:orders product_id:references:products --no-scope
 
 You are generating into an existing context.
 ...
 Would you like to proceed? [Yn] y
 * creating lib/hello/orders/line_item.ex
-* creating priv/repo/migrations/20210209215050_create_order_line_items.exs
+* creating priv/repo/migrations/20250209215050_create_order_line_items.exs
 * injecting lib/hello/orders.ex
 * injecting test/hello/orders_test.exs
 * injecting test/support/fixtures/orders_fixtures.ex
@@ -1094,9 +1174,9 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and inject supporting functions into our orders context. Like before, let's modify the migration in `priv/repo/migrations/*_create_order_line_items.exs` and make the following decimal field changes:
+Usamos o comando `phx.gen.context` para gerar o esquema Ecto `LineItem` e injetar funções de suporte em nosso contexto de pedidos. Como antes, vamos modificar a migração em `priv/repo/migrations/*_create_order_line_items.exs` e fazer as seguintes alterações no campo decimal:
 
-```elixir
+```diff
   def change do
     create table(:order_line_items) do
 -     add :price, :decimal
@@ -1113,13 +1193,14 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
   end
 ```
 
-With our migration in place, let's wire up our orders and line items associations in `lib/hello/orders/order.ex`:
+Com nossa migração no lugar, vamos conectar nossas associações de pedidos e itens de linha em `lib/hello/orders/order.ex`:
 
-```elixir
+```diff
   schema "orders" do
     field :total_price, :decimal
-    field :user_uuid, Ecto.UUID
+-   field :user_id, :id
 
++   belongs_to :user, Hello.Accounts.User
 +   has_many :line_items, Hello.Orders.LineItem
 +   has_many :products, through: [:line_items, :product]
 
@@ -1127,9 +1208,9 @@ With our migration in place, let's wire up our orders and line items association
   end
 ```
 
-We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's wire up the association in the other direction in `lib/hello/orders/line_item.ex`:
+Usamos `has_many :line_items` para associar pedidos e itens de linha, assim como vimos antes. Em seguida, usamos o recurso `:through` de `has_many`, que nos permite instruir o ecto sobre como associar recursos através de outro relacionamento. Neste caso, podemos associar produtos de um pedido encontrando todos os produtos através dos itens de linha associados. Agora, vamos conectar a associação na outra direção em `lib/hello/orders/line_item.ex`:
 
-```elixir
+```diff
   schema "order_line_items" do
     field :price, :decimal
     field :quantity, :integer
@@ -1143,29 +1224,33 @@ We used `has_many :line_items` to associate orders and line items, just like we'
   end
 ```
 
-We used `belongs_to` to associate line items to orders and products. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
+Usamos `belongs_to` para associar itens de linha a pedidos e produtos. Com nossas associações no lugar, podemos começar a integrar a interface web no nosso processo de pedidos. Abra seu roteador `lib/hello_web/router.ex` e adicione a seguinte linha:
 
-```elixir
+```diff
   scope "/", HelloWeb do
-    pipe_through :browser
+    pipe_through [:browser, :require_authenticated_user]
 
-    ...
+    resources "/cart_items", CartItemController, only: [:create, :delete]
+
+    get "/cart", CartController, :show
+    put "/cart", CartController, :update
+
 +   resources "/orders", OrderController, only: [:create, :show]
   end
 ```
 
-We wired up `create` and `show` routes for our generated `OrderController`, since these are the only actions we need at the moment. With our routes in place, we can now migrate up:
+Configuramos as rotas `create` e `show` para nosso `OrderController` gerado, já que estas são as únicas ações que precisamos no momento. Com nossas rotas no lugar, agora podemos migrar:
 
 ```console
 $ mix ecto.migrate
 
-17:14:37.715 [info] == Running 20210209214612 Hello.Repo.Migrations.CreateOrders.change/0 forward
+17:14:37.715 [info] == Running 20250209214612 Hello.Repo.Migrations.CreateOrders.change/0 forward
 
 17:14:37.720 [info] create table orders
 
-17:14:37.755 [info] == Migrated 20210209214612 in 0.0s
+17:14:37.755 [info] == Migrated 20250209214612 in 0.0s
 
-17:14:37.784 [info] == Running 20210209215050 Hello.Repo.Migrations.CreateOrderLineItems.change/0 forward
+17:14:37.784 [info] == Running 20250209215050 Hello.Repo.Migrations.CreateOrderLineItems.change/0 forward
 
 17:14:37.785 [info] create table order_line_items
 
@@ -1173,22 +1258,21 @@ $ mix ecto.migrate
 
 17:14:37.796 [info] create index order_line_items_product_id_index
 
-17:14:37.798 [info] == Migrated 20210209215050 in 0.0s
+17:14:37.798 [info] == Migrated 20250209215050 in 0.0s
 ```
 
-Before we render information about our orders, we need to ensure our order data is fully populated and can be looked up by a current user. Open up your orders context in `lib/hello/orders.ex` and replace your `get_order!/1` function by a new `get_order!/2` definition:
+Antes de renderizar informações sobre nossos pedidos, precisamos garantir que nossos dados de pedido estejam totalmente preenchidos e possam ser consultados por um usuário atual. Abra seu contexto de pedidos em `lib/hello/orders.ex` e ajuste seu `get_order!/2` para incluir um preload:
 
-```elixir
-  def get_order!(user_uuid, id) do
-    Order
-    |> Repo.get_by!(id: id, user_uuid: user_uuid)
-    |> Repo.preload([line_items: [:product]])
-  end
+```diff
+   def get_order!(%Scope{} = scope, id) do
+-    Repo.get_by!(Order, id: id, user_id: scope.user.id)
++    Order
++    |> Repo.get_by!(id: id, user_id: scope.user.id)
++    |> Repo.preload([line_items: [:product]])
+   end
 ```
 
-We rewrote the function to accept a user UUID and query our repo for an order matching the user's ID for a given order ID. Then we populated the order by preloading our line item and product associations.
-
-To complete an order, our cart page can issue a POST to the `OrderController.create` action, but we need to implement the operations and logic to actually complete an order. Like before, we'll start at the web interface. Create a new file at `lib/hello_web/controllers/order_controller.ex` and key this in:
+Para completar um pedido, nossa página de carrinho pode emitir um POST para a ação `OrderController.create`, mas precisamos implementar as operações e lógica para realmente completar um pedido. Como antes, começaremos pela interface web. Crie um novo arquivo em `lib/hello_web/controllers/order_controller.ex` e insira isto:
 
 ```elixir
 defmodule HelloWeb.OrderController do
@@ -1197,7 +1281,7 @@ defmodule HelloWeb.OrderController do
   alias Hello.Orders
 
   def create(conn, _) do
-    case Orders.complete_order(conn.assigns.cart) do
+    case Orders.complete_order(conn.assigns.current_scope, conn.assigns.cart) do
       {:ok, order} ->
         conn
         |> put_flash(:info, "Order created successfully.")
@@ -1212,25 +1296,27 @@ defmodule HelloWeb.OrderController do
 end
 ```
 
-We wrote the `create` action to call an as-yet-implemented `Orders.complete_order/1` function. Our code is technically "creating" an order, but it's important to step back and consider the naming of your interfaces. The act of *completing* an order is extremely important in our system. Money changes hands in a transaction, physical goods could be automatically shipped, etc. Such an operation deserves a better, more obvious function name, such as `complete_order`. If the order is completed successfully we redirect to the show page, otherwise a flash error is shown as we redirect back to the cart page.
+Escrevemos a ação `create` para chamar uma função `Orders.complete_order/2` que ainda não implementamos. Nosso código está tecnicamente "criando" um pedido, mas é importante recuar e considerar a nomenclatura de suas interfaces. O ato de *completar* um pedido é extremamente importante em nosso sistema. Dinheiro muda de mãos em uma transação, bens físicos podem ser enviados automaticamente, etc. Tal operação merece um nome de função melhor e mais óbvio, como `complete_order`. Se o pedido for concluído com sucesso, redirecionamos para a página de exibição, caso contrário, um erro flash é mostrado e redirecionamos de volta para a página do carrinho.
 
-Here is also a good opportunity to highlight that contexts can naturally work with data defined by other contexts too. This will be especially common with data that is used throughout the application, such as the cart here (but it can also be the current user or the current project, and so forth, depending on your project).
+Aqui também é uma boa oportunidade para destacar que os contextos podem naturalmente trabalhar com dados definidos por outros contextos também. Isso será especialmente comum com dados que são usados em toda a aplicação, como o carrinho aqui (mas também pode ser o usuário atual ou o projeto atual, e assim por diante, dependendo do seu projeto).
 
-Now we can implement our `Orders.complete_order/1` function. To complete an order, our job will require a few operations:
+Agora podemos implementar nossa função `Orders.complete_order/2`. Para completar um pedido, nosso trabalho exigirá algumas operações:
 
-  1. A new order record must be persisted with the total price of the order
-  2. All items in the cart must be transformed into new order line items records
-    with quantity and point-in-time product price information
-  3. After successful order insert (and eventual payment), items must be pruned
-    from the cart
+  1. Um novo registro de pedido deve ser persistido com o preço total do pedido
+  2. Todos os itens no carrinho devem ser transformados em novos registros de itens de linha de pedido
+    com informações de quantidade e preço do produto em tempo real
+  3. Após a inserção bem-sucedida do pedido (e eventual pagamento), os itens devem ser removidos
+    do carrinho
 
-From our requirements alone, we can start to see why a generic `create_order` function doesn't cut it. Let's implement this new function in `lib/hello/orders.ex`:
+Apenas com nossos requisitos, podemos começar a ver por que uma função genérica `create_order` não é suficiente. Vamos implementar esta nova função em `lib/hello/orders.ex`:
 
 ```elixir
   alias Hello.Orders.LineItem
   alias Hello.ShoppingCart
 
-  def complete_order(%ShoppingCart.Cart{} = cart) do
+  def complete_order(%Scope{} = scope, %ShoppingCart.Cart{} = cart) do
+    true = cart.user_id == scope.user.id
+
     line_items =
       Enum.map(cart.items, fn item ->
         %{product_id: item.product_id, price: item.product.price, quantity: item.quantity}
@@ -1238,7 +1324,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
 
     order =
       Ecto.Changeset.change(%Order{},
-        user_uuid: cart.user_uuid,
+        user_id: scope.user.id,
         total_price: ShoppingCart.total_cart_price(cart),
         line_items: line_items
       )
@@ -1246,37 +1332,41 @@ From our requirements alone, we can start to see why a generic `create_order` fu
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:order, order)
     |> Ecto.Multi.run(:prune_cart, fn _repo, _changes ->
-      ShoppingCart.prune_cart_items(cart)
+      ShoppingCart.prune_cart_items(scope, cart)
     end)
     |> Repo.transaction()
     |> case do
-      {:ok, %{order: order}} -> {:ok, order}
-      {:error, name, value, _changes_so_far} -> {:error, {name, value}}
+      {:ok, %{order: order}} ->
+        broadcast(scope, {:created, order})
+        {:ok, order}
+
+      {:error, name, value, _changes_so_far} ->
+        {:error, {name, value}}
     end
   end
 ```
 
-We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of the order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we can again make use of `Ecto.Multi` to execute our operations in a database transaction. We start by inserting the order, followed by a `run` operation. The `Ecto.Multi.run/3` function allows us to run any code in the function which must either succeed with `{:ok, result}` or error, which halts and rolls back the transaction. Here, we simply call into our shopping cart context and ask it to prune all items in a cart. Running the transaction will execute the multi as before and we return the result to the caller.
+Começamos mapeando os `%ShoppingCart.CartItem{}` em nosso carrinho de compras para um mapa de estruturas de itens de linha de pedido. O trabalho do registro de item de linha de pedido é capturar o preço do produto *no momento da transação de pagamento*, então referenciamos o preço do produto aqui. Em seguida, criamos um changeset de pedido básico com `Ecto.Changeset.change/2` e associamos nosso UUID de usuário, definimos nosso cálculo de preço total e colocamos nossos itens de linha de pedido no changeset. Com um changeset de pedido novo pronto para ser inserido, podemos novamente fazer uso de `Ecto.Multi` para executar nossas operações em uma transação de banco de dados. Começamos inserindo o pedido, seguido por uma operação `run`. A função `Ecto.Multi.run/3` nos permite executar qualquer código na função que deve ter sucesso com `{:ok, result}` ou erro, o que interrompe e reverte a transação. Aqui, simplesmente chamamos nosso contexto de carrinho de compras e pedimos para limpar todos os itens em um carrinho. Executar a transação executará o multi como antes e retornamos o resultado ao chamador.
 
-To close out our order completion, we need to implement the `ShoppingCart.prune_cart_items/1` function in `lib/hello/shopping_cart.ex`:
+Para finalizar nossa conclusão de pedido, precisamos implementar a função `ShoppingCart.prune_cart_items/1` em `lib/hello/shopping_cart.ex`:
 
 ```elixir
-  def prune_cart_items(%Cart{} = cart) do
+  def prune_cart_items(%Scope{} = scope, %Cart{} = cart) do
     {_, _} = Repo.delete_all(from(i in CartItem, where: i.cart_id == ^cart.id))
-    {:ok, reload_cart(cart)}
+    {:ok, get_cart(scope)}
   end
 ```
 
-Our new function accepts the cart struct and issues a `Repo.delete_all` which accepts a query of all items for the provided cart. We return a success result by simply reloading the pruned cart to the caller. With our context complete, we now need to show the user their completed order. Head back to your order controller and add the `show/2` action:
+Nossa nova função aceita a estrutura do carrinho e emite um `Repo.delete_all` que aceita uma consulta de todos os itens para o carrinho fornecido. Retornamos um resultado de sucesso simplesmente recarregando o carrinho limpo para o chamador. Com nosso contexto completo, agora precisamos mostrar ao usuário seu pedido concluído. Volte ao seu controlador de pedidos e adicione a ação `show/2`:
 
 ```elixir
   def show(conn, %{"id" => id}) do
-    order = Orders.get_order!(conn.assigns.current_uuid, id)
+    order = Orders.get_order!(conn.assigns.current_scope, id)
     render(conn, :show, order: order)
   end
 ```
 
-We added the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can implement the view and template. Create a new view file at `lib/hello_web/controllers/order_html.ex` with the following content:
+Adicionamos a ação de exibição para passar nosso `conn.assigns.current_scope` para `get_order!` que autoriza que os pedidos sejam visualizáveis apenas pelo proprietário do pedido. Em seguida, podemos implementar a view e o template. Crie um novo arquivo de view em `lib/hello_web/controllers/order_html.ex` com o seguinte conteúdo:
 
 ```elixir
 defmodule HelloWeb.OrderHTML do
@@ -1285,87 +1375,87 @@ defmodule HelloWeb.OrderHTML do
   embed_templates "order_html/*"
 end
 ```
-Next we can create the template at `lib/hello_web/controllers/order_html/show.html.heex`:
+Em seguida, podemos criar o template em `lib/hello_web/controllers/order_html/show.html.heex`:
 
 ```heex
 <.header>
-  Thank you for your order!
+  Obrigado pelo seu pedido!
   <:subtitle>
-     <strong>User uuid: </strong>{@order.user_uuid}
+     <strong>Email: </strong>{@current_scope.user.email}
   </:subtitle>
 </.header>
 
 <.table id="items" rows={@order.line_items}>
-  <:col :let={item} label="Title">{item.product.title}</:col>
-  <:col :let={item} label="Quantity">{item.quantity}</:col>
-  <:col :let={item} label="Price">
+  <:col :let={item} label="Título">{item.product.title}</:col>
+  <:col :let={item} label="Quantidade">{item.quantity}</:col>
+  <:col :let={item} label="Preço">
     {HelloWeb.CartHTML.currency_to_str(item.price)}
   </:col>
 </.table>
 
-<strong>Total price:</strong>
+<strong>Preço total:</strong>
 {HelloWeb.CartHTML.currency_to_str(@order.total_price)}
 
-<.back navigate={~p"/products"}>Back to products</.back>
+<.back navigate={~p"/products"}>Voltar aos produtos</.back>
 ```
 
-To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
+Para mostrar nosso pedido concluído, exibimos o usuário do pedido, seguido pela listagem de itens de linha com título do produto, quantidade e o preço que "transacionamos" ao completar o pedido, juntamente com o preço total.
 
-Our last addition will be to add the "complete order" button to our cart page to allow completing an order. Add the following button to the <.header> of the cart show template in `lib/hello_web/controllers/cart_html/show.html.heex`:
+Nossa última adição será adicionar o botão "completar pedido" à nossa página do carrinho para permitir a conclusão de um pedido. Adicione o seguinte botão ao <.header> do template de exibição do carrinho em `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```diff
   <.header>
-    My Cart
+    Meu Carrinho
 +   <:actions>
 +     <.link href={~p"/orders"} method="post">
-+       <.button>Complete order</.button>
++       <.button>Completar pedido</.button>
 +     </.link>
 +   </:actions>
   </.header>
 ```
 
-We added a link with `method="post"` to send a POST request to our `OrderController.create` action. If we head back to our cart page at [`http://localhost:4000/cart`](http://localhost:4000/cart) and complete an order, we'll be greeted by our rendered template:
+Adicionamos um link com `method="post"` para enviar uma requisição POST para nossa ação `OrderController.create`. Se voltarmos à nossa página do carrinho em [`http://localhost:4000/cart`](http://localhost:4000/cart) e completarmos um pedido, seremos recebidos pelo nosso template renderizado:
 
 ```text
-Thank you for your order!
+Obrigado pelo seu pedido!
 
-User uuid: 08964c7c-908c-4a55-bcd3-9811ad8b0b9d
-Title                   Quantity Price
-Metaprogramming Elixir  2        $15.00
+UUID do usuário: 08964c7c-908c-4a55-bcd3-9811ad8b0b9d
+Título                   Quantidade Preço
+Metaprogramming Elixir  2          R$15,00
 
-Total price: $30.00
+Preço total: R$30,00
 ```
 
-Nice work! We haven't added payments, but we can already see how our `ShoppingCart` and `Orders` context splitting is driving us towards a maintainable solution. With our cart items separated from our order line items, we are well equipped in the future to add payment transactions, cart price detection, and more.
+Bom trabalho! Não adicionamos pagamentos, mas já podemos ver como nossa divisão de contextos `ShoppingCart` e `Orders` está nos levando a uma solução sustentável. Com nossos itens de carrinho separados de nossos itens de linha de pedido, estamos bem equipados no futuro para adicionar transações de pagamento, detecção de preço do carrinho e muito mais.
 
-Great work!
+Excelente trabalho!
 
 ## FAQ
 
-### When to use code generators?
+### Quando usar geradores de código?
 
-In this guide, we have used code generators for schemas, contexts, controllers, and more. If you are happy to move forward with Phoenix defaults, feel free to rely on generators to scaffold large parts of your application. When using Phoenix generators, the main question you need to answer is: does this new functionality (with its schema, table, and fields) belong to one of the existing contexts or a new one?
+Neste guia, usamos geradores de código para esquemas, contextos, controladores e mais. Se você estiver satisfeito em avançar com os padrões do Phoenix, sinta-se à vontade para confiar nos geradores para estruturar grandes partes da sua aplicação. Ao usar geradores do Phoenix, a principal pergunta que você precisa responder é: esta nova funcionalidade (com seu esquema, tabela e campos) pertence a um dos contextos existentes ou a um novo?
 
-This way, Phoenix generators guide you to use contexts to group related functionality, instead of having several dozens of schemas laying around without any structure. And remember: if you're stuck when trying to come up with a context name, you can simply use the plural form of the resource you're creating.
+Desta forma, os geradores do Phoenix o orientam a usar contextos para agrupar funcionalidades relacionadas, em vez de ter várias dezenas de esquemas espalhados sem qualquer estrutura. E lembre-se: se você estiver preso ao tentar criar um nome de contexto, você pode simplesmente usar a forma plural do recurso que está criando.
 
-### How do I structure code inside contexts?
+### Como estruturar código dentro de contextos?
 
-You may wonder how to organize the code inside contexts. For example, should you define a module for changesets (such as ProductChangesets) and another module for queries (such as ProductQueries)?
+Você pode se perguntar como organizar o código dentro dos contextos. Por exemplo, você deve definir um módulo para changesets (como ProductChangesets) e outro módulo para consultas (como ProductQueries)?
 
-One important benefit of contexts is that this decision does not matter much. The context is your public API, the other modules are private. Contexts isolate these modules into small groups so the surface area of your application is the context and not _all of your code_.
+Um benefício importante dos contextos é que essa decisão não importa muito. O contexto é sua API pública, os outros módulos são privados. Os contextos isolam esses módulos em pequenos grupos, de modo que a área de superfície de sua aplicação é o contexto e não _todo o seu código_.
 
-So while you and your team could establish patterns for organizing these private modules, it is also our opinion it is completely fine for them to be different. The major focus should be on how the contexts are defined and how they interact with each other (and with your web application).
+Então, embora você e sua equipe possam estabelecer padrões para organizar esses módulos privados, também é nossa opinião que é completamente aceitável que eles sejam diferentes. O foco principal deve ser em como os contextos são definidos e como interagem entre si (e com sua aplicação web).
 
-Think about it as a well-kept neighbourhood. Your contexts are houses, you want to keep them well-preserved, well-connected, etc. Inside the houses, they may all be a little bit different, and that's fine.
+Pense nisso como um bairro bem conservado. Seus contextos são casas, você quer mantê-las bem preservadas, bem conectadas, etc. Dentro das casas, todas podem ser um pouco diferentes, e isso é bom.
 
-### Returning Ecto structures from context APIs
+### Retornando estruturas Ecto das APIs de contexto
 
-As we explored the context API, you might have wondered:
+Ao explorar a API de contexto, você pode ter se perguntado:
 
-> If one of the goals of our context is to encapsulate Ecto Repo access, why does `create_user/1` return an `Ecto.Changeset` struct when we fail to create a user?
+> Se um dos objetivos do nosso contexto é encapsular o acesso ao Ecto Repo, por que `create_user/1` retorna uma estrutura `Ecto.Changeset` quando falhamos em criar um usuário?
 
-Although Changesets are part of Ecto, they are not tied to the database, and they can be used to map data from and to any source, which makes it a general and useful data structure for tracking field changes, perform validations, and generate error messages.
+Embora os Changesets sejam parte do Ecto, eles não estão vinculados ao banco de dados e podem ser usados para mapear dados de e para qualquer fonte, o que o torna uma estrutura de dados geral e útil para rastrear alterações de campo, realizar validações e gerar mensagens de erro.
 
-For those reasons, `%Ecto.Changeset{}` is a good choice to model the data changes between your contexts and your web layer - regardless if you are talking to an API or the database.
+Por essas razões, `%Ecto.Changeset{}` é uma boa escolha para modelar as mudanças de dados entre seus contextos e sua camada web - independentemente se você está falando com uma API ou com o banco de dados.
 
-Finally, note that your controllers and views are not hardcoded to work exclusively with Ecto either. Instead, Phoenix defines protocols such as `Phoenix.Param` and `Phoenix.HTML.FormData`, which allow any library to extend how Phoenix generates URL parameters or renders forms. Conveniently for us, the `phoenix_ecto` project implements those protocols, but you could as well bring your own data structures and implement them yourself.
+Finalmente, note que seus controladores e views não são codificados para trabalhar exclusivamente com Ecto. Em vez disso, o Phoenix define protocolos como `Phoenix.Param` e `Phoenix.HTML.FormData`, que permitem que qualquer biblioteca estenda como o Phoenix gera parâmetros de URL ou renderiza formulários. Convenientemente para nós, o projeto `phoenix_ecto` implementa esses protocolos, mas você também poderia trazer suas próprias estruturas de dados e implementá-las você mesmo.

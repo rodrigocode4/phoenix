@@ -1,80 +1,79 @@
-# Writing a Channels Client
+# Escrevendo um Cliente para Channels
 
-Client libraries for Phoenix Channels already exist in [several languages](https://hexdocs.pm/phoenix/channels.html#client-libraries), but if you want to write your own, this guide should get you started.
-It may also be useful as a guide for manual testing with a WebSocket client.
+Bibliotecas cliente para Phoenix Channels já existem em [várias linguagens](https://hexdocs.pm/phoenix/channels.html#client-libraries), mas se você quiser escrever a sua própria, este guia deve ajudá-lo a começar.
+Também pode ser útil como um guia para testes manuais com um cliente WebSocket.
 
-## Overview
+## Visão Geral
 
-Because WebSockets are bidirectional, messages can flow in either direction at any time.
-For this reason, clients typically use callbacks to handle incoming messages whenever they come.
+Como os WebSockets são bidirecionais, as mensagens podem fluir em qualquer direção a qualquer momento.
+Por esta razão, os clientes geralmente usam callbacks para lidar com mensagens recebidas sempre que elas chegam.
 
-A client must join at least one topic to begin sending and receiving messages, and may join any number of topics using the same connection.
+Um cliente deve ingressar em pelo menos um tópico para começar a enviar e receber mensagens, e pode ingressar em qualquer número de tópicos usando a mesma conexão.
 
-## Connecting
+## Conectando
 
-To establish a WebSocket connection to Phoenix Channels, first make note of the `socket` declaration in the application's `Endpoint` module.
-For example, if you see: `socket "/mobile", MyAppWeb.MobileSocket`, the path for the initial HTTP request is:
+Para estabelecer uma conexão WebSocket com Phoenix Channels, primeiro observe a declaração `socket` no módulo `Endpoint` da aplicação.
+Por exemplo, se você vê: `socket "/mobile", MyAppWeb.MobileSocket`, o caminho para a requisição HTTP inicial é:
 
-    [host]:[port]/mobile/websocket?vsn=2.0.0
+    [host]:[porta]/mobile/websocket?vsn=2.0.0
 
-Passing `&vsn=2.0.0` specifies `Phoenix.Socket.V2.JSONSerializer`, which is built into Phoenix, and which expects and returns messages in the form of lists.
+Passar `&vsn=2.0.0` especifica `Phoenix.Socket.V2.JSONSerializer`, que é incorporado ao Phoenix, e que espera e retorna mensagens na forma de listas.
 
-You also need to include [the standard header fields for upgrading an HTTP request to a WebSocket connection](https://developer.mozilla.org/en-US/docs/Web/HTTP/Protocol_upgrade_mechanism) or use an HTTP library that handles this for you; in Elixir, [mint_web_socket](https://hex.pm/packages/mint_web_socket) is an example.
+Você também precisa incluir [os campos de cabeçalho padrão para atualizar uma requisição HTTP para uma conexão WebSocket](https://developer.mozilla.org/en-US/docs/Web/HTTP/Protocol_upgrade_mechanism) ou usar uma biblioteca HTTP que lide com isso para você; em Elixir, [mint_web_socket](https://hex.pm/packages/mint_web_socket) é um exemplo.
 
-Other parameters or headers may be expected or required by the specific `connect/3` function in the application's socket module (in the example above, `MyAppWeb.MobileSocket.connect/3`).
+Outros parâmetros ou cabeçalhos podem ser esperados ou exigidos pela função específica `connect/3` no módulo socket da aplicação (no exemplo acima, `MyAppWeb.MobileSocket.connect/3`).
 
-## Message Format
+## Formato da Mensagem
 
-The message format is determined by the serializer configured for the application.
-For these examples, `Phoenix.Socket.V2.JSONSerializer` is assumed.
+O formato da mensagem é determinado pelo serializador configurado para a aplicação.
+Para estes exemplos, `Phoenix.Socket.V2.JSONSerializer` é assumido.
 
-The general format for messages a client sends to a Phoenix Channel is as follows:
+O formato geral para mensagens que um cliente envia para um Phoenix Channel é o seguinte:
 
 ```
-[join_reference, message_reference, topic_name, event_name, payload]
+[referência_ingresso, referência_mensagem, nome_tópico, nome_evento, payload]
 ```
 
-- The `join_reference` is also chosen by the client and should also be a unique value. It only needs to be sent for a `"phx_join"` event; for other messages it can be `null`. It is used as a message reference for `push` messages from the server, meaning those that are not replies to a specific client message. For example, imagine something like "a new user just joined the chat room".
-- The `message_reference` is chosen by the client and should be a unique value. The server includes it in its reply so that the client knows which message the reply is for.
-- The `topic_name` must be a known topic for the socket endpoint, and a client must join that topic before sending any messages on it.
-- The `event_name` must match the first argument of a `handle_in` function on the server channel module.
-- The `payload` should be a map and is passed as the second argument to that `handle_in` function.
+- A `referência_ingresso` também é escolhida pelo cliente e também deve ser um valor único. Só precisa ser enviada para um evento `"phx_join"`; para outras mensagens, pode ser `null`. É usada como referência de mensagem para mensagens `push` do servidor, ou seja, aquelas que não são respostas a uma mensagem específica do cliente. Por exemplo, imagine algo como "um novo usuário acabou de entrar na sala de chat".
+- A `referência_mensagem` é escolhida pelo cliente e deve ser um valor único. O servidor a inclui em sua resposta para que o cliente saiba a qual mensagem a resposta se refere.
+- O `nome_tópico` deve ser um tópico conhecido para o endpoint do socket, e um cliente deve ingressar nesse tópico antes de enviar qualquer mensagem nele.
+- O `nome_evento` deve corresponder ao primeiro argumento de uma função `handle_in` no módulo do canal do servidor.
+- O `payload` deve ser um mapa e é passado como o segundo argumento para essa função `handle_in`.
 
-There are three events that are understood by every Phoenix application.
+Existem três eventos que são compreendidos por todas as aplicações Phoenix.
 
-First, `phx_join` is used join a channel. For example, to join the `miami:weather` channel:
+Primeiro, `phx_join` é usado para ingressar em um canal. Por exemplo, para ingressar no canal `miami:weather`:
 
 ```json
 ["0", "0", "miami:weather", "phx_join", {"some": "param"}]
 ```
 
-Second, `phx_leave` is used to leave a channel. For example, to leave the `miami:weather` channel:
+Segundo, `phx_leave` é usado para sair de um canal. Por exemplo, para sair do canal `miami:weather`:
 
 ```json
 [null, "1", "miami:weather", "phx_leave", {}]
 ```
 
-Third, `heartbeat` is used to maintain the WebSocket connection. For example:
-
+Terceiro, `heartbeat` é usado para manter a conexão WebSocket. Por exemplo:
 
 ```json
 [null, "2", "phoenix", "heartbeat", {}]
 ```
 
-The `heartbeat` message is only needed when no other messages are being sent and prevents Phoenix from closing the connection; the exact `:timeout` is configured in the application's `Endpoint` module.
+A mensagem de `heartbeat` só é necessária quando nenhuma outra mensagem está sendo enviada e impede que o Phoenix feche a conexão; o `:timeout` exato é configurado no módulo `Endpoint` da aplicação.
 
-Other allowed messages depend on the Phoenix application.
+Outras mensagens permitidas dependem da aplicação Phoenix.
 
-For example, if the Channel serving the `miami:weather` can handle a `report_emergency` event:
+Por exemplo, se o Canal que serve o `miami:weather` pode lidar com um evento `report_emergency`:
 
 ```elixir
 def handle_in("report_emergency", payload, socket) do
-  MyApp.Emergencies.report(payload) # or whatever
+  MyApp.Emergencies.report(payload) # ou o que for
   {:reply, :ok, socket}
 end
 ```
 
-...a client could send:
+...um cliente poderia enviar:
 
 ```json
 [null, "3", "miami:weather", "report_emergency", {"category": "sharknado"}]

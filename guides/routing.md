@@ -1,12 +1,12 @@
-# Routing
+# Roteamento
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia espera que você tenha passado pelos [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
+> **Requisito**: Este guia espera que você tenha passado pelo [guia do ciclo de vida de requisições](request_lifecycle.html).
 
-Routers are the main hubs of Phoenix applications. They match HTTP requests to controller actions, wire up real-time channel handlers, and define a series of pipeline transformations scoped to a set of routes.
+Roteadores são os principais pontos centrais de aplicações Phoenix. Eles correspondem requisições HTTP a ações de controladores, conectam manipuladores de canais em tempo real e definem uma série de transformações de pipeline com escopo para um conjunto de rotas.
 
-The router file that Phoenix generates, `lib/hello_web/router.ex`, will look something like this one:
+O arquivo de roteador que o Phoenix gera, `lib/hello_web/router.ex`, será algo parecido com este:
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -31,7 +31,7 @@ defmodule HelloWeb.Router do
     get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
+  # Outros escopos podem usar pilhas personalizadas.
   # scope "/api", HelloWeb do
   #   pipe_through :api
   # end
@@ -39,37 +39,37 @@ defmodule HelloWeb.Router do
 end
 ```
 
-Both the router and controller module names will be prefixed with the name you gave your application suffixed with `Web`.
+Tanto os nomes do módulo do roteador quanto do controlador terão como prefixo o nome que você deu à sua aplicação seguido de `Web`.
 
-The first line of this module, `use HelloWeb, :router`, simply makes Phoenix router functions available in our particular router.
+A primeira linha deste módulo, `use HelloWeb, :router`, simplesmente disponibiliza as funções do roteador do Phoenix em nosso roteador específico.
 
-Scopes have their own section in this guide, so we won't spend time on the `scope "/", HelloWeb do` block here. The `pipe_through :browser` line will get a full treatment in the "Pipelines" section of this guide. For now, you only need to know that pipelines allow a set of plugs to be applied to different sets of routes.
+Os escopos têm sua própria seção neste guia, então não vamos gastar tempo no bloco `scope "/", HelloWeb do` aqui. A linha `pipe_through :browser` terá um tratamento completo na seção "Pipelines" deste guia. Por enquanto, você só precisa saber que os pipelines permitem que um conjunto de plugs seja aplicado a diferentes conjuntos de rotas.
 
-Inside the scope block, however, we have our first actual route:
+Dentro do bloco de escopo, no entanto, temos nossa primeira rota real:
 
 ```elixir
 get "/", PageController, :home
 ```
 
-`get` is a Phoenix macro that corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs, including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE, and HEAD.
+`get` é uma macro do Phoenix que corresponde ao verbo HTTP GET. Macros similares existem para outros verbos HTTP, incluindo POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE e HEAD.
 
-> #### Why the macros? {: .info}
+> #### Por que as macros? {: .info}
 >
-> Phoenix does its best to keep the usage of macros low. You may have noticed, however, that the `Phoenix.Router` relies heavily on macros. Why is that?
+> O Phoenix faz o possível para manter o uso de macros baixo. Você pode ter notado, no entanto, que o `Phoenix.Router` depende muito de macros. Por quê?
 >
-> We use `get`, `post`, `put`, and `delete` to define your routes. We use macros for two purposes:
+> Usamos `get`, `post`, `put` e `delete` para definir suas rotas. Usamos macros para dois propósitos:
 >
->   * They define the routing engine, used on every request, to choose which controller to dispatch the request to. Thanks to macros, Phoenix compiles all of your routes to a huge case-statement with pattern matching rules, which is heavily optimized by the Erlang VM
+>   * Elas definem o motor de roteamento, usado em cada requisição, para escolher qual controlador irá processar a requisição. Graças às macros, o Phoenix compila todas as suas rotas em uma grande instrução case com regras de correspondência de padrões, que é altamente otimizada pela VM do Erlang
 >
->   * For each route you define, we also define metadata to implement `Phoenix.VerifiedRoutes`. As we will soon learn, verified routes allow us to reference any route as if it were a plain looking string, except that it is verified by the compiler to be valid (making it much harder to ship broken links, forms, mails, etc to production)
+>   * Para cada rota que você define, também definimos metadados para implementar `Phoenix.VerifiedRoutes`. Como aprenderemos em breve, rotas verificadas nos permitem referenciar qualquer rota como se fosse uma string comum, exceto que é verificada pelo compilador para ser válida (tornando muito mais difícil enviar links, formulários, e-mails etc. quebrados para produção)
 >
-> In other words, the router relies on macros to build applications that are faster and safer. Also remember that macros in Elixir are compile-time only, which gives plenty of stability after the code is compiled. As we will learn next, Phoenix also provides introspection for all defined routes via `mix phx.routes`.
+> Em outras palavras, o roteador depende de macros para construir aplicações que são mais rápidas e seguras. Lembre-se também que macros em Elixir são apenas em tempo de compilação, o que dá muita estabilidade após o código ser compilado. Como aprenderemos a seguir, o Phoenix também fornece introspecção para todas as rotas definidas via `mix phx.routes`.
 
-## Examining routes
+## Examinando rotas
 
-Phoenix provides an excellent tool for investigating routes in an application: `mix phx.routes`.
+O Phoenix fornece uma excelente ferramenta para investigar rotas em uma aplicação: `mix phx.routes`.
 
-Let's see how this works. Go to the root of a newly-generated Phoenix application and run `mix phx.routes`. You should see something like the following, generated with all routes you currently have:
+Vamos ver como isso funciona. Vá para a raiz de uma aplicação Phoenix recém-gerada e execute `mix phx.routes`. Você deve ver algo como o seguinte, gerado com todas as rotas que você tem atualmente:
 
 ```console
 $ mix phx.routes
@@ -77,11 +77,11 @@ GET  /  HelloWeb.PageController :home
 ...
 ```
 
-The route above tells us that any HTTP GET request for the root of the application will be handled by the `home` action of the `HelloWeb.PageController`.
+A rota acima nos diz que qualquer requisição HTTP GET para a raiz da aplicação será tratada pela ação `home` do `HelloWeb.PageController`.
 
-## Resources
+## Recursos
 
-The router supports other macros besides those for HTTP verbs like [`get`](`Phoenix.Router.get/3`), [`post`](`Phoenix.Router.post/3`), and [`put`](`Phoenix.Router.put/3`). The most important among them is [`resources`](`Phoenix.Router.resources/4`). Let's add a resource to our `lib/hello_web/router.ex` file like this:
+O roteador suporta outras macros além daquelas para verbos HTTP como [`get`](`Phoenix.Router.get/3`), [`post`](`Phoenix.Router.post/3`) e [`put`](`Phoenix.Router.put/3`). A mais importante entre elas é [`resources`](`Phoenix.Router.resources/4`). Vamos adicionar um recurso ao nosso arquivo `lib/hello_web/router.ex` assim:
 
 ```elixir
 scope "/", HelloWeb do
@@ -93,9 +93,9 @@ scope "/", HelloWeb do
 end
 ```
 
-For now it doesn't matter that we don't actually have a `HelloWeb.UserController`.
+Por enquanto, não importa que não tenhamos realmente um `HelloWeb.UserController`.
 
-Run `mix phx.routes` once again at the root of your project. You should see something like the following:
+Execute `mix phx.routes` mais uma vez na raiz do seu projeto. Você deve ver algo como o seguinte:
 
 ```console
 ...
@@ -110,39 +110,39 @@ DELETE  /users/:id       HelloWeb.UserController :delete
 ...
 ```
 
-This is the standard matrix of HTTP verbs, paths, and controller actions. For a while, this was known as RESTful routes, but most consider this a misnomer nowadays. Let's look at them individually.
+Esta é a matriz padrão de verbos HTTP, caminhos e ações do controlador. Por um tempo, isso foi conhecido como rotas RESTful, mas a maioria considera isso um termo errado hoje em dia. Vamos olhar para elas individualmente.
 
-- A GET request to `/users` will invoke the `index` action to show all the users.
-- A GET request to `/users/:id/edit` will invoke the `edit` action with an ID to retrieve an individual user from the data store and present the information in a form for editing.
-- A GET request to `/users/new` will invoke the `new` action to present a form for creating a new user.
-- A GET request to `/users/:id` will invoke the `show` action with an id to show an individual user identified by that ID.
-- A POST request to `/users` will invoke the `create` action to save a new user to the data store.
-- A PATCH request to `/users/:id` will invoke the `update` action with an ID to save the updated user to the data store.
-- A PUT request to `/users/:id` will also invoke the `update` action with an ID to save the updated user to the data store.
-- A DELETE request to `/users/:id` will invoke the `delete` action with an ID to remove the individual user from the data store.
+- Uma requisição GET para `/users` invocará a ação `index` para mostrar todos os usuários.
+- Uma requisição GET para `/users/:id/edit` invocará a ação `edit` com um ID para recuperar um usuário individual do armazenamento de dados e apresentar as informações em um formulário para edição.
+- Uma requisição GET para `/users/new` invocará a ação `new` para apresentar um formulário para criar um novo usuário.
+- Uma requisição GET para `/users/:id` invocará a ação `show` com um ID para mostrar um usuário individual identificado por esse ID.
+- Uma requisição POST para `/users` invocará a ação `create` para salvar um novo usuário no armazenamento de dados.
+- Uma requisição PATCH para `/users/:id` invocará a ação `update` com um ID para salvar o usuário atualizado no armazenamento de dados.
+- Uma requisição PUT para `/users/:id` também invocará a ação `update` com um ID para salvar o usuário atualizado no armazenamento de dados.
+- Uma requisição DELETE para `/users/:id` invocará a ação `delete` com um ID para remover o usuário individual do armazenamento de dados.
 
-If we don't need all these routes, we can be selective using the `:only` and `:except` options to filter specific actions.
+Se não precisarmos de todas essas rotas, podemos ser seletivos usando as opções `:only` e `:except` para filtrar ações específicas.
 
-Let's say we have a read-only posts resource. We could define it like this:
+Digamos que temos um recurso de posts somente leitura. Poderíamos defini-lo assim:
 
 ```elixir
 resources "/posts", PostController, only: [:index, :show]
 ```
 
-Running `mix phx.routes` shows that we now only have the routes to the index and show actions defined.
+Executando `mix phx.routes` mostra que agora temos apenas as rotas para as ações index e show definidas.
 
 ```console
 GET     /posts      HelloWeb.PostController :index
 GET     /posts/:id  HelloWeb.PostController :show
 ```
 
-Similarly, if we have a comments resource, and we don't want to provide a route to delete one, we could define a route like this.
+Da mesma forma, se temos um recurso de comentários e não queremos fornecer uma rota para excluir um, poderíamos definir uma rota assim:
 
 ```elixir
 resources "/comments", CommentController, except: [:delete]
 ```
 
-Running `mix phx.routes` now shows that we have all the routes except the DELETE request to the delete action.
+Executando `mix phx.routes` agora mostra que temos todas as rotas, exceto a requisição DELETE para a ação delete.
 
 ```console
 GET    /comments           HelloWeb.CommentController :index
@@ -154,13 +154,13 @@ PATCH  /comments/:id       HelloWeb.CommentController :update
 PUT    /comments/:id       HelloWeb.CommentController :update
 ```
 
-The `Phoenix.Router.resources/4` macro describes additional options for customizing resource routes.
+A macro `Phoenix.Router.resources/4` descreve opções adicionais para personalizar rotas de recursos.
 
-## Verified Routes
+## Rotas Verificadas
 
-Phoenix includes `Phoenix.VerifiedRoutes` module which provides compile-time checks of router paths against your router by using the `~p` sigil. For example, you can write paths in controllers, tests, and templates and the compiler will make sure those actually match routes defined in your router.
+O Phoenix inclui o módulo `Phoenix.VerifiedRoutes` que fornece verificações em tempo de compilação de caminhos de roteador contra seu roteador usando o sigil `~p`. Por exemplo, você pode escrever caminhos em controladores, testes e templates, e o compilador garantirá que esses realmente correspondam às rotas definidas em seu roteador.
 
-Let's see it in action. Run `iex -S mix` at the root of the project. We'll define a throwaway example module that builds a couple `~p` route paths.
+Vamos ver isso em ação. Execute `iex -S mix` na raiz do projeto. Vamos definir um módulo de exemplo descartável que constrói alguns caminhos de rota `~p`.
 
 ```elixir
 iex> defmodule RouteExample do
@@ -178,26 +178,26 @@ warning: no route path for HelloWeb.Router matches "/unknown/123"
 iex>
 ```
 
-Notice how the first call to an existing route, `~p"/comments"` gave no warning, but a bad route path `~p"/unknown/123"` produced a compiler warning, just as it should. This is significant because it allows us to write otherwise hard-coded paths in our application and the compiler will let us know whenever we write a bad route or change our routing structure.
+Observe como a primeira chamada para uma rota existente, `~p"/comments"` não deu nenhum aviso, mas um caminho de rota ruim `~p"/unknown/123"` produziu um aviso do compilador, como deveria. Isso é significativo porque nos permite escrever caminhos codificados em nossa aplicação e o compilador nos informará sempre que escrevermos uma rota incorreta ou alterarmos nossa estrutura de roteamento.
 
-Phoenix projects are set up out of the box to allow use of verified routes throughout your web layer, including tests. For example in your templates you can render `~p` links:
+Os projetos Phoenix são configurados prontos para permitir o uso de rotas verificadas em toda a sua camada web, incluindo testes. Por exemplo, em seus templates, você pode renderizar links `~p`:
 
 ```heex
-<.link href={~p"/"}>Welcome Page!</.link>
-<.link href={~p"/comments"}>View Comments</.link>
+<.link href={~p"/"}>Página de Boas-vindas!</.link>
+<.link href={~p"/comments"}>Ver Comentários</.link>
 ```
 
-Or in a controller, issue a redirect:
+Ou em um controlador, emitir um redirecionamento:
 
 ```elixir
 redirect(conn, to: ~p"/comments/#{comment}")
 ```
 
-Using `~p` for route paths ensures our application paths and URLs stay up to date with the router definitions. The compiler will catch bugs for us, and let us know when we change routes that are referenced elsewhere in our application.
+Usar `~p` para caminhos de rota garante que os caminhos e URLs de nossa aplicação permaneçam atualizados com as definições do roteador. O compilador capturará bugs para nós e nos informará quando alterarmos rotas que são referenciadas em outros lugares de nossa aplicação.
 
-### More on verified routes
+### Mais sobre rotas verificadas
 
-What about paths with query strings? You can either add query string key values directly, or provide a dictionary of key-value pairs, for example:
+E quanto a caminhos com strings de consulta? Você pode adicionar pares de chave-valor de string de consulta diretamente ou fornecer um dicionário de pares de chave-valor, por exemplo:
 
 ```elixir
 ~p"/users/17?admin=true&active=false"
@@ -207,18 +207,18 @@ What about paths with query strings? You can either add query string key values 
 "/users/17?admin=true"
 ```
 
-What if we need a full URL instead of a path? Just wrap your path with a call to `Phoenix.VerifiedRoutes.url/1`, which is imported everywhere that `~p` is available:
+E se precisarmos de uma URL completa em vez de um caminho? Basta envolver seu caminho com uma chamada para `Phoenix.VerifiedRoutes.url/1`, que é importado em todos os lugares onde `~p` está disponível:
 
 ```elixir
 url(~p"/users")
 "http://localhost:4000/users"
 ```
 
-The `url` calls will get the host, port, proxy port, and SSL information needed to construct the full URL from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `config/dev.exs` file in your own project to see those values.
+As chamadas `url` obterão o host, porta, porta de proxy e informações SSL necessárias para construir a URL completa a partir dos parâmetros de configuração definidos para cada ambiente. Falaremos sobre configuração em mais detalhes em seu próprio guia. Por enquanto, você pode dar uma olhada no arquivo `config/dev.exs` em seu próprio projeto para ver esses valores.
 
-## Nested resources
+## Recursos aninhados
 
-It is also possible to nest resources in a Phoenix router. Let's say we also have a `posts` resource that has a many-to-one relationship with `users`. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that by adding a nested route in `lib/hello_web/router.ex` like this:
+Também é possível aninhar recursos em um roteador Phoenix. Digamos que também temos um recurso `posts` que tem um relacionamento muitos-para-um com `users`. Ou seja, um usuário pode criar muitos posts, e um post individual pertence a apenas um usuário. Podemos representar isso adicionando uma rota aninhada em `lib/hello_web/router.ex` assim:
 
 ```elixir
 resources "/users", UserController do
@@ -226,7 +226,7 @@ resources "/users", UserController do
 end
 ```
 
-When we run `mix phx.routes` now, in addition to the routes we saw for `users` above, we get the following set of routes:
+Quando executamos `mix phx.routes` agora, além das rotas que vimos para `users` acima, obtemos o seguinte conjunto de rotas:
 
 ```elixir
 ...
@@ -241,9 +241,9 @@ DELETE  /users/:user_id/posts/:id       HelloWeb.PostController :delete
 ...
 ```
 
-We see that each of these routes scopes the posts to a user ID. For the first one, we will invoke `PostController`'s `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
+Vemos que cada uma dessas rotas limita os posts a um ID de usuário. Para a primeira, invocaremos a ação `index` do `PostController`, mas passaremos um `user_id`. Isso implica que exibiríamos todos os posts apenas para esse usuário individual. O mesmo escopo se aplica a todas essas rotas.
 
-When building paths for nested routes, we will need to interpolate the IDs where they belong in route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`.
+Ao construir caminhos para rotas aninhadas, precisaremos interpolar os IDs onde eles pertencem na definição da rota. Para a seguinte rota `show`, `42` é o `user_id` e `17` é o `post_id`.
 
 ```elixir
 user_id = 42
@@ -252,20 +252,20 @@ post_id = 17
 "/users/42/posts/17"
 ```
 
-Verified routes also support the `Phoenix.Param` protocol, but we don't need to concern ourselves with Elixir protocols just yet. Just know that once we start building our application with structs like `%User{}` and `%Post{}`, we'll be able to interpolate those data structures directly into our `~p` paths and Phoenix will pluck out the correct fields to use in the route.
+Rotas verificadas também suportam o protocolo `Phoenix.Param`, mas não precisamos nos preocupar com protocolos Elixir por enquanto. Saiba apenas que, uma vez que começamos a construir nossa aplicação com structs como `%User{}` e `%Post{}`, poderemos interpolar essas estruturas de dados diretamente em nossos caminhos `~p` e o Phoenix extrairá os campos corretos para usar na rota.
 
 ```elixir
 ~p"/users/#{user}/posts/#{post}"
 "/users/42/posts/17"
 ```
 
-Notice how we didn't need to interpolate `user.id` or `post.id`? This is particularly nice if we decide later we want to make our URLs a little nicer and start using slugs instead. We don't need to change any of our `~p`'s!
+Perceba como não precisamos interpolar `user.id` ou `post.id`? Isso é particularmente útil se decidirmos mais tarde que queremos tornar nossas URLs um pouco mais agradáveis e começar a usar slugs. Não precisamos alterar nenhum de nossos `~p`!
 
-## Scoped routes
+## Rotas com escopo
 
-Scopes are a way to group routes under a common path prefix and scoped set of plugs. We might want to do this for admin functionality, APIs, and especially for versioned APIs. Let's say we have user-generated reviews on a site, and that those reviews first need to be approved by an administrator. The semantics of these resources are quite different, and they might not share the same controller. Scopes enable us to segregate these routes.
+Escopos são uma maneira de agrupar rotas sob um prefixo de caminho comum e um conjunto de plugs com escopo. Podemos querer fazer isso para funcionalidades de administração, APIs e especialmente para APIs versionadas. Digamos que temos reviews geradas pelo usuário em um site, e que essas reviews primeiro precisam ser aprovadas por um administrador. A semântica desses recursos é bastante diferente, e eles podem não compartilhar o mesmo controlador. Escopos nos permitem segregar essas rotas.
 
-The paths to the user-facing reviews would look like a standard resource.
+Os caminhos para as reviews voltadas para o usuário seriam como um recurso padrão.
 
 ```console
 /reviews
@@ -274,7 +274,7 @@ The paths to the user-facing reviews would look like a standard resource.
 ...
 ```
 
-The administration review paths can be prefixed with `/admin`.
+Os caminhos de administração de reviews podem ter o prefixo `/admin`.
 
 ```console
 /admin/reviews
@@ -283,7 +283,7 @@ The administration review paths can be prefixed with `/admin`.
 ...
 ```
 
-We accomplish this with a scoped route that sets a path option to `/admin` like this one. We can nest this scope inside another scope, but instead, let's set it by itself at the root, by adding to `lib/hello_web/router.ex` the following:
+Conseguimos isso com uma rota com escopo que define uma opção de caminho para `/admin` como esta. Podemos aninhar este escopo dentro de outro escopo, mas, em vez disso, vamos defini-lo sozinho na raiz, adicionando ao `lib/hello_web/router.ex` o seguinte:
 
 ```elixir
 scope "/admin", HelloWeb.Admin do
@@ -293,9 +293,9 @@ scope "/admin", HelloWeb.Admin do
 end
 ```
 
-We define a new scope where all routes are prefixed with `/admin` and all controllers are under the `HelloWeb.Admin` namespace.
+Definimos um novo escopo onde todas as rotas têm o prefixo `/admin` e todos os controladores estão sob o namespace `HelloWeb.Admin`.
 
-Running `mix phx.routes` again, in addition to the previous set of routes we get the following:
+Executando `mix phx.routes` novamente, além do conjunto anterior de rotas, obtemos o seguinte:
 
 ```console
 ...
@@ -310,7 +310,7 @@ DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
 ...
 ```
 
-This looks good, but there is a problem here. Remember that we wanted both user-facing review routes `/reviews` and the admin ones `/admin/reviews`. If we now include the user-facing reviews in our router under the root scope like this:
+Isso parece bom, mas há um problema aqui. Lembre-se de que queríamos tanto as rotas de reviews voltadas para o usuário `/reviews` quanto as de administração `/admin/reviews`. Se agora incluirmos as reviews voltadas para o usuário em nosso roteador sob o escopo raiz assim:
 
 ```elixir
 scope "/", HelloWeb do
@@ -327,7 +327,7 @@ scope "/admin", HelloWeb.Admin do
 end
 ```
 
-and we run `mix phx.routes`, we get output for each scoped route:
+e executarmos `mix phx.routes`, obteremos saída para cada rota com escopo:
 
 ```console
 ...
@@ -350,7 +350,7 @@ PUT     /admin/reviews/:id       HelloWeb.Admin.ReviewController :update
 DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
 ```
 
-What if we had a number of resources that were all handled by admins? We could put all of them inside the same scope like this:
+E se tivéssemos vários recursos que fossem todos tratados por administradores? Poderíamos colocar todos eles dentro do mesmo escopo assim:
 
 ```elixir
 scope "/admin", HelloWeb.Admin do
@@ -362,7 +362,7 @@ scope "/admin", HelloWeb.Admin do
 end
 ```
 
-Here's what `mix phx.routes` tells us:
+Veja o que `mix phx.routes` nos diz:
 
 ```console
 ...
@@ -392,9 +392,9 @@ PUT     /admin/users/:id         HelloWeb.Admin.UserController :update
 DELETE  /admin/users/:id         HelloWeb.Admin.UserController :delete
 ```
 
-This is great, exactly what we want. Note how every route and controller is properly namespaced.
+Isso é ótimo, exatamente o que queremos. Observe como cada rota e controlador está adequadamente com namespace.
 
-Scopes can also be arbitrarily nested, but you should do it carefully as nesting can sometimes make our code confusing and less clear. With that said, suppose that we had a versioned API with resources defined for images, reviews, and users. Then technically, we could set up routes for the versioned API like this:
+Escopos também podem ser aninhados arbitrariamente, mas você deve fazer isso com cuidado, pois o aninhamento às vezes pode tornar nosso código confuso e menos claro. Com isso dito, suponha que tivéssemos uma API versionada com recursos definidos para imagens, reviews e usuários. Então, tecnicamente, poderíamos configurar rotas para a API versionada assim:
 
 ```elixir
 scope "/api", HelloWeb.Api, as: :api do
@@ -408,9 +408,9 @@ scope "/api", HelloWeb.Api, as: :api do
 end
 ```
 
-You can run `mix phx.routes` to see how these definitions will look like.
+Você pode executar `mix phx.routes` para ver como essas definições serão.
 
-Interestingly, we can use multiple scopes with the same path as long as we are careful not to duplicate routes. The following router is perfectly fine with two scopes defined for the same path:
+Curiosamente, podemos usar vários escopos com o mesmo caminho, desde que sejamos cuidadosos para não duplicar rotas. O seguinte roteador está perfeitamente correto com dois escopos definidos para o mesmo caminho:
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -431,7 +431,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-If we do duplicate a route — which means two routes having the same path — we'll get this familiar warning:
+Se duplicarmos uma rota — o que significa duas rotas tendo o mesmo caminho — receberemos este aviso familiar:
 
 ```console
 warning: this clause cannot match because a previous clause at line 16 always matches
@@ -439,27 +439,27 @@ warning: this clause cannot match because a previous clause at line 16 always ma
 
 ## Pipelines
 
-We have come quite a long way in this guide without talking about one of the first lines we saw in the router: `pipe_through :browser`. It's time to fix that.
+Chegamos bastante longe neste guia sem falar sobre uma das primeiras linhas que vimos no roteador: `pipe_through :browser`. É hora de corrigir isso.
 
-Pipelines are a series of plugs that can be attached to specific scopes. If you are not familiar with plugs, we have an [in-depth guide about them](plug.html).
+Pipelines são uma série de plugs que podem ser anexados a escopos específicos. Se você não está familiarizado com plugs, temos um [guia detalhado sobre eles](plug.html).
 
-Routes are defined inside scopes and scopes may pipe through multiple pipelines. Once a route matches, Phoenix invokes all plugs defined in all pipelines associated to that route. For example, accessing `/` will pipe through the `:browser` pipeline, consequently invoking all of its plugs.
+Rotas são definidas dentro de escopos e escopos podem passar por vários pipelines. Uma vez que uma rota corresponde, o Phoenix invoca todos os plugs definidos em todos os pipelines associados a essa rota. Por exemplo, acessar `/` passará pelo pipeline `:browser`, consequentemente invocando todos os seus plugs.
 
-Phoenix defines two pipelines by default, `:browser` and `:api`, which can be used for a number of common tasks. In turn we can customize them as well as create new pipelines to meet our needs.
+O Phoenix define dois pipelines por padrão, `:browser` e `:api`, que podem ser usados para uma série de tarefas comuns. Por sua vez, podemos personalizá-los, bem como criar novos pipelines para atender às nossas necessidades.
 
-### The `:browser` and `:api` pipelines
+### Os pipelines `:browser` e `:api`
 
-As their names suggest, the `:browser` pipeline prepares for routes which render requests for a browser, and the `:api` pipeline prepares for routes which produce data for an API.
+Como seus nomes sugerem, o pipeline `:browser` prepara para rotas que renderizam requisições para um navegador, e o pipeline `:api` prepara para rotas que produzem dados para uma API.
 
-The `:browser` pipeline has six plugs: The `plug :accepts, ["html"]` defines the accepted request format or formats. `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection. `:fetch_live_flash`, which fetches any flash messages from LiveView and merges them with the controller flash messages. Then, the plug `:put_root_layout` will store the root layout for rendering purposes. Later `:protect_from_forgery` and `:put_secure_browser_headers`, protects form posts from cross-site forgery.
+O pipeline `:browser` tem seis plugs: O `plug :accepts, ["html"]` define o formato ou formatos de requisição aceitos. `:fetch_session`, que, naturalmente, busca os dados da sessão e os disponibiliza na conexão. `:fetch_live_flash`, que busca quaisquer mensagens flash do LiveView e as mescla com as mensagens flash do controlador. Em seguida, o plug `:put_root_layout` armazenará o layout raiz para fins de renderização. Mais tarde, `:protect_from_forgery` e `:put_secure_browser_headers` protegem os envios de formulários de falsificação entre sites.
 
-Currently, the `:api` pipeline only defines `plug :accepts, ["json"]`.
+Atualmente, o pipeline `:api` define apenas `plug :accepts, ["json"]`.
 
-The router invokes a pipeline on a route defined within a scope. Routes outside of a scope have no pipelines. Although the use of nested scopes is discouraged (see above the versioned API example), if we call `pipe_through` within a nested scope, the router will invoke all `pipe_through`'s from parent scopes, followed by the nested one.
+O roteador invoca um pipeline em uma rota definida dentro de um escopo. Rotas fora de um escopo não têm pipelines. Embora o uso de escopos aninhados seja desencorajado (veja acima o exemplo de API versionada), se chamarmos `pipe_through` dentro de um escopo aninhado, o roteador invocará todos os `pipe_through` dos escopos pai, seguidos pelo aninhado.
 
-Those are a lot of words bunched up together. Let's take a look at some examples to untangle their meaning.
+Essas são muitas palavras agrupadas. Vamos dar uma olhada em alguns exemplos para desvendar seu significado.
 
-Here's another look at the router from a newly generated Phoenix application, this time with the `/api` scope uncommented back in and a route added.
+Aqui está outra olhada no roteador de uma aplicação Phoenix recém-gerada, desta vez com o escopo `/api` descomentado de volta e uma rota adicionada.
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -484,7 +484,7 @@ defmodule HelloWeb.Router do
     get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
+  # Outros escopos podem usar pilhas personalizadas.
   scope "/api", HelloWeb do
     pipe_through :api
 
@@ -494,17 +494,17 @@ defmodule HelloWeb.Router do
 end
 ```
 
-When the server accepts a request, the request will always first pass through the plugs in our endpoint, after which it will attempt to match on the path and HTTP verb.
+Quando o servidor aceita uma requisição, a requisição sempre passará primeiro pelos plugs em nosso endpoint, após o qual tentará corresponder ao caminho e verbo HTTP.
 
-Let's say that the request matches our first route: a GET to `/`. The router will first pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to `PageController`'s `home` action.
+Digamos que a requisição corresponda à nossa primeira rota: um GET para `/`. O roteador primeiro passará essa requisição pelo pipeline `:browser` - que buscará os dados da sessão, buscará o flash e executará a proteção contra falsificação - antes de despachar a requisição para a ação `home` do `PageController`.
 
-Conversely, suppose the request matches any of the routes defined by the [`resources/2`](`Phoenix.Router.resources/2`) macro. In that case, the router will pipe it through the `:api` pipeline — which currently only performs content negotiation — before it dispatches further to the correct action of the `HelloWeb.ReviewController`.
+Por outro lado, suponha que a requisição corresponda a qualquer uma das rotas definidas pela macro [`resources/2`](`Phoenix.Router.resources/2`). Nesse caso, o roteador a passará pelo pipeline `:api` — que atualmente só realiza negociação de conteúdo — antes de despachá-la para a ação correta do `HelloWeb.ReviewController`.
 
-If no route matches, no pipeline is invoked and a 404 error is raised.
+Se nenhuma rota corresponder, nenhum pipeline é invocado e um erro 404 é levantado.
 
-### Creating new pipelines
+### Criando novos pipelines
 
-Phoenix allows us to create our own custom pipelines anywhere in the router. To do so, we call the [`pipeline/2`](`Phoenix.Router.pipeline/2`) macro with these arguments: an atom for the name of our new pipeline and a block with all the plugs we want in it.
+O Phoenix nos permite criar nossos próprios pipelines personalizados em qualquer lugar do roteador. Para fazer isso, chamamos a macro [`pipeline/2`](`Phoenix.Router.pipeline/2`) com estes argumentos: um átomo para o nome do nosso novo pipeline e um bloco com todos os plugs que queremos nele.
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -531,9 +531,9 @@ defmodule HelloWeb.Router do
 end
 ```
 
-The above assumes there is a plug called `HelloWeb.Authentication` that performs authentication and is now part of the `:auth` pipeline.
+O exemplo acima assume que existe um plug chamado `HelloWeb.Authentication` que realiza autenticação e agora faz parte do pipeline `:auth`.
 
-Note that pipelines themselves are plugs, so we can plug a pipeline inside another pipeline. For example, we could rewrite the `auth` pipeline above to automatically invoke `browser`, simplifying the downstream pipeline call:
+Observe que os próprios pipelines são plugs, então podemos conectar um pipeline dentro de outro pipeline. Por exemplo, poderíamos reescrever o pipeline `auth` acima para invocar automaticamente `browser`, simplificando a chamada de pipeline downstream:
 
 ```elixir
   pipeline :auth do
@@ -549,13 +549,13 @@ Note that pipelines themselves are plugs, so we can plug a pipeline inside anoth
   end
 ```
 
-## How to organize my routes?
+## Como organizar minhas rotas?
 
-In Phoenix, we tend to define several pipelines, that provide specific functionality. For example, the `:browser` and `:api` pipelines are meant to be accessed by specific clients, browsers and http clients respectively.
+No Phoenix, tendemos a definir vários pipelines que fornecem funcionalidades específicas. Por exemplo, os pipelines `:browser` e `:api` são destinados a serem acessados por clientes específicos, navegadores e clientes http, respectivamente.
 
-Perhaps more importantly, it is also very common to define pipelines specific to authentication and authorization. For example, you might have a pipeline that requires all users are authenticated. Another pipeline may enforce only admin users can access certain routes.
+Talvez mais importante, também é muito comum definir pipelines específicos para autenticação e autorização. Por exemplo, você pode ter um pipeline que exige que todos os usuários estejam autenticados. Outro pipeline pode impor que apenas usuários administradores possam acessar certas rotas.
 
-Once your pipelines are defined, you reuse the pipelines in the desired scopes, grouping your routes around their pipelines. For example, going back to our reviews example. Let's say anyone can read a review, but only authenticated users can create them. Your routes could look like this:
+Uma vez que seus pipelines estão definidos, você reutiliza os pipelines nos escopos desejados, agrupando suas rotas em torno de seus pipelines. Por exemplo, voltando ao nosso exemplo de reviews. Digamos que qualquer pessoa possa ler uma review, mas apenas usuários autenticados podem criá-las. Suas rotas poderiam ser assim:
 
 ```elixir
 pipeline :browser do
@@ -581,13 +581,13 @@ scope "/" do
 end
 ```
 
-Note in the above how the routes are split across different scopes. While the separation can be confusing at first, it has one big upside: it is very easy to inspect your routes and see all routes that, for example, require authentication and which ones do not. This helps with auditing and making sure your routes have the proper scope.
+Observe no exemplo acima como as rotas são divididas em diferentes escopos. Embora a separação possa ser confusa no início, ela tem uma grande vantagem: é muito fácil inspecionar suas rotas e ver todas as rotas que, por exemplo, exigem autenticação e quais não exigem. Isso ajuda na auditoria e na certificação de que suas rotas têm o escopo adequado.
 
-You can create as few or as many scopes as you want. Because pipelines are reusable across scopes, they help encapsulate common functionality and you can compose them as necessary on each scope you define.
+Você pode criar tantos ou tão poucos escopos quanto desejar. Como os pipelines são reutilizáveis entre escopos, eles ajudam a encapsular funcionalidades comuns e você pode compô-los conforme necessário em cada escopo que definir.
 
 ## Forward
 
-The `Phoenix.Router.forward/4` macro can be used to send all requests that start with a particular path to a particular plug. Let's say we have a part of our system that is responsible (it could even be a separate application or library) for running jobs in the background, it could have its own web interface for checking the status of the jobs. We can forward to this admin interface using:
+A macro `Phoenix.Router.forward/4` pode ser usada para enviar todas as requisições que começam com um caminho específico para um determinado plug. Digamos que temos uma parte do nosso sistema que é responsável (pode até ser uma aplicação ou biblioteca separada) por executar tarefas em segundo plano, ela poderia ter sua própria interface web para verificar o status das tarefas. Podemos encaminhar para esta interface de administração usando:
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -603,9 +603,9 @@ defmodule HelloWeb.Router do
 end
 ```
 
-This means that all routes starting with `/jobs` will be sent to the `HelloWeb.BackgroundJob.Plug` module. Inside the plug, you can match on subroutes, such as `/pending` and `/active` that shows the status of certain jobs.
+Isso significa que todas as rotas que começam com `/jobs` serão enviadas para o módulo `HelloWeb.BackgroundJob.Plug`. Dentro do plug, você pode corresponder a sub-rotas, como `/pending` e `/active` que mostram o status de determinadas tarefas.
 
-We can even mix the [`forward/4`](`Phoenix.Router.forward/4`) macro with pipelines. If we wanted to ensure that the user was authenticated and was an administrator in order to see the jobs page, we could use the following in our router.
+Podemos até mesmo misturar a macro [`forward/4`](`Phoenix.Router.forward/4`) com pipelines. Se quiséssemos garantir que o usuário estivesse autenticado e fosse um administrador para ver a página de tarefas, poderíamos usar o seguinte em nosso roteador.
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -620,25 +620,25 @@ defmodule HelloWeb.Router do
 end
 ```
 
-This means the plugs in the `authenticate_user` and `ensure_admin` pipelines will be called before the `BackgroundJob.Plug` allowing them to send an appropriate response and halt the request accordingly.
+Isso significa que os plugs nos pipelines `authenticate_user` e `ensure_admin` serão chamados antes do `BackgroundJob.Plug`, permitindo que eles enviem uma resposta apropriada e interrompam a requisição de acordo.
 
-The `opts` that are received in the `init/1` callback of the Module Plug can be passed as a third argument. For example, maybe the background job lets you set the name of your application to be displayed on the page. This could be passed with:
+As `opts` que são recebidas no callback `init/1` do Módulo Plug podem ser passadas como um terceiro argumento. Por exemplo, talvez o trabalho em segundo plano permita que você defina o nome da sua aplicação para ser exibido na página. Isso poderia ser passado com:
 
 ```elixir
 forward "/jobs", BackgroundJob.Plug, name: "Hello Phoenix"
 ```
 
-There is a fourth `router_opts` argument that can be passed. These options are outlined in the `Phoenix.Router.scope/2` documentation.
+Existe um quarto argumento `router_opts` que pode ser passado. Essas opções são descritas na documentação `Phoenix.Router.scope/2`.
 
-`BackgroundJob.Plug` can be implemented as any Module Plug discussed in the [Plug guide](plug.html). Note though it is not advised to forward to another Phoenix endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
+`BackgroundJob.Plug` pode ser implementado como qualquer Módulo Plug discutido no [guia do Plug](plug.html). Observe, no entanto, que não é recomendável encaminhar para outro endpoint Phoenix. Isso ocorre porque os plugs definidos pelo seu aplicativo e pelo endpoint encaminhado seriam invocados duas vezes, o que pode levar a erros.
 
-## Summary
+## Resumo
 
-Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
+Roteamento é um grande tópico, e cobrimos muito terreno aqui. Os pontos importantes a serem tirados deste guia são:
 
-- Routes which begin with an HTTP verb name expand to a single clause of the match function.
-- Routes declared with `resources` expand to 8 clauses of the match function.
-- Resources may restrict the number of match function clauses by using the `only:` or `except:` options.
-- Any of these routes may be nested.
-- Any of these routes may be scoped to a given path.
-- Using verified routes with `~p` for compile-time route checks
+- Rotas que começam com um nome de verbo HTTP expandem para uma única cláusula da função match.
+- Rotas declaradas com `resources` expandem para 8 cláusulas da função match.
+- Recursos podem restringir o número de cláusulas da função match usando as opções `only:` ou `except:`.
+- Qualquer dessas rotas pode ser aninhada.
+- Qualquer dessas rotas pode ter escopo para um determinado caminho.
+- Usar rotas verificadas com `~p` para verificações de rota em tempo de compilação

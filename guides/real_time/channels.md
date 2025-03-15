@@ -1,108 +1,108 @@
-# Channels
+# Canais
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requisito**: Este guia pressupõe que você tenha passado pelos [guias introdutórios](installation.html) e tenha uma aplicação Phoenix [funcionando](up_and_running.html).
 
-Channels are an exciting part of Phoenix that enable soft real-time communication with and between millions of connected clients.
+Canais são uma parte empolgante do Phoenix que permitem comunicação em tempo real com e entre milhões de clientes conectados.
 
-Some possible use cases include:
+Alguns casos de uso possíveis incluem:
 
-- Chat rooms and APIs for messaging apps
-- Breaking news, like "a goal was scored" or "an earthquake is coming"
-- Tracking trains, trucks, or race participants on a map
-- Events in multiplayer games
-- Monitoring sensors and controlling lights
-- Notifying a browser that a page's CSS or JavaScript has changed (this is handy in development)
+- Salas de chat e APIs para aplicativos de mensagens
+- Notícias de última hora, como "um gol foi marcado" ou "um terremoto está chegando"
+- Rastreamento de trens, caminhões ou participantes de corridas em um mapa
+- Eventos em jogos multiplayer
+- Monitoramento de sensores e controle de luzes
+- Notificando um navegador que o CSS ou JavaScript de uma página mudou (isso é útil no desenvolvimento)
 
-Conceptually, Channels are pretty simple.
+Conceitualmente, os Canais são bastante simples.
 
-First, clients connect to the server using some transport, like WebSocket. Once connected, they join one or more topics. For example, to interact with a public chat room clients may join a topic called `public_chat`, and to receive updates from a product with ID 7, they may need to join a topic called `product_updates:7`.
+Primeiro, os clientes se conectam ao servidor usando algum transporte, como WebSocket. Uma vez conectados, eles se juntam a um ou mais tópicos. Por exemplo, para interagir com uma sala de chat pública, os clientes podem se juntar a um tópico chamado `public_chat`, e para receber atualizações de um produto com ID 7, eles podem precisar se juntar a um tópico chamado `product_updates:7`.
 
-Clients can push messages to the topics they've joined, and can also receive messages from them. The other way around, Channel servers receive messages from their connected clients, and can push messages to them too.
+Os clientes podem enviar mensagens para os tópicos aos quais se juntaram e também podem receber mensagens deles. No sentido inverso, os servidores de Canais recebem mensagens de seus clientes conectados e também podem enviar mensagens para eles.
 
-Servers are able to broadcast messages to all clients subscribed to a certain topic. This is illustrated in the following diagram:
+Os servidores são capazes de transmitir mensagens para todos os clientes inscritos em um determinado tópico. Isso é ilustrado no seguinte diagrama:
 
 ```plaintext
                                                                   +----------------+
-                                                     +--Topic X-->| Mobile Client  |
+                                                     +--Tópico X-->| Cliente Móvel  |
                                                      |            +----------------+
-                              +-------------------+  |
+                                              +-------------------+  |
 +----------------+            |                   |  |            +----------------+
-| Browser Client |--Topic X-->| Phoenix Server(s) |--+--Topic X-->| Desktop Client |
+| Cliente Navegador |--Tópico X-->| Servidor(es) Phoenix |--+--Tópico X-->| Cliente Desktop |
 +----------------+            |                   |  |            +----------------+
                               +-------------------+  |
                                                      |            +----------------+
-                                                     +--Topic X-->|   IoT Client   |
+                                                     +--Tópico X-->| Cliente IoT    |
                                                                   +----------------+
 ```
 
-Broadcasts work even if the application runs on several nodes/computers. That is, if two clients have their socket connected to different application nodes and are subscribed to the same topic `T`, both of them will receive messages broadcasted to `T`. That is possible thanks to an internal PubSub mechanism.
+As transmissões funcionam mesmo se a aplicação estiver em execução em vários nós/computadores. Ou seja, se dois clientes tiverem seu socket conectado a diferentes nós da aplicação e estiverem inscritos no mesmo tópico `T`, ambos receberão mensagens transmitidas para `T`. Isso é possível graças a um mecanismo interno de PubSub.
 
-Channels can support any kind of client: a browser, native app, smart watch, embedded device, or anything else that can connect to a network.
-All the client needs is a suitable library; see the [Client Libraries](#client-libraries) section below.
-Each client library communicates using one of the "transports" that Channels understand.
-Currently, that's either Websockets or long polling, but other transports may be added in the future.
+Os Canais podem suportar qualquer tipo de cliente: um navegador, aplicativo nativo, smartwatch, dispositivo integrado ou qualquer outra coisa que possa se conectar a uma rede.
+Tudo o que o cliente precisa é de uma biblioteca adequada; veja a seção [Bibliotecas de Cliente](#bibliotecas-de-cliente) abaixo.
+Cada biblioteca cliente se comunica usando um dos "transportes" que os Canais entendem.
+Atualmente, isso é WebSockets ou long polling, mas outros transportes podem ser adicionados no futuro.
 
-Unlike stateless HTTP connections, Channels support long-lived connections, each backed by a lightweight BEAM process, working in parallel and maintaining its own state.
+Ao contrário das conexões HTTP sem estado, os Canais suportam conexões de longa duração, cada uma apoiada por um processo BEAM leve, trabalhando em paralelo e mantendo seu próprio estado.
 
-This architecture scales well; Phoenix Channels [can support millions of subscribers with reasonable latency on a single box](https://phoenixframework.org/blog/the-road-to-2-million-websocket-connections), passing hundreds of thousands of messages per second.
-And that capacity can be multiplied by adding more nodes to the cluster.
+Essa arquitetura escala bem; Phoenix Channels [pode suportar milhões de assinantes com latência razoável em uma única máquina](https://phoenixframework.org/blog/the-road-to-2-million-websocket-connections), passando centenas de milhares de mensagens por segundo.
+E essa capacidade pode ser multiplicada adicionando mais nós ao cluster.
 
-## The Moving Parts
+## As Partes em Movimento
 
-Although Channels are simple to use from a client perspective, there are a number of components involved in routing messages to clients across a cluster of servers.
-Let's take a look at them.
+Embora os Canais sejam simples de usar do ponto de vista do cliente, há vários componentes envolvidos no roteamento de mensagens para clientes em um cluster de servidores.
+Vamos dar uma olhada neles.
 
-### Overview
+### Visão Geral
 
-To start communicating, a client connects to a node (a Phoenix server) using a transport (e.g., Websockets or long polling) and joins one or more channels using that single network connection.
-One channel server lightweight process is created per client, per topic. Each channel holds onto the `%Phoenix.Socket{}` and can maintain any state it needs within its `socket.assigns`.
+Para começar a se comunicar, um cliente se conecta a um nó (um servidor Phoenix) usando um transporte (por exemplo, Websockets ou long polling) e se junta a um ou mais canais usando essa única conexão de rede.
+Um processo servidor de canal leve é criado por cliente, por tópico. Cada canal mantém o `%Phoenix.Socket{}` e pode manter qualquer estado necessário dentro de seu `socket.assigns`.
 
-Once the connection is established, each incoming message from a client is routed, based on its topic, to the correct channel server.
-If the channel server asks to broadcast a message, that message is sent to the local PubSub, which sends it out to any clients connected to the same server and subscribed to that topic.
+Uma vez estabelecida a conexão, cada mensagem recebida de um cliente é roteada, com base em seu tópico, para o servidor de canal correto.
+Se o servidor de canal pedir para transmitir uma mensagem, essa mensagem é enviada para o PubSub local, que a envia para quaisquer clientes conectados ao mesmo servidor e inscritos nesse tópico.
 
-If there are other nodes in the cluster, the local PubSub also forwards the message to their PubSubs, which send it out to their own subscribers.
-Because only one message has to be sent per additional node, the performance cost of adding nodes is negligible, while each new node supports many more subscribers.
+Se houver outros nós no cluster, o PubSub local também encaminha a mensagem para seus PubSubs, que a enviam para seus próprios assinantes.
+Como apenas uma mensagem precisa ser enviada por nó adicional, o custo de desempenho de adicionar nós é insignificante, enquanto cada novo nó suporta muito mais assinantes.
 
-The message flow looks something like this:
+O fluxo de mensagens é mais ou menos assim:
 
 ```plaintext
-                                 Channel   +-------------------------+      +--------+
-                                  route    | Sending Client, Topic 1 |      | Local  |
-                              +----------->|     Channel.Server      |----->| PubSub |--+
+                                 Rota do    +-------------------------+      +--------+
+                                  Canal     | Cliente Enviando, Tópico 1 |      | PubSub  |
+                              +----------->|     Canal.Servidor      |----->| Local  |--+
 +----------------+            |            +-------------------------+      +--------+  |
-| Sending Client |-Transport--+                                                  |      |
+| Cliente Enviando |-Transporte--+                                                  |      |
 +----------------+                         +-------------------------+           |      |
-                                           | Sending Client, Topic 2 |           |      |
-                                           |     Channel.Server      |           |      |
+                                           | Cliente Enviando, Tópico 2 |           |      |
+                                           |     Canal.Servidor      |           |      |
                                            +-------------------------+           |      |
                                                                                  |      |
                                            +-------------------------+           |      |
-+----------------+                         | Browser Client, Topic 1 |           |      |
-| Browser Client |<-------Transport--------|     Channel.Server      |<----------+      |
++----------------+                         | Cliente Navegador, Tópico 1 |           |      |
+| Cliente Navegador |<-------Transporte--------|     Canal.Servidor      |<----------+      |
 +----------------+                         +-------------------------+                  |
                                                                                         |
                                                                                         |
                                                                                         |
                                            +-------------------------+                  |
-+----------------+                         |  Phone Client, Topic 1  |                  |
-|  Phone Client  |<-------Transport--------|     Channel.Server      |<-+               |
++----------------+                         |  Cliente Telefone, Tópico 1  |                  |
+|  Cliente Telefone  |<-------Transporte--------|     Canal.Servidor      |<-+               |
 +----------------+                         +-------------------------+  |   +--------+  |
-                                                                        |   | Remote |  |
-                                           +-------------------------+  +---| PubSub |<-+
-+----------------+                         |  Watch Client, Topic 1  |  |   +--------+  |
-|  Watch Client  |<-------Transport--------|     Channel.Server      |<-+               |
+                                                                        |   | PubSub  |  |
+                                           +-------------------------+  +---| Remoto |<-+
++----------------+                         |  Cliente Relógio, Tópico 1  |  |   +--------+  |
+|  Cliente Relógio  |<-------Transporte--------|     Canal.Servidor      |<-+               |
 +----------------+                         +-------------------------+                  |
                                                                                         |
                                                                                         |
                                            +-------------------------+      +--------+  |
-+----------------+                         |   IoT Client, Topic 1   |      | Remote |  |
-|   IoT Client   |<-------Transport--------|     Channel.Server      |<-----| PubSub |<-+
++----------------+                         |   Cliente IoT, Tópico 1   |      | PubSub  |  |
+|   Cliente IoT   |<-------Transporte--------|     Canal.Servidor      |<-----| Remoto |<-+
 +----------------+                         +-------------------------+      +--------+
 ```
 
 ### Endpoint
 
-In your Phoenix app's `Endpoint` module, a `socket` declaration specifies which socket handler will receive connections on a given URL.
+No módulo `Endpoint` do seu aplicativo Phoenix, uma declaração `socket` especifica qual manipulador de socket receberá conexões em uma determinada URL.
 
 ```elixir
 socket "/socket", HelloWeb.UserSocket,
@@ -110,68 +110,68 @@ socket "/socket", HelloWeb.UserSocket,
   longpoll: false
 ```
 
-Phoenix comes with two default transports: websocket and longpoll. You can configure them directly via the `socket` declaration.
+O Phoenix vem com dois transportes padrão: websocket e longpoll. Você pode configurá-los diretamente através da declaração `socket`.
 
-### Socket Handlers
+### Manipuladores de Socket
 
-On the client side, you will establish a socket connection to the route above:
+No lado do cliente, você estabelecerá uma conexão de socket para a rota acima:
 
 ```javascript
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 ```
 
-On the server, Phoenix will invoke `HelloWeb.UserSocket.connect/2`, passing your parameters and the initial socket state. Within the socket, you can authenticate and identify a socket connection and set default socket assigns. The socket is also where you define your channel routes.
+No servidor, o Phoenix invocará `HelloWeb.UserSocket.connect/2`, passando seus parâmetros e o estado inicial do socket. Dentro do socket, você pode autenticar e identificar uma conexão de socket e definir atribuições padrão do socket. O socket também é onde você define suas rotas de canal.
 
-### Channel Routes
+### Rotas de Canal
 
-Channel routes match on the topic string and dispatch matching requests to the given Channel module.
+As rotas de canal correspondem à string do tópico e enviam solicitações correspondentes para o módulo Channel fornecido.
 
-The star character `*` acts as a wildcard matcher, so in the following example route, requests for `room:lobby` and `room:123` would both be dispatched to the `RoomChannel`. In your `UserSocket`, you would have:
+O caractere estrela `*` atua como um curinga, então no exemplo de rota a seguir, solicitações para `room:lobby` e `room:123` seriam ambas enviadas para o `RoomChannel`. No seu `UserSocket`, você teria:
 
 ```elixir
 channel "room:*", HelloWeb.RoomChannel
 ```
 
-### Channels
+### Canais
 
-Channels handle events from clients, so they are similar to Controllers, but there are two key differences. Channel events can go both directions - incoming and outgoing. Channel connections also persist beyond a single request/response cycle. Channels are the highest level abstraction for real-time communication components in Phoenix.
+Os Canais lidam com eventos dos clientes, então são semelhantes aos Controllers, mas há duas diferenças principais. Os eventos do Canal podem ir em ambas as direções - de entrada e saída. As conexões do Canal também persistem além de um único ciclo de solicitação/resposta. Os Canais são o nível mais alto de abstração para componentes de comunicação em tempo real no Phoenix.
 
-Each Channel will implement one or more clauses of each of these four callback functions - `join/3`, `terminate/2`, `handle_in/3`, and `handle_out/3`.
+Cada Canal implementará uma ou mais cláusulas de cada uma dessas quatro funções de callback - `join/3`, `terminate/2`, `handle_in/3` e `handle_out/3`.
 
-### Topics
+### Tópicos
 
-Topics are string identifiers - names that the various layers use in order to make sure messages end up in the right place. As we saw above, topics can use wildcards. This allows for a useful `"topic:subtopic"` convention. Often, you'll compose topics using record IDs from your application layer, such as `"users:123"`.
+Tópicos são identificadores de string - nomes que as várias camadas usam para garantir que as mensagens acabem no lugar certo. Como vimos acima, os tópicos podem usar curingas. Isso permite uma convenção útil de `"tópico:subtópico"`. Frequentemente, você compõe tópicos usando IDs de registros da sua camada de aplicação, como `"users:123"`.
 
-### Messages
+### Mensagens
 
-The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](https://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
+O módulo `Phoenix.Socket.Message` define uma struct com as seguintes chaves que denota uma mensagem válida. Da [documentação do Phoenix.Socket.Message](https://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
 
-- `topic` - The string topic or `"topic:subtopic"` pair namespace, such as `"messages"` or `"messages:123"`
-- `event` - The string event name, for example `"phx_join"`
-- `payload` - The message payload
-- `ref` - The unique string ref
+- `topic` - O tópico de string ou par de namespace `"tópico:subtópico"`, como `"messages"` ou `"messages:123"`
+- `event` - O nome do evento em string, por exemplo `"phx_join"`
+- `payload` - A carga útil da mensagem
+- `ref` - A string de referência única
 
 ### PubSub
 
-PubSub is provided by the `Phoenix.PubSub` module. Interested parties can receive events by subscribing to topics. Other processes can broadcast events to certain topics.
+O PubSub é fornecido pelo módulo `Phoenix.PubSub`. Partes interessadas podem receber eventos se inscrevendo em tópicos. Outros processos podem transmitir eventos para determinados tópicos.
 
-This is useful to broadcast messages on channel and also for application development in general. For instance, letting all connected [live views](https://github.com/phoenixframework/phoenix_live_view) to know that a new comment has been added to a post.
+Isso é útil para transmitir mensagens em canal e também para o desenvolvimento de aplicativos em geral. Por exemplo, permitindo que todas as [views ao vivo](https://github.com/phoenixframework/phoenix_live_view) conectadas saibam que um novo comentário foi adicionado a uma postagem.
 
-The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
-By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
+O sistema PubSub cuida de obter mensagens de um nó para outro para que possam ser enviadas a todos os assinantes do cluster.
+Por padrão, isso é feito usando [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), que usa mensagens BEAM nativas.
 
-If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
+Se seu ambiente de implantação não suporta Elixir distribuído ou comunicação direta entre servidores, o Phoenix também vem com um [Adaptador Redis](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) que usa o Redis para trocar dados PubSub. Por favor, veja a [documentação do Phoenix.PubSub](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) para mais informações.
 
-### Client Libraries
+### Bibliotecas de Cliente
 
-Any networked device can connect to Phoenix Channels as long as it has a client library.
-The following libraries exist today, and new ones are always welcome; to write your own, see our how-to guide [Writing a Channels Client](writing_a_channels_client.md).
+Qualquer dispositivo em rede pode se conectar aos Phoenix Channels, desde que tenha uma biblioteca cliente.
+As seguintes bibliotecas existem hoje, e novas são sempre bem-vindas; para escrever a sua própria, veja nosso guia [Escrevendo um Cliente de Canais](writing_a_channels_client.md).
 
-#### Official
+#### Oficial
 
-Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [multiple js files](https://github.com/phoenixframework/phoenix/blob/main/assets/js/phoenix/).
+O Phoenix vem com um cliente JavaScript que está disponível ao gerar um novo projeto Phoenix. A documentação para o módulo JavaScript está disponível em [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); o código está em [múltiplos arquivos js](https://github.com/phoenixframework/phoenix/blob/main/assets/js/phoenix/).
 
-#### 3rd Party
+#### Terceiros
 
 + Swift (iOS)
   - [SwiftPhoenix](https://github.com/davidstump/SwiftPhoenixClient)
@@ -184,22 +184,22 @@ Phoenix ships with a JavaScript client that is available when generating a new P
 + Elixir
   - [phoenix_gen_socket_client](https://github.com/Aircloak/phoenix_gen_socket_client)
   - [slipstream](https://hexdocs.pm/slipstream/Slipstream.html)
-+ GDScript (Godot Game Engine)
++ GDScript (Motor de Jogo Godot)
   - [GodotPhoenixChannels](https://github.com/alfredbaudisch/GodotPhoenixChannels)
 
-## Tying it all together
+## Juntando tudo
 
-Let's tie all these ideas together by building a simple chat application. Make sure [you created a new Phoenix application](https://hexdocs.pm/phoenix/up_and_running.html) and now we are ready to generate the `UserSocket`.
+Vamos unir todas essas ideias construindo um aplicativo de chat simples. Certifique-se de que [você criou uma nova aplicação Phoenix](https://hexdocs.pm/phoenix/up_and_running.html) e agora estamos prontos para gerar o `UserSocket`.
 
-### Generating a socket
+### Gerando um socket
 
-Let's invoke the socket generator to get started:
+Vamos invocar o gerador de socket para começar:
 
 ```console
 $ mix phx.gen.socket User
 ```
 
-It will create two files, the client code in `assets/js/user_socket.js` and the server counter-part in `lib/hello_web/channels/user_socket.ex`. After running, the generator will also ask to add the following line to `lib/hello_web/endpoint.ex`:
+Ele criará dois arquivos, o código do cliente em `assets/js/user_socket.js` e a contraparte do servidor em `lib/hello_web/channels/user_socket.ex`. Após a execução, o gerador também pedirá para adicionar a seguinte linha a `lib/hello_web/endpoint.ex`:
 
 ```elixir
 defmodule HelloWeb.Endpoint do
@@ -213,9 +213,9 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-The generator also asks us to import the client code, we will do that later.
+O gerador também nos pede para importar o código do cliente, faremos isso mais tarde.
 
-Next, we will configure our socket to ensure messages get routed to the correct channel. To do that, we'll uncomment the `"room:*"` channel definition:
+Em seguida, vamos configurar nosso socket para garantir que as mensagens sejam roteadas para o canal correto. Para isso, vamos descomentar a definição do canal `"room:*"`:
 
 ```elixir
 defmodule HelloWeb.UserSocket do
@@ -226,11 +226,11 @@ defmodule HelloWeb.UserSocket do
   ...
 ```
 
-Now, whenever a client sends a message whose topic starts with `"room:"`, it will be routed to our RoomChannel. Next, we'll define a `HelloWeb.RoomChannel` module to manage our chat room messages.
+Agora, sempre que um cliente enviar uma mensagem cujo tópico começa com `"room:"`, ela será roteada para nosso RoomChannel. Em seguida, definiremos um módulo `HelloWeb.RoomChannel` para gerenciar nossas mensagens de sala de chat.
 
-### Joining Channels
+### Juntando-se aos Canais
 
-The first priority of your channels is to authorize clients to join a given topic. For authorization, we must implement `join/3` in `lib/hello_web/channels/room_channel.ex`.
+A primeira prioridade de seus canais é autorizar os clientes a se juntarem a um determinado tópico. Para autorização, devemos implementar `join/3` em `lib/hello_web/channels/room_channel.ex`.
 
 ```elixir
 defmodule HelloWeb.RoomChannel do
@@ -246,21 +246,21 @@ defmodule HelloWeb.RoomChannel do
 end
 ```
 
-For our chat app, we'll allow anyone to join the `"room:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required.
-(We won't worry about private chat rooms for this exercise, but feel free to explore after we finish.)
+Para nosso aplicativo de chat, permitiremos que qualquer pessoa se junte ao tópico `"room:lobby"`, mas qualquer outra sala será considerada privada e autorização especial, digamos de um banco de dados, será necessária.
+(Não vamos nos preocupar com salas de chat privadas para este exercício, mas fique à vontade para explorar depois que terminarmos.)
 
-With our channel in place, let's get the client and server talking.
+Com nosso canal em vigor, vamos fazer o cliente e o servidor conversarem.
 
-The generated `assets/js/user_socket.js` defines a simple client based on the socket implementation that ships with Phoenix.
+O arquivo `assets/js/user_socket.js` gerado define um cliente simples baseado na implementação de socket que vem com o Phoenix.
 
-We can use that library to connect to our socket and join our channel, we just need to set our room name to `"room:lobby"` in that file.
+Podemos usar essa biblioteca para nos conectar ao nosso socket e nos juntar ao nosso canal, só precisamos definir o nome da nossa sala como `"room:lobby"` nesse arquivo.
 
 ```javascript
 // assets/js/user_socket.js
 // ...
 socket.connect()
 
-// Now that you are connected, you can join channels with a topic:
+// Agora que você está conectado, você pode se juntar a canais com um tópico:
 let channel = socket.channel("room:lobby", {})
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
@@ -269,23 +269,23 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment this line in `assets/js/app.js`.
+Depois disso, precisamos garantir que `assets/js/user_socket.js` seja importado para nosso arquivo JavaScript da aplicação. Para fazer isso, descomente esta linha em `assets/js/app.js`.
 
 ```javascript
 // ...
 import "./user_socket.js"
 ```
 
-Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
+Salve o arquivo e seu navegador deve atualizar automaticamente, graças ao recarregador ao vivo do Phoenix. Se tudo funcionou, devemos ver "Joined successfully" no console JavaScript do navegador. Nosso cliente e servidor agora estão conversando por uma conexão persistente. Agora vamos torná-lo útil habilitando o chat.
 
-In `lib/hello_web/controllers/page_html/home.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
+Em `lib/hello_web/controllers/page_html/home.html.heex`, substituiremos o código existente por um container para conter nossas mensagens de chat e um campo de entrada para enviá-las:
 
 ```heex
 <div id="messages" role="log" aria-live="polite"></div>
 <input id="chat-input" type="text">
 ```
 
-Now let's add a couple of event listeners to `assets/js/user_socket.js`:
+Agora vamos adicionar alguns ouvintes de eventos para `assets/js/user_socket.js`:
 
 ```javascript
 // ...
@@ -307,7 +307,7 @@ channel.join()
 export default socket
 ```
 
-All we had to do is detect that enter was pressed and then `push` an event over the channel with the message body. We named the event `"new_msg"`. With this in place, let's handle the other piece of a chat application, where we listen for new messages and append them to our messages container.
+Tudo o que tivemos que fazer é detectar que Enter foi pressionado e então `push` um evento pelo canal com o corpo da mensagem. Nomeamos o evento `"new_msg"`. Com isso em vigor, vamos lidar com a outra parte de um aplicativo de chat, onde ouvimos novas mensagens e as adicionamos ao nosso container de mensagens.
 
 ```javascript
 // ...
@@ -335,11 +335,11 @@ channel.join()
 export default socket
 ```
 
-We listen for the `"new_msg"` event using `channel.on`, and then append the message body to the DOM. Now let's handle the incoming and outgoing events on the server to complete the picture.
+Ouvimos o evento `"new_msg"` usando `channel.on`, e então anexamos o corpo da mensagem ao DOM. Agora vamos lidar com os eventos de entrada e saída no servidor para completar o quadro.
 
-### Incoming Events
+### Eventos de Entrada
 
-We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `room:lobby` subscribers of the new message with `broadcast!/3`.
+Lidamos com eventos de entrada com `handle_in/3`. Podemos fazer pattern matching nos nomes dos eventos, como `"new_msg"`, e então pegar a carga útil que o cliente passou pelo canal. Para nosso aplicativo de chat, simplesmente precisamos notificar todos os outros assinantes de `room:lobby` sobre a nova mensagem com `broadcast!/3`.
 
 ```elixir
 defmodule HelloWeb.RoomChannel do
@@ -360,11 +360,11 @@ defmodule HelloWeb.RoomChannel do
 end
 ```
 
-`broadcast!/3` will notify all joined clients on this `socket`'s topic and invoke their `handle_out/3` callbacks. `handle_out/3` isn't a required callback, but it allows us to customize and filter broadcasts before they reach each client. By default, `handle_out/3` is implemented for us and simply pushes the message on to the client. Hooking into outgoing events allows for powerful message customization and filtering. Let's see how.
+`broadcast!/3` notificará todos os clientes conectados neste tópico do `socket` e invocará seus callbacks `handle_out/3`. `handle_out/3` não é um callback obrigatório, mas nos permite personalizar e filtrar transmissões antes que elas cheguem a cada cliente. Por padrão, `handle_out/3` é implementado para nós e simplesmente envia a mensagem para o cliente. Conectar-se a eventos de saída permite uma poderosa personalização e filtragem de mensagens. Vamos ver como.
 
-### Intercepting Outgoing Events
+### Interceptando Eventos de Saída
 
-We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this, where we explicitly tell Phoenix which outgoing event we want to intercept and then define a `handle_out/3` callback for those events. (Of course, this assumes that we have an `Accounts` context with an `ignoring_user?/2` function, and that we pass a user in via the `assigns` map). It is important to note that the `handle_out/3` callback will be called for every recipient of a message, so more expensive operations like hitting the database should be considered carefully before being included in `handle_out/3`.
+Não implementaremos isso para nossa aplicação, mas imagine que nosso aplicativo de chat permitisse aos usuários ignorar mensagens sobre novos usuários se juntando a uma sala. Poderíamos implementar esse comportamento assim, onde explicitamente dizemos ao Phoenix qual evento de saída queremos interceptar e então definimos um callback `handle_out/3` para esses eventos. (É claro, isso pressupõe que temos um contexto `Accounts` com uma função `ignoring_user?/2`, e que passamos um usuário através do mapa `assigns`). É importante notar que o callback `handle_out/3` será chamado para cada destinatário de uma mensagem, então operações mais caras como acessar o banco de dados devem ser consideradas cuidadosamente antes de serem incluídas em `handle_out/3`.
 
 ```elixir
 intercept ["user_joined"]
@@ -379,15 +379,15 @@ def handle_out("user_joined", msg, socket) do
 end
 ```
 
-That's all there is to our basic chat app. Fire up multiple browser tabs and you should see your messages being pushed and broadcasted to all windows!
+É tudo o que existe para nosso aplicativo de chat básico. Abra múltiplas abas do navegador e você deve ver suas mensagens sendo enviadas e transmitidas para todas as janelas!
 
-## Using Token Authentication
+## Usando Autenticação por Token
 
-When we connect, we'll often need to authenticate the client. Fortunately, this is a 4-step process with [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
+Quando nos conectamos, muitas vezes precisamos autenticar o cliente. Felizmente, este é um processo de 4 etapas com [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
 
-### Step 1 - Assign a Token in the Connection
+### Etapa 1 - Atribuir um Token na Conexão
 
-Let's say we have an authentication plug in our app called `OurAuth`. When `OurAuth` authenticates a user, it sets a value for the `:current_user` key in `conn.assigns`. Since the `current_user` exists, we can simply assign the user's token in the connection for use in the layout. We can wrap that behavior up in a private function plug, `put_user_token/2`. This could also be put in its own module as well. To make this all work, we just add `OurAuth` and `put_user_token/2` to the browser pipeline.
+Vamos dizer que temos um plug de autenticação em nosso aplicativo chamado `OurAuth`. Quando `OurAuth` autentica um usuário, ele define um valor para a chave `:current_user` em `conn.assigns`. Como o `current_user` existe, podemos simplesmente atribuir o token do usuário na conexão para uso no layout. Podemos empacotar esse comportamento em um plug de função privada, `put_user_token/2`. Isso também poderia ser colocado em seu próprio módulo. Para fazer isso funcionar, basta adicionar `OurAuth` e `put_user_token/2` ao pipeline do navegador.
 
 ```elixir
 pipeline :browser do
@@ -406,24 +406,24 @@ defp put_user_token(conn, _) do
 end
 ```
 
-Now our `conn.assigns` contains the `current_user` and `user_token`.
+Agora nosso `conn.assigns` contém o `current_user` e `user_token`.
 
-### Step 2 - Pass the Token to the JavaScript
+### Etapa 2 - Passar o Token para o JavaScript
 
-Next, we need to pass this token to JavaScript. We can do so inside a script tag in `lib/hello_web/components/layouts/app.html.heex` right above the app.js script, as follows:
+Em seguida, precisamos passar esse token para o JavaScript. Podemos fazer isso dentro de uma tag de script em `lib/hello_web/components/layouts/app.html.heex` logo acima do script app.js, da seguinte forma:
 
 ```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
 <script src={~p"/assets/app.js"}></script>
 ```
 
-### Step 3 - Pass the Token to the Socket Constructor and Verify
+### Etapa 3 - Passar o Token para o Construtor do Socket e Verificar
 
-We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `lib/hello_web/channels/user_socket.ex`, as follows:
+Também precisamos passar os `:params` para o construtor do socket e verificar o token do usuário na função `connect/3`. Para fazer isso, edite `lib/hello_web/channels/user_socket.ex`, da seguinte forma:
 
 ```elixir
 def connect(%{"token" => token}, socket, _connect_info) do
-  # max_age: 1209600 is equivalent to two weeks in seconds
+  # max_age: 1209600 é equivalente a duas semanas em segundos
   case Phoenix.Token.verify(socket, "user socket", token, max_age: 1209600) do
     {:ok, user_id} ->
       {:ok, assign(socket, :current_user, user_id)}
@@ -433,24 +433,24 @@ def connect(%{"token" => token}, socket, _connect_info) do
 end
 ```
 
-In our JavaScript, we can use the token set previously when constructing the Socket:
+Em nosso JavaScript, podemos usar o token definido anteriormente ao construir o Socket:
 
 ```javascript
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 ```
 
-We used `Phoenix.Token.verify/4` to verify the user token provided by the client. `Phoenix.Token.verify/4` returns either `{:ok, user_id}` or `{:error, reason}`. We can pattern match on that return in a `case` statement. With a verified token, we set the user's id as the value to `:current_user` in the socket. Otherwise, we return `:error`.
+Usamos `Phoenix.Token.verify/4` para verificar o token do usuário fornecido pelo cliente. `Phoenix.Token.verify/4` retorna ou `{:ok, user_id}` ou `{:error, reason}`. Podemos fazer pattern matching nesse retorno em uma declaração `case`. Com um token verificado, definimos o id do usuário como o valor para `:current_user` no socket. Caso contrário, retornamos `:error`.
 
-### Step 4 - Connect to the socket in JavaScript
+### Etapa 4 - Conectar ao socket em JavaScript
 
-With authentication set up, we can connect to sockets and channels from JavaScript.
+Com a autenticação configurada, podemos nos conectar a sockets e canais a partir do JavaScript.
 
 ```javascript
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 socket.connect()
 ```
 
-Now that we are connected, we can join channels with a topic:
+Agora que estamos conectados, podemos nos juntar a canais com um tópico:
 
 ```javascript
 let channel = socket.channel("topic:subtopic", {})
@@ -461,24 +461,24 @@ channel.join()
 export default socket
 ```
 
-Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or other authentication approaches.
+Observe que a autenticação por token é preferível, uma vez que é agnóstica em relação ao transporte e adequada para conexões de longa duração como canais, em contraste com o uso de sessões ou outras abordagens de autenticação.
 
-## Fault Tolerance and Reliability Guarantees
+## Tolerância a Falhas e Garantias de Confiabilidade
 
-Servers restart, networks split, and clients lose connectivity. In order to design robust systems, we need to understand how Phoenix responds to these events and what guarantees it offers.
+Servidores reiniciam, redes se dividem e clientes perdem conectividade. Para projetar sistemas robustos, precisamos entender como o Phoenix responde a esses eventos e quais garantias ele oferece.
 
-### Handling Reconnection
+### Lidando com Reconexão
 
-Clients subscribe to topics, and Phoenix stores those subscriptions in an in-memory ETS table. If a channel crashes, the clients will need to reconnect to the topics they had previously subscribed to. Fortunately, the Phoenix JavaScript client knows how to do this. The server will notify all the clients of the crash. This will trigger each client's `Channel.onError` callback. The clients will attempt to reconnect to the server using an exponential backoff strategy. Once they reconnect, they'll attempt to rejoin the topics they had previously subscribed to. If they are successful, they'll start receiving messages from those topics as before.
+Os clientes se inscrevem em tópicos, e o Phoenix armazena essas inscrições em uma tabela ETS em memória. Se um canal falhar, os clientes precisarão se reconectar aos tópicos aos quais haviam se inscrito anteriormente. Felizmente, o cliente JavaScript do Phoenix sabe como fazer isso. O servidor notificará todos os clientes da falha. Isso acionará o callback `Channel.onError` de cada cliente. Os clientes tentarão se reconectar ao servidor usando uma estratégia de recuo exponencial. Uma vez reconectados, eles tentarão se juntar novamente aos tópicos aos quais haviam se inscrito anteriormente. Se forem bem-sucedidos, eles começarão a receber mensagens desses tópicos como antes.
 
-### Resending Client Messages
+### Reenviando Mensagens do Cliente
 
-Channel clients queue outgoing messages into a `PushBuffer`, and send them to the server when there is a connection. If no connection is available, the client holds on to the messages until it can establish a new connection. With no connection, the client will hold the messages in memory until it establishes a connection, or until it receives a `timeout` event. The default timeout is set to 5000 milliseconds. The client won't persist the messages in the browser's local storage, so if the browser tab closes, the messages will be gone.
+Os clientes de canal enfileiram mensagens de saída em um `PushBuffer` e as enviam para o servidor quando há uma conexão. Se nenhuma conexão estiver disponível, o cliente mantém as mensagens até que possa estabelecer uma nova conexão. Sem conexão, o cliente manterá as mensagens na memória até estabelecer uma conexão, ou até receber um evento de `timeout`. O timeout padrão é definido como 5000 milissegundos. O cliente não persistirá as mensagens no armazenamento local do navegador, então se a aba do navegador fechar, as mensagens serão perdidas.
 
-### Resending Server Messages
+### Reenviando Mensagens do Servidor
 
-Phoenix uses an at-most-once strategy when sending messages to clients. If the client is offline and misses the message, Phoenix won't resend it. Phoenix doesn't persist messages on the server. If the server restarts, unsent messages will be gone. If our application needs stronger guarantees around message delivery, we'll need to write that code ourselves. Common approaches involve persisting messages on the server and having clients request missing messages. For an example, see Chris McCord's Phoenix training: [client code](https://github.com/chrismccord/elixirconf_training/blob/master/web/static/js/app.js#L38-L39) and [server code](https://github.com/chrismccord/elixirconf_training/blob/master/web/channels/document_channel.ex#L13-L19).
+O Phoenix usa uma estratégia de no máximo uma vez ao enviar mensagens para os clientes. Se o cliente estiver offline e perder a mensagem, o Phoenix não a reenviará. O Phoenix não persiste mensagens no servidor. Se o servidor reiniciar, mensagens não enviadas serão perdidas. Se nossa aplicação precisa de garantias mais fortes em torno da entrega de mensagens, precisaremos escrever esse código nós mesmos. Abordagens comuns envolvem persistir mensagens no servidor e ter clientes solicitando mensagens perdidas. Para um exemplo, veja o treinamento de Phoenix do Chris McCord: [código do cliente](https://github.com/chrismccord/elixirconf_training/blob/master/web/static/js/app.js#L38-L39) e [código do servidor](https://github.com/chrismccord/elixirconf_training/blob/master/web/channels/document_channel.ex#L13-L19).
 
-## Example Application
+## Aplicação de Exemplo
 
-To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
+Para ver um exemplo da aplicação que acabamos de construir, confira o projeto [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
