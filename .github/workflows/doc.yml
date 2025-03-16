@@ -23,8 +23,12 @@ concurrency:
 
 jobs:
 
-  build:
+  deploy:
     name: mix docs (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     env:
       MIX_ENV: docs
@@ -37,7 +41,7 @@ jobs:
             otp: 26.2
             lint: true
             installer: true
-    
+
     runs-on: ubuntu-20.04
 
     steps:
