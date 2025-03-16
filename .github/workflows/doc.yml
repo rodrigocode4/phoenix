@@ -73,10 +73,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Build doc 🏗️
-        run: |
-          npm install --prefix assets
-          mix docs
+      - name: Install dependencies Node.js
+        run:  npm install --prefix assets
+
+      - name: Install dependencies Elixir
+        run: mix deps.get --only docs
+
+      - name: Remove compiled application files
+        run: mix clean
+
+      - name: (Elixir) Build doc 🏗️
+        run: mix docs
 
       - name: List files on doc 📂
         run: ls -R doc
