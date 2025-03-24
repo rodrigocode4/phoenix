@@ -16,14 +16,14 @@ defmodule Phoenix.Controller do
   @type layout :: {module(), layout_name :: atom()} | atom() | false
 
   @moduledoc """
-  Controllers are used to group common functionality in the same
-  (pluggable) module.
+  Controladores são usados para agrupar funcionalidades comuns no mesmo
+  módulo (conectável).
 
-  For example, the route:
+  Por exemplo, a rota:
 
       get "/users/:id", MyAppWeb.UserController, :show
 
-  will invoke the `show/2` action in the `MyAppWeb.UserController`:
+  irá invocar a ação `show/2` em `MyAppWeb.UserController`:
 
       defmodule MyAppWeb.UserController do
         use MyAppWeb, :controller
@@ -34,112 +34,111 @@ defmodule Phoenix.Controller do
         end
       end
 
-  An action is a regular function that receives the connection
-  and the request parameters as arguments. The connection is a
-  `Plug.Conn` struct, as specified by the Plug library.
+  Uma ação é uma função regular que recebe a conexão e os parâmetros
+  da requisição como argumentos. A conexão é uma struct `Plug.Conn`,
+  conforme especificado pela biblioteca Plug.
 
-  Then we invoke `render/3`, passing the connection, the template
-  to render (typically named after the action), and the `user: user`
-  as assigns. We will explore all of those concepts next.
+  Então invocamos `render/3`, passando a conexão, o template
+  a ser renderizado (tipicamente nomeado após a ação) e `user: user`
+  como assigns. Exploraremos todos esses conceitos a seguir.
 
-  ## Connection
+  ## Conexão
 
-  A controller by default provides many convenience functions for
-  manipulating the connection, rendering templates, and more.
+  Um controlador por padrão fornece muitas funções de conveniência para
+  manipular a conexão, renderizar templates e muito mais.
 
-  Those functions are imported from two modules:
+  Essas funções são importadas de dois módulos:
 
-    * `Plug.Conn` - a collection of low-level functions to work with
-      the connection
+    * `Plug.Conn` - uma coleção de funções de baixo nível para trabalhar
+      com a conexão
 
-    * `Phoenix.Controller` - functions provided by Phoenix
-      to support rendering, and other Phoenix specific behaviour
+    * `Phoenix.Controller` - funções fornecidas pelo Phoenix
+      para suportar renderização e outros comportamentos específicos do Phoenix
 
-  If you want to have functions that manipulate the connection
-  without fully implementing the controller, you can import both
-  modules directly instead of `use Phoenix.Controller`.
+  Se você quiser ter funções que manipulem a conexão sem implementar
+  totalmente o controlador, você pode importar ambos os módulos diretamente
+  em vez de `use Phoenix.Controller`.
 
-  ## Rendering and layouts
+  ## Renderização e layouts
 
-  One of the main features provided by controllers is the ability
-  to perform content negotiation and render templates based on
-  information sent by the client.
+  Uma das principais funcionalidades fornecidas pelos controladores é a capacidade
+  de realizar negociação de conteúdo e renderizar templates com base em
+  informações enviadas pelo cliente.
 
-  There are two ways to render content in a controller. One option
-  is to invoke format-specific functions, such as `html/2` and `json/2`.
+  Existem duas maneiras de renderizar conteúdo em um controlador. Uma opção
+  é invocar funções específicas de formato, como `html/2` e `json/2`.
 
-  However, most commonly controllers invoke custom modules called
-  views. Views are modules capable of rendering a custom format.
-  This is done by specifying the option `:formats` when defining
-  the controller:
+  No entanto, mais comumente, os controladores invocam módulos personalizados
+  chamados de views. Views são módulos capazes de renderizar um formato personalizado.
+  Isso é feito especificando a opção `:formats` ao definir o controlador:
 
       use Phoenix.Controller,
         formats: [:html, :json]
 
-   Now, when invoking `render/3`, a controller named `MyAppWeb.UserController`
-   will invoke `MyAppWeb.UserHTML` and `MyAppWeb.UserJSON` respectively
-   when rendering each format:
+   Agora, ao invocar `render/3`, um controlador chamado `MyAppWeb.UserController`
+   irá invocar `MyAppWeb.UserHTML` e `MyAppWeb.UserJSON` respectivamente
+   ao renderizar cada formato:
 
       def show(conn, %{"id" => id}) do
         user = Repo.get(User, id)
-        # Will invoke UserHTML.show(%{user: user}) for html requests
-        # Will invoke UserJSON.show(%{user: user}) for json requests
+        # Irá invocar UserHTML.show(%{user: user}) para requisições html
+        # Irá invocar UserJSON.show(%{user: user}) para requisições json
         render(conn, :show, user: user)
       end
 
-  Some formats are also handy to have layouts, which render content
-  shared across all pages. We can also specify layouts on `use`:
+  Alguns formatos também são úteis para ter layouts, que renderizam conteúdo
+  compartilhado em todas as páginas. Também podemos especificar layouts em `use`:
 
       use Phoenix.Controller,
         formats: [:html, :json],
         layouts: [html: MyAppWeb.Layouts]
 
-  You can also specify formats and layouts to render by calling
-  `put_view/2` and `put_layout/2` directly with a connection.
-  The line above can also be written directly in your actions as:
+  Você também pode especificar formatos e layouts a serem renderizados chamando
+  `put_view/2` e `put_layout/2` diretamente com uma conexão.
+  A linha acima também pode ser escrita diretamente em suas ações como:
 
       conn
       |> put_view(html: MyAppWeb.UserHTML, json: MyAppWeb.UserJSON)
       |> put_layout(html: MyAppWeb.Layouts)
 
-  ### Backwards compatibility
+  ### Compatibilidade com versões anteriores
 
-  In previous Phoenix versions, a controller you always render
-  `MyApp.UserView`. This behaviour can be explicitly retained by
-  passing a suffix to the formats options:
+  Em versões anteriores do Phoenix, um controlador sempre renderizava
+  `MyApp.UserView`. Esse comportamento pode ser explicitamente mantido
+  passando um sufixo para as opções de formatos:
 
       use Phoenix.Controller,
         formats: [html: "View", json: "View"],
         layouts: [html: MyAppWeb.Layouts]
 
-  ### Options
+  ### Opções
 
-  When used, the controller supports the following options to customize
-  template rendering:
+  Quando usado, o controlador suporta as seguintes opções para personalizar
+  a renderização de templates:
 
-    * `:formats` - the formats this controller will render
-      by default. For example, specifying `formats: [:html, :json]`
-      for a controller named `MyAppWeb.UserController` will
-      invoke `MyAppWeb.UserHTML` and `MyAppWeb.UserJSON` when
-      respectively rendering each format. If `:formats` is not
-      set, the default view is set to `MyAppWeb.UserView`
+    * `:formats` - os formatos que este controlador irá renderizar
+      por padrão. Por exemplo, especificar `formats: [:html, :json]`
+      para um controlador chamado `MyAppWeb.UserController` irá
+      invocar `MyAppWeb.UserHTML` e `MyAppWeb.UserJSON` ao
+      renderizar cada formato respectivamente. Se `:formats` não for
+      definido, a view padrão é definida como `MyAppWeb.UserView`
 
-    * `:layouts` - which layouts to render for each format,
-      for example: `[html: DemoWeb.Layouts]`
+    * `:layouts` - quais layouts renderizar para cada formato,
+      por exemplo: `[html: DemoWeb.Layouts]`
 
-  Deprecated options:
+  Opções obsoletas:
 
-    * `:namespace` - sets the namespace for the layout. Use
-      `:layouts` instead
+    * `:namespace` - define o namespace para o layout. Use
+      `:layouts` em vez disso
 
-    * `:put_default_views` - controls whether the default view
-      and layout should be set or not. Set `formats: []` and
-      `layouts: []` instead
+    * `:put_default_views` - controla se a view e o layout padrão
+      devem ser definidos ou não. Defina `formats: []` e
+      `layouts: []` em vez disso
 
-  ## Plug pipeline
+  ## Pipeline de Plugs
 
-  As with routers, controllers also have their own plug pipeline.
-  However, different from routers, controllers have a single pipeline:
+  Assim como os roteadores, os controladores também têm seu próprio pipeline de plugs.
+  No entanto, diferente dos roteadores, os controladores têm um único pipeline:
 
       defmodule MyAppWeb.UserController do
         use MyAppWeb, :controller
@@ -147,7 +146,7 @@ defmodule Phoenix.Controller do
         plug :authenticate, usernames: ["jose", "eric", "sonny"]
 
         def show(conn, params) do
-          # authenticated users only
+          # apenas usuários autenticados
         end
 
         defp authenticate(conn, options) do
@@ -159,61 +158,62 @@ defmodule Phoenix.Controller do
         end
       end
 
-  The `:authenticate` plug will be invoked before the action. If the
-  plug calls `Plug.Conn.halt/1` (which is by default imported into
-  controllers), it will halt the pipeline and won't invoke the action.
+  O plug `:authenticate` será invocado antes da ação. Se o plug
+  chamar `Plug.Conn.halt/1` (que é importado por padrão nos
+  controladores), ele irá interromper o pipeline e não invocará a ação.
 
-  ### Guards
+  ### Guardas
 
-  `plug/2` in controllers supports guards, allowing a developer to configure
-  a plug to only run in some particular action.
+  `plug/2` nos controladores suporta guardas, permitindo que um desenvolvedor
+  configure um plug para ser executado apenas em alguma ação específica.
 
       plug :do_something when action in [:show, :edit]
 
-  Due to operator precedence in Elixir, if the second argument is a keyword list,
-  we need to wrap the keyword in `[...]` when using `when`:
+  Devido à precedência de operadores no Elixir, se o segundo argumento for uma
+  lista de palavras-chave, precisamos envolver a palavra-chave em `[...]` ao
+  usar `when`:
 
       plug :authenticate, [usernames: ["jose", "eric", "sonny"]] when action in [:show, :edit]
       plug :authenticate, [usernames: ["admin"]] when not action in [:index]
 
-  The first plug will run only when action is show or edit. The second plug will
-  always run, except for the index action.
+  O primeiro plug será executado apenas quando a ação for show ou edit. O segundo plug
+  sempre será executado, exceto para a ação index.
 
-  Those guards work like regular Elixir guards and the only variables accessible
-  in the guard are `conn`, the `action` as an atom and the `controller` as an
-  alias.
+  Essas guardas funcionam como guardas regulares do Elixir e as únicas variáveis
+  acessíveis na guarda são `conn`, a `action` como um átomo e o `controller`
+  como um alias.
 
-  ## Controllers are plugs
+  ## Controladores são plugs
 
-  Like routers, controllers are plugs, but they are wired to dispatch
-  to a particular function which is called an action.
+  Assim como os roteadores, os controladores são plugs, mas eles são conectados
+  para despachar para uma função específica, que é chamada de ação.
 
-  For example, the route:
+  Por exemplo, a rota:
 
       get "/users/:id", UserController, :show
 
-  will invoke `UserController` as a plug:
+  irá invocar `UserController` como um plug:
 
       UserController.call(conn, :show)
 
-  which will trigger the plug pipeline and which will eventually
-  invoke the inner action plug that dispatches to the `show/2`
-  function in `UserController`.
+  que irá disparar o pipeline de plugs e que eventualmente
+  invocará o plug de ação interno que despacha para a função `show/2`
+  em `UserController`.
 
-  As controllers are plugs, they implement both [`init/1`](`c:Plug.init/1`) and
-  [`call/2`](`c:Plug.call/2`), and it also provides a function named `action/2`
-  which is responsible for dispatching the appropriate action
-  after the plug stack (and is also overridable).
+  Como os controladores são plugs, eles implementam tanto [`init/1`](`c:Plug.init/1`)
+  quanto [`call/2`](`c:Plug.call/2`), e também fornecem uma função chamada
+  `action/2`, que é responsável por despachar a ação apropriada
+  após a pilha de plugs (e também é substituível).
 
-  ### Overriding `action/2` for custom arguments
+  ### Substituindo `action/2` para argumentos personalizados
 
-  Phoenix injects an `action/2` plug in your controller which calls the
-  function matched from the router. By default, it passes the conn and params.
-  In some cases, overriding the `action/2` plug in your controller is a
-  useful way to inject arguments into your actions that you would otherwise
-  need to repeatedly fetch off the connection. For example, imagine if you
-  stored a `conn.assigns.current_user` in the connection and wanted quick
-  access to the user for every action in your controller:
+  O Phoenix injeta um plug `action/2` no seu controlador que chama a função
+  correspondente do roteador. Por padrão, ele passa a conn e os params.
+  Em alguns casos, substituir o plug `action/2` no seu controlador é uma
+  maneira útil de injetar argumentos em suas ações que você precisaria
+  buscar repetidamente da conexão. Por exemplo, imagine se você armazenou
+  um `conn.assigns.current_user` na conexão e quisesse acesso rápido ao
+  usuário para cada ação no seu controlador:
 
       def action(conn, _) do
         args = [conn, conn.params, conn.assigns.current_user]
@@ -258,15 +258,15 @@ defmodule Phoenix.Controller do
   defp expand_alias(other, _env), do: other
 
   @doc """
-  Registers the plug to call as a fallback to the controller action.
+  Registra o plug a ser chamado como um fallback para a ação do controlador.
 
-  A fallback plug is useful to translate common domain data structures
-  into a valid `%Plug.Conn{}` response. If the controller action fails to
-  return a `%Plug.Conn{}`, the provided plug will be called and receive
-  the controller's `%Plug.Conn{}` as it was before the action was invoked
-  along with the value returned from the controller action.
+  Um plug de fallback é útil para traduzir estruturas de dados de domínio comuns
+  em uma resposta `%Plug.Conn{}` válida. Se a ação do controlador falhar em
+  retornar um `%Plug.Conn{}`, o plug fornecido será chamado e receberá
+  o `%Plug.Conn{}` do controlador como estava antes da ação ser invocada,
+  juntamente com o valor retornado da ação do controlador.
 
-  ## Examples
+  ## Exemplos
 
       defmodule MyController do
         use Phoenix.Controller
@@ -282,16 +282,16 @@ defmodule Phoenix.Controller do
         end
       end
 
-  In the above example, `with` is used to match only a successful
-  post fetch, followed by valid authorization for the current user.
-  In the event either of those fail to match, `with` will not invoke
-  the render block and instead return the unmatched value. In this case,
-  imagine `Blog.fetch_post/2` returned `{:error, :not_found}` or
-  `Authorizer.authorize/3` returned `{:error, :unauthorized}`. For cases
-  where these data structures serve as return values across multiple
-  boundaries in our domain, a single fallback module can be used to
-  translate the value into a valid response. For example, you could
-  write the following fallback controller to handle the above values:
+  No exemplo acima, `with` é usado para corresponder apenas a uma busca de postagem
+  bem-sucedida, seguida de uma autorização válida para o usuário atual.
+  Caso qualquer uma dessas correspondências falhe, `with` não invocará
+  o bloco de renderização e, em vez disso, retornará o valor não correspondido. Nesse caso,
+  imagine que `Blog.fetch_post/2` retornou `{:error, :not_found}` ou
+  `Authorizer.authorize/3` retornou `{:error, :unauthorized}`. Para casos
+  onde essas estruturas de dados servem como valores de retorno em múltiplas
+  fronteiras em nosso domínio, um único módulo de fallback pode ser usado para
+  traduzir o valor em uma resposta válida. Por exemplo, você poderia
+  escrever o seguinte controlador de fallback para lidar com os valores acima:
 
       defmodule MyFallbackController do
         use Phoenix.Controller
@@ -315,33 +315,33 @@ defmodule Phoenix.Controller do
     Phoenix.Controller.Pipeline.__action_fallback__(plug, __CALLER__)
   end
 
-  @doc """
-  Returns the action name as an atom, raises if unavailable.
+@doc """
+  Retorna o nome da ação como um átomo, gera um erro se não estiver disponível.
   """
   @spec action_name(Plug.Conn.t()) :: atom
   def action_name(conn), do: conn.private.phoenix_action
 
-  @doc """
-  Returns the controller module as an atom, raises if unavailable.
+@doc """
+  Retorna o módulo do controlador como um átomo, gera um erro se não estiver disponível.
   """
   @spec controller_module(Plug.Conn.t()) :: atom
   def controller_module(conn), do: conn.private.phoenix_controller
 
   @doc """
-  Returns the router module as an atom, raises if unavailable.
+  Retorna o módulo do roteador como um átomo, gera um erro se não estiver disponível.
   """
   @spec router_module(Plug.Conn.t()) :: atom
   def router_module(conn), do: conn.private.phoenix_router
 
   @doc """
-  Returns the endpoint module as an atom, raises if unavailable.
+  Retorna o módulo do endpoint como um átomo, gera um erro se não estiver disponível.
   """
   @spec endpoint_module(Plug.Conn.t()) :: atom
   def endpoint_module(conn), do: conn.private.phoenix_endpoint
 
   @doc """
-  Returns the template name rendered in the view as a string
-  (or nil if no template was rendered).
+  Retorna o nome do template renderizado na view como uma string
+  (ou nil se nenhum template foi renderizado).
   """
   @spec view_template(Plug.Conn.t()) :: binary | nil
   def view_template(conn) do
@@ -349,12 +349,12 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Sends JSON response.
+  Envia uma resposta JSON.
 
-  It uses the configured `:json_library` under the `:phoenix`
-  application for `:json` to pick up the encoder module.
+  Ele usa a `:json_library` configurada em `:phoenix`
+  para `:json` escolher o módulo encoder.
 
-  ## Examples
+  ## Exemplos
 
       iex> json(conn, %{id: 123})
 
@@ -366,25 +366,25 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  A plug that may convert a JSON response into a JSONP one.
+  Um plug que pode converter uma resposta JSON em uma JSONP.
 
-  In case a JSON response is returned, it will be converted
-  to a JSONP as long as the callback field is present in
-  the query string. The callback field itself defaults to
-  "callback", but may be configured with the callback option.
+  Caso uma resposta JSON seja retornada, ela será convertida
+  para JSONP desde que o campo de callback esteja presente na
+  query string. O campo de callback em si tem como padrão
+  "callback", mas pode ser configurado com a opção callback.
 
-  In case there is no callback or the response is not encoded
-  in JSON format, it is a no-op.
+  Caso não haja callback ou a resposta não esteja codificada
+  no formato JSON, é uma operação nula (no-op).
 
-  Only alphanumeric characters and underscore are allowed in the
-  callback name. Otherwise an exception is raised.
+  Apenas caracteres alfanuméricos e underscore são permitidos no
+  nome do callback. Caso contrário, uma exceção é lançada.
 
-  ## Examples
+  ## Exemplos
 
-      # Will convert JSON to JSONP if callback=someFunction is given
+      # Irá converter JSON para JSONP se callback=someFunction for fornecido
       plug :allow_jsonp
 
-      # Will convert JSON to JSONP if cb=someFunction is given
+      # Irá converter JSON para JSONP se cb=someFunction for fornecido
       plug :allow_jsonp, callback: "cb"
 
   """
@@ -442,11 +442,11 @@ defmodule Phoenix.Controller do
     do: raise(ArgumentError, "the JSONP callback name contains invalid characters")
 
   @doc """
-  Sends text response.
+  Envia uma resposta de texto.
 
-  ## Examples
+  ## Exemplos
 
-      iex> text(conn, "hello")
+      iex> text(conn, "olá")
 
       iex> text(conn, :implements_to_string)
 
@@ -457,9 +457,9 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Sends html response.
+  Envia uma resposta HTML.
 
-  ## Examples
+  ## Exemplos
 
       iex> html(conn, "<html><head>...")
 
@@ -470,16 +470,16 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Sends redirect response to the given url.
+  Envia uma resposta de redirecionamento para a URL fornecida.
 
-  For security, `:to` only accepts paths. Use the `:external`
-  option to redirect to any URL.
+  Por segurança, `:to` aceita apenas caminhos. Use a opção
+  `:external` para redirecionar para qualquer URL.
 
-  The response will be sent with the status code defined within
-  the connection, via `Plug.Conn.put_status/2`. If no status
-  code is set, a 302 response is sent.
+  A resposta será enviada com o código de status definido dentro
+  da conexão, através de `Plug.Conn.put_status/2`. Se nenhum código
+  de status for definido, uma resposta 302 será enviada.
 
-  ## Examples
+  ## Exemplos
 
       iex> redirect(conn, to: "/login")
 
@@ -523,16 +523,16 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Stores the view for rendering.
+  Armazena a view para renderização.
 
-  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
+  Gera `Plug.Conn.AlreadySentError` se `conn` já foi enviado.
 
-  ## Examples
+  ## Exemplos
 
-      # Use single view module
+      # Usar um único módulo de view
       iex> put_view(conn, AppView)
 
-      # Use multiple view module for content negotiation
+      # Usar múltiplos módulos de view para negociação de conteúdo
       iex> put_view(conn, html: AppHTML, json: AppJSON)
 
   """
@@ -568,9 +568,9 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Stores the view for rendering if one was not stored yet.
+  Armazena a view para renderização se uma ainda não foi armazenada.
 
-  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
+  Gera `Plug.Conn.AlreadySentError` se `conn` já foi enviado.
   """
   # TODO: Remove | layout from the spec once we deprecate put_new_view on controllers
   @spec put_new_view(Plug.Conn.t(), [{format :: atom, view}] | view) :: Plug.Conn.t()
@@ -581,9 +581,9 @@ defmodule Phoenix.Controller do
   def put_new_view(%Plug.Conn{}, _module), do: raise(AlreadySentError)
 
   @doc """
-  Retrieves the current view for the given format.
+  Recupera a view atual para o formato fornecido.
 
-  If no format is given, takes the current one from the connection.
+  Se nenhum formato for fornecido, pega o atual da conexão.
   """
   @spec view_module(Plug.Conn.t(), binary | nil) :: atom
   def view_module(conn, format \\ nil) do
@@ -605,24 +605,23 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Stores the layout for rendering.
+  Armazena o layout para renderização.
 
-  The layout must be given as keyword list where the key is the request
-  format the layout will be applied to (such as `:html`) and the value
-  is one of:
+  O layout deve ser fornecido como uma lista de palavras-chave, onde a chave é o formato
+  da requisição ao qual o layout será aplicado (como `:html`) e o valor é um dos seguintes:
 
-    * `{module, layout}` with the `module` the layout is defined and
-      the name of the `layout` as an atom
+    * `{module, layout}` com o `module` onde o layout é definido e
+      o nome do `layout` como um átomo
 
-    * `layout` when the name of the layout. This requires a layout for
-      the given format in the shape of `{module, layout}` to be previously
-      given
+    * `layout` quando o nome do layout. Isso requer um layout para
+      o formato fornecido na forma de `{module, layout}` a ser previamente
+      fornecido
 
-    * `false` which disables the layout
+    * `false` que desativa o layout
 
-  If `false` is given without a format, all layouts are disabled.
+  Se `false` for fornecido sem um formato, todos os layouts são desativados.
 
-  ## Examples
+  ## Exemplos
 
       iex> layout(conn)
       false
@@ -635,7 +634,7 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       {AppView, :print}
 
-  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
+  Gera `Plug.Conn.AlreadySentError` se `conn` já foi enviado.
   """
   @spec put_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) :: Plug.Conn.t()
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
@@ -708,11 +707,11 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Stores the layout for rendering if one was not stored yet.
+  Armazena o layout para renderização se um ainda não foi armazenado.
 
-  See `put_layout/2` for more information.
+  Veja `put_layout/2` para mais informações.
 
-  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
+  Gera `Plug.Conn.AlreadySentError` se `conn` já foi enviado.
   """
   # TODO: Remove | layout from the spec once we deprecate put_new_layout on controllers
   @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
@@ -723,22 +722,21 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Stores the root layout for rendering.
+  Armazena o layout raiz para renderização.
 
-  The layout must be given as keyword list where the key is the request
-  format the layout will be applied to (such as `:html`) and the value
-  is one of:
+  O layout deve ser fornecido como uma lista de palavras-chave, onde a chave é o formato da requisição
+  ao qual o layout será aplicado (como `:html`) e o valor é um dos seguintes:
 
-    * `{module, layout}` with the `module` the layout is defined and
-      the name of the `layout` as an atom
+    * `{module, layout}` com o `module` onde o layout é definido e
+      o nome do `layout` como um átomo
 
-    * `layout` when the name of the layout. This requires a layout for
-      the given format in the shape of `{module, layout}` to be previously
-      given
+    * `layout` quando o nome do layout. Isso requer um layout para
+      o formato fornecido na forma de `{module, layout}` a ser previamente
+      fornecido
 
-    * `false` which disables the layout
+    * `false` que desativa o layout
 
-  ## Examples
+  ## Exemplos
 
       iex> root_layout(conn)
       false
@@ -751,7 +749,7 @@ defmodule Phoenix.Controller do
       iex> root_layout(conn)
       {AppView, :bare}
 
-  Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
+  Gera `Plug.Conn.AlreadySentError` se `conn` já foi enviado.
   """
   @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) ::
           Plug.Conn.t()
@@ -787,18 +785,18 @@ defmodule Phoenix.Controller do
   def put_layout_formats(%Plug.Conn{}, _formats), do: raise(AlreadySentError)
 
   @doc """
-  Retrieves current layout formats.
+  Recupera os formatos de layout atuais.
   """
   @spec layout_formats(Plug.Conn.t()) :: [String.t()]
-  @deprecated "layout_formats/1 is deprecated, pass a keyword list to put_layout/put_root_layout instead"
+  @deprecated "layout_formats/1 está obsoleto, passe uma lista de palavras-chave para put_layout/put_root_layout em vez disso"
   def layout_formats(conn) do
     Map.get(conn.private, :phoenix_layout_formats, ~w(html))
   end
 
   @doc """
-  Retrieves the current layout for the given format.
+  Recupera o layout atual para o formato fornecido.
 
-  If no format is given, takes the current one from the connection.
+  Se nenhum formato for fornecido, pega o atual da conexão.
   """
   @spec layout(Plug.Conn.t(), binary | nil) :: {atom, String.t() | atom} | false
   def layout(conn, format \\ nil) do
@@ -806,9 +804,9 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Retrieves the current root layout for the given format.
+  Recupera o layout raiz atual para o formato fornecido.
 
-  If no format is given, takes the current one from the connection.
+  Se nenhum formato for fornecido, pega o atual da conexão.
   """
   @spec root_layout(Plug.Conn.t(), binary | nil) :: {atom, String.t() | atom} | false
   def root_layout(conn, format \\ nil) do
@@ -826,10 +824,10 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Render the given template or the default template
-  specified by the current action with the given assigns.
+  Renderiza o template fornecido ou o template padrão
+  especificado pela ação atual com os assigns fornecidos.
 
-  See `render/3` for more information.
+  Veja `render/3` para mais informações.
   """
   @spec render(Plug.Conn.t(), Keyword.t() | map | binary | atom) :: Plug.Conn.t()
   def render(conn, template_or_assigns \\ [])
@@ -839,71 +837,71 @@ defmodule Phoenix.Controller do
   end
 
   def render(conn, assigns) do
-    render(conn, action_name(conn), assigns)
+      render(conn, action_name(conn), assigns)
   end
 
   @doc """
-  Renders the given `template` and `assigns` based on the `conn` information.
+  Renderiza o `template` e `assigns` fornecidos com base nas informações da `conn`.
 
-  Once the template is rendered, the template format is set as the response
-  content type (for example, an HTML template will set "text/html" as response
-  content type) and the data is sent to the client with default status of 200.
+  Uma vez que o template é renderizado, o formato do template é definido como o tipo de conteúdo
+  da resposta (por exemplo, um template HTML definirá "text/html" como tipo de conteúdo da resposta)
+  e os dados são enviados ao cliente com o status padrão de 200.
 
-  ## Arguments
+  ## Argumentos
 
-    * `conn` - the `Plug.Conn` struct
+    * `conn` - a struct `Plug.Conn`
 
-    * `template` - which may be an atom or a string. If an atom, like `:index`,
-      it will render a template with the same format as the one returned by
-      `get_format/1`. For example, for an HTML request, it will render
-      the "index.html" template. If the template is a string, it must contain
-      the extension too, like "index.json"
+    * `template` - que pode ser um átomo ou uma string. Se um átomo, como `:index`,
+      ele renderizará um template com o mesmo formato que o retornado por
+      `get_format/1`. Por exemplo, para uma requisição HTML, ele renderizará
+      o template "index.html". Se o template for uma string, ele deve conter
+      a extensão também, como "index.json"
 
-    * `assigns` - a dictionary with the assigns to be used in the view. Those
-      assigns are merged and have higher precedence than the connection assigns
+    * `assigns` - um dicionário com os assigns a serem usados na view. Esses
+      assigns são mesclados e têm maior precedência do que os assigns da conexão
       (`conn.assigns`)
 
-  ## Examples
+  ## Exemplos
 
       defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
         def show(conn, _params) do
-          render(conn, "show.html", message: "Hello")
+          render(conn, "show.html", message: "Olá")
         end
       end
 
-  The example above renders a template "show.html" from the `MyAppWeb.UserView`
-  and sets the response content type to "text/html".
+  O exemplo acima renderiza um template "show.html" da `MyAppWeb.UserView`
+  e define o tipo de conteúdo da resposta como "text/html".
 
-  In many cases, you may want the template format to be set dynamically based
-  on the request. To do so, you can pass the template name as an atom (without
-  the extension):
+  Em muitos casos, você pode querer que o formato do template seja definido dinamicamente com base
+  na requisição. Para fazer isso, você pode passar o nome do template como um átomo (sem
+  a extensão):
 
       def show(conn, _params) do
-        render(conn, :show, message: "Hello")
+        render(conn, :show, message: "Olá")
       end
 
-  In order for the example above to work, we need to do content negotiation with
-  the accepts plug before rendering. You can do so by adding the following to your
-  pipeline (in the router):
+  Para que o exemplo acima funcione, precisamos fazer a negociação de conteúdo com
+  o plug accepts antes de renderizar. Você pode fazer isso adicionando o seguinte ao seu
+  pipeline (no roteador):
 
       plug :accepts, ["html"]
 
   ## Views
 
-  By default, Controllers render templates in a view with a similar name to the
-  controller. For example, `MyAppWeb.UserController` will render templates inside
-  the `MyAppWeb.UserView`. This information can be changed any time by using the
-  `put_view/2` function:
+  Por padrão, os Controladores renderizam templates em uma view com um nome semelhante ao
+  controlador. Por exemplo, `MyAppWeb.UserController` renderizará templates dentro
+  da `MyAppWeb.UserView`. Essa informação pode ser alterada a qualquer momento usando a
+  função `put_view/2`:
 
       def show(conn, _params) do
         conn
         |> put_view(MyAppWeb.SpecialView)
-        |> render(:show, message: "Hello")
+        |> render(:show, message: "Olá")
       end
 
-  `put_view/2` can also be used as a plug:
+  `put_view/2` também pode ser usado como um plug:
 
       defmodule MyAppWeb.UserController do
         use Phoenix.Controller
@@ -911,27 +909,27 @@ defmodule Phoenix.Controller do
         plug :put_view, html: MyAppWeb.SpecialView
 
         def show(conn, _params) do
-          render(conn, :show, message: "Hello")
+          render(conn, :show, message: "Olá")
         end
       end
 
   ## Layouts
 
-  Templates are often rendered inside layouts. By default, Phoenix
-  will render layouts for html requests. For example:
+  Os templates são frequentemente renderizados dentro de layouts. Por padrão, o Phoenix
+  renderizará layouts para requisições html. Por exemplo:
 
       defmodule MyAppWeb.UserController do
         use Phoenix.Controller
 
         def show(conn, _params) do
-          render(conn, "show.html", message: "Hello")
+          render(conn, "show.html", message: "Olá")
         end
       end
 
-  will render the  "show.html" template inside an "app.html"
-  template specified in `MyAppWeb.LayoutView`. `put_layout/2` can be used
-  to change the layout, similar to how `put_view/2` can be used to change
-  the view.
+  irá renderizar o template "show.html" dentro de um template "app.html"
+  especificado em `MyAppWeb.LayoutView`. `put_layout/2` pode ser usado
+  para alterar o layout, semelhante a como `put_view/2` pode ser usado para alterar
+  a view.
   """
   @spec render(Plug.Conn.t(), binary | atom, Keyword.t() | map) :: Plug.Conn.t()
   def render(conn, template, assigns)
@@ -1099,26 +1097,26 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Puts the url string or `%URI{}` to be used for route generation.
+  Coloca a string de URL ou `%URI{}` a ser usada para geração de rotas.
 
-  This function overrides the default URL generation pulled
-  from the `%Plug.Conn{}`'s endpoint configuration.
+  Esta função substitui a geração de URL padrão obtida
+  da configuração do endpoint da `%Plug.Conn{}`.
 
-  ## Examples
+  ## Exemplos
 
-  Imagine your application is configured to run on "example.com"
-  but after the user signs in, you want all links to use
-  "some_user.example.com". You can do so by setting the proper
-  router url configuration:
+  Imagine que sua aplicação está configurada para rodar em "example.com"
+  mas, após o usuário fazer login, você quer que todos os links usem
+  "some_user.example.com". Você pode fazer isso configurando a URL
+  do roteador apropriada:
 
       def put_router_url_by_user(conn) do
         put_router_url(conn, get_user_from_conn(conn).account_name <> ".example.com")
       end
 
-  Now when you call `Routes.some_route_url(conn, ...)`, it will use
-  the router url set above. Keep in mind that, if you want to generate
-  routes to the *current* domain, it is preferred to use
-  `Routes.some_route_path` helpers, as those are always relative.
+  Agora, quando você chamar `Routes.some_route_url(conn, ...)`, ele usará
+  a URL do roteador definida acima. Tenha em mente que, se você quiser gerar
+  rotas para o domínio *atual*, é preferível usar os helpers
+  `Routes.some_route_path`, pois estes são sempre relativos.
   """
   def put_router_url(conn, %URI{} = uri) do
     put_private(conn, :phoenix_router_url, URI.to_string(uri))
@@ -1129,11 +1127,11 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Puts the URL or `%URI{}` to be used for the static url generation.
+  Coloca a URL ou `%URI{}` a ser usada para a geração de URL estática.
 
-  Using this function on a `%Plug.Conn{}` struct tells `static_url/2` to use
-  the given information for URL generation instead of the `%Plug.Conn{}`'s
-  endpoint configuration (much like `put_router_url/2` but for static URLs).
+  Usar esta função em uma struct `%Plug.Conn{}` instrui `static_url/2` a usar
+  as informações fornecidas para geração de URL em vez da configuração do endpoint
+  da `%Plug.Conn{}` (muito parecido com `put_router_url/2`, mas para URLs estáticas).
   """
   def put_static_url(conn, %URI{} = uri) do
     put_private(conn, :phoenix_static_url, URI.to_string(uri))
@@ -1144,24 +1142,24 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Puts the format in the connection.
+  Coloca o formato na conexão.
 
-  This format is used when rendering a template as an atom.
-  For example, `render(conn, :foo)` will render `"foo.FORMAT"`
-  where the format is the one set here. The default format
-  is typically set from the negotiation done in `accepts/2`.
+  Este formato é usado ao renderizar um template como um átomo.
+  Por exemplo, `render(conn, :foo)` renderizará `"foo.FORMAT"`,
+  onde o formato é o definido aqui. O formato padrão
+  é tipicamente definido a partir da negociação feita em `accepts/2`.
 
-  See `get_format/1` for retrieval.
+  Veja `get_format/1` para recuperação.
   """
   def put_format(conn, format), do: put_private(conn, :phoenix_format, to_string(format))
 
   @doc """
-  Returns the request format, such as "json", "html".
+  Retorna o formato da requisição, como "json", "html".
 
-  This format is used when rendering a template as an atom.
-  For example, `render(conn, :foo)` will render `"foo.FORMAT"`
-  where the format is the one set here. The default format
-  is typically set from the negotiation done in `accepts/2`.
+  Este formato é usado ao renderizar um template como um átomo.
+  Por exemplo, `render(conn, :foo)` renderizará `"foo.FORMAT"`,
+  onde o formato é o definido aqui. O formato padrão
+  é tipicamente definido a partir da negociação feita em `accepts/2`.
   """
   def get_format(conn) do
     conn.private[:phoenix_format] || conn.params["_format"]
@@ -1176,61 +1174,61 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Sends the given file or binary as a download.
+  Envia o arquivo ou binário fornecido como um download.
 
-  The second argument must be `{:binary, contents}`, where
-  `contents` will be sent as download, or`{:file, path}`,
-  where `path` is the filesystem location of the file to
-  be sent. Be careful to not interpolate the path from
-  external parameters, as it could allow traversal of the
-  filesystem.
+  O segundo argumento deve ser `{:binary, contents}`, onde
+  `contents` será enviado como download, ou `{:file, path}`,
+  onde `path` é a localização do arquivo no sistema de arquivos a ser
+  enviado. Tenha cuidado para não interpolar o caminho de
+  parâmetros externos, pois isso pode permitir a travessia do
+  sistema de arquivos.
 
-  The download is achieved by setting "content-disposition"
-  to attachment. The "content-type" will also be set based
-  on the extension of the given filename but can be customized
-  via the `:content_type` and `:charset` options.
+  O download é obtido definindo "content-disposition"
+  como attachment. O "content-type" também será definido com base
+  na extensão do nome do arquivo fornecido, mas pode ser personalizado
+  através das opções `:content_type` e `:charset`.
 
-  ## Options
+  ## Opções
 
-    * `:filename` - the filename to be presented to the user
-      as download
-    * `:content_type` - the content type of the file or binary
-      sent as download. It is automatically inferred from the
-      filename extension
-    * `:disposition` - specifies disposition type
-      (`:attachment` or `:inline`). If `:attachment` was used,
-      user will be prompted to save the file. If `:inline` was used,
-      the browser will attempt to open the file.
-      Defaults to `:attachment`.
-    * `:charset` - the charset of the file, such as "utf-8".
-      Defaults to none
-    * `:offset` - the bytes to offset when reading. Defaults to `0`
-    * `:length` - the total bytes to read. Defaults to `:all`
-    * `:encode` - encodes the filename using `URI.encode/2`.
-      Defaults to `true`. When `false`, disables encoding. If you
-      disable encoding, you need to guarantee there are no special
-      characters in the filename, such as quotes, newlines, etc.
-      Otherwise you can expose your application to security attacks
+    * `:filename` - o nome do arquivo a ser apresentado ao usuário
+      como download
+    * `:content_type` - o tipo de conteúdo do arquivo ou binário
+      enviado como download. É inferido automaticamente da
+      extensão do nome do arquivo
+    * `:disposition` - especifica o tipo de disposição
+      (`:attachment` ou `:inline`). Se `:attachment` foi usado,
+      o usuário será solicitado a salvar o arquivo. Se `:inline` foi usado,
+      o navegador tentará abrir o arquivo.
+      O padrão é `:attachment`.
+    * `:charset` - o conjunto de caracteres do arquivo, como "utf-8".
+      O padrão é nenhum
+    * `:offset` - os bytes a serem deslocados ao ler. O padrão é `0`
+    * `:length` - o total de bytes a serem lidos. O padrão é `:all`
+    * `:encode` - codifica o nome do arquivo usando `URI.encode/2`.
+      O padrão é `true`. Quando `false`, a codificação é desativada. Se você
+      desativar a codificação, você precisa garantir que não haja caracteres especiais
+      no nome do arquivo, como aspas, novas linhas, etc.
+      Caso contrário, você pode expor sua aplicação a ataques de segurança
 
-  ## Examples
+  ## Exemplos
 
-  To send a file that is stored inside your application priv
-  directory:
+  Para enviar um arquivo que está armazenado dentro do diretório priv
+  da sua aplicação:
 
       path = Application.app_dir(:my_app, "priv/prospectus.pdf")
       send_download(conn, {:file, path})
 
-  When using `{:file, path}`, the filename is inferred from the
-  given path but may also be set explicitly.
+  Ao usar `{:file, path}`, o nome do arquivo é inferido do
+  caminho fornecido, mas também pode ser definido explicitamente.
 
-  To allow the user to download contents that are in memory as
-  a binary or string:
+  Para permitir que o usuário baixe conteúdos que estão na memória como
+  um binário ou string:
 
-      send_download(conn, {:binary, "world"}, filename: "hello.txt")
+      send_download(conn, {:binary, "mundo"}, filename: "hello.txt")
 
-  See `Plug.Conn.send_file/3` and `Plug.Conn.send_resp/3` if you
-  would like to access the low-level functions used to send files
-  and responses via Plug.
+  Veja `Plug.Conn.send_file/3` e `Plug.Conn.send_resp/3` se você
+  quiser acessar as funções de baixo nível usadas para enviar arquivos
+  e respostas via Plug.
   """
   def send_download(conn, kind, opts \\ [])
 
@@ -1303,21 +1301,21 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Scrubs the parameters from the request.
+  Limpa os parâmetros da requisição.
 
-  This process is two-fold:
+  Este processo tem duas partes:
 
-    * Checks to see if the `required_key` is present
-    * Changes empty parameters of `required_key` (recursively) to nils
+    * Verifica se a `required_key` está presente
+    * Altera parâmetros vazios de `required_key` (recursivamente) para nils
 
-  This function is useful for removing empty strings sent
-  via HTML forms. If you are providing an API, there
-  is likely no need to invoke `scrub_params/2`.
+  Esta função é útil para remover strings vazias enviadas
+  via formulários HTML. Se você estiver fornecendo uma API,
+  provavelmente não há necessidade de invocar `scrub_params/2`.
 
-  If the `required_key` is not present, it will
-  raise `Phoenix.MissingParamError`.
+  Se a `required_key` não estiver presente, ela irá
+  gerar `Phoenix.MissingParamError`.
 
-  ## Examples
+  ## Exemplos
 
       iex> scrub_params(conn, "user")
 
@@ -1357,40 +1355,40 @@ defmodule Phoenix.Controller do
   defp scrub?(_), do: false
 
   @doc """
-  Enables CSRF protection.
+  Habilita a proteção CSRF.
 
-  Currently used as a wrapper function for `Plug.CSRFProtection`
-  and mainly serves as a function plug in `YourApp.Router`.
+  Atualmente usado como uma função wrapper para `Plug.CSRFProtection`
+  e serve principalmente como um plug de função em `YourApp.Router`.
 
-  Check `get_csrf_token/0` and `delete_csrf_token/0` for
-  retrieving and deleting CSRF tokens.
+  Verifique `get_csrf_token/0` e `delete_csrf_token/0` para
+  recuperar e deletar tokens CSRF.
   """
   def protect_from_forgery(conn, opts \\ []) do
     Plug.CSRFProtection.call(conn, Plug.CSRFProtection.init(opts))
   end
 
   @doc """
-  Put headers that improve browser security.
+  Coloca cabeçalhos que melhoram a segurança do navegador.
 
-  It sets the following headers:
+  Define os seguintes cabeçalhos:
 
-    * `referrer-policy` - only send origin on cross origin requests
-    * `x-frame-options` - set to SAMEORIGIN to avoid clickjacking
-      through iframes unless in the same origin
-    * `x-content-type-options` - set to nosniff. This requires
-      script and style tags to be sent with proper content type
-    * `x-download-options` - set to noopen to instruct the browser
-      not to open a download directly in the browser, to avoid
-      HTML files rendering inline and accessing the security
-      context of the application (like critical domain cookies)
-    * `x-permitted-cross-domain-policies` - set to none to restrict
-      Adobe Flash Player’s access to data
+    * `referrer-policy` - envia apenas a origem em requisições de origem cruzada
+    * `x-frame-options` - definido como SAMEORIGIN para evitar clickjacking
+      através de iframes, a menos que na mesma origem
+    * `x-content-type-options` - definido como nosniff. Isso requer
+      que as tags de script e estilo sejam enviadas com o tipo de conteúdo apropriado
+    * `x-download-options` - definido como noopen para instruir o navegador
+      a não abrir um download diretamente no navegador, para evitar
+      que arquivos HTML sejam renderizados embutidos e acessem o contexto
+      de segurança da aplicação (como cookies de domínio críticos)
+    * `x-permitted-cross-domain-policies` - definido como none para restringir
+      o acesso do Adobe Flash Player aos dados
 
-  A custom headers map may also be given to be merged with defaults.
-  It is recommended for custom header keys to be in lowercase, to avoid sending
-  duplicate keys in a request.
-  Additionally, responses with mixed-case headers served over HTTP/2 are not
-  considered valid by common clients, resulting in dropped responses.
+  Um mapa de cabeçalhos personalizados também pode ser fornecido para ser mesclado com os padrões.
+  Recomenda-se que as chaves de cabeçalho personalizadas estejam em minúsculas, para evitar o envio
+  de chaves duplicadas em uma requisição.
+  Além disso, respostas com cabeçalhos de caso misto servidas via HTTP/2 não são
+  consideradas válidas por clientes comuns, resultando em respostas descartadas.
   """
   def put_secure_browser_headers(conn, headers \\ %{})
 
@@ -1406,11 +1404,11 @@ defmodule Phoenix.Controller do
 
   defp put_secure_defaults(conn) do
     merge_resp_headers(conn, [
-      # Below is the default from November 2020 but not yet in Safari as in Jan/2022.
+      # Abaixo está o padrão de novembro de 2020, mas ainda não está no Safari em janeiro de 2022.
       # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
       {"referrer-policy", "strict-origin-when-cross-origin"},
       {"x-content-type-options", "nosniff"},
-      # Applies only to Internet Explorer, can safely be removed in the future.
+      # Aplica-se apenas ao Internet Explorer, pode ser removido com segurança no futuro.
       {"x-download-options", "noopen"},
       {"x-frame-options", "SAMEORIGIN"},
       {"x-permitted-cross-domain-policies", "none"}
@@ -1418,87 +1416,86 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Gets or generates a CSRF token.
+  Obtém ou gera um token CSRF.
 
-  If a token exists, it is returned, otherwise it is generated and stored
-  in the process dictionary.
+  Se um token existir, ele é retornado, caso contrário, é gerado e armazenado
+  no dicionário de processos.
   """
   defdelegate get_csrf_token(), to: Plug.CSRFProtection
 
   @doc """
-  Deletes the CSRF token from the process dictionary.
+  Deleta o token CSRF do dicionário de processos.
 
-  *Note*: The token is deleted only after a response has been sent.
+  *Nota*: O token é deletado apenas após uma resposta ser enviada.
   """
   defdelegate delete_csrf_token(), to: Plug.CSRFProtection
 
   @doc """
-  Performs content negotiation based on the available formats.
+  Realiza a negociação de conteúdo com base nos formatos disponíveis.
 
-  It receives a connection, a list of formats that the server
-  is capable of rendering and then proceeds to perform content
-  negotiation based on the request information. If the client
-  accepts any of the given formats, the request proceeds.
+  Recebe uma conexão, uma lista de formatos que o servidor
+  é capaz de renderizar e, em seguida, prossegue para realizar a negociação de conteúdo
+  com base nas informações da requisição. Se o cliente aceitar algum dos formatos
+  fornecidos, a requisição prossegue.
 
-  If the request contains a "_format" parameter, it is
-  considered to be the format desired by the client. If no
-  "_format" parameter is available, this function will parse
-  the "accept" header and find a matching format accordingly.
+  Se a requisição contiver um parâmetro "_format", ele é considerado
+  o formato desejado pelo cliente. Se nenhum parâmetro "_format" estiver disponível,
+  esta função analisará o cabeçalho "accept" e encontrará um formato correspondente.
 
-  This function is useful when you may want to serve different
-  content-types (such as JSON and HTML) from the same routes.
-  However, if you always have distinct routes, you can also
-  disable content negotiation and simply hardcode your format
-  of choice in your route pipelines:
+  Esta função é útil quando você deseja servir diferentes
+  tipos de conteúdo (como JSON e HTML) das mesmas rotas.
+  No entanto, se você sempre tiver rotas distintas, também poderá
+  desativar a negociação de conteúdo e simplesmente codificar seu formato
+  de escolha em seus pipelines de rota:
 
       plug :put_format, "html"
 
-  It is important to notice that browsers have historically
-  sent bad accept headers. For this reason, this function will
-  default to "html" format whenever:
+  É importante notar que os navegadores historicamente
+  enviaram cabeçalhos accept ruins. Por esta razão, esta função usará
+  o formato "html" como padrão sempre que:
 
-    * the accepted list of arguments contains the "html" format
+    * a lista de argumentos aceitos contém o formato "html"
 
-    * the accept header specified more than one media type preceded
-      or followed by the wildcard media type "`*/*`"
+    * o cabeçalho accept especificou mais de um tipo de mídia precedido
+      ou seguido pelo tipo de mídia curinga "`*/*`"
 
-  This function raises `Phoenix.NotAcceptableError`, which is rendered
-  with status 406, whenever the server cannot serve a response in any
-  of the formats expected by the client.
+  Esta função gera `Phoenix.NotAcceptableError`, que é renderizado
+  com o status 406, sempre que o servidor não pode servir uma resposta em nenhum
+  dos formatos esperados pelo cliente.
 
-  ## Examples
+  ## Exemplos
 
-  `accepts/2` can be invoked as a function:
+  `accepts/2` pode ser invocado como uma função:
 
       iex> accepts(conn, ["html", "json"])
 
-  or used as a plug:
+  ou usado como um plug:
 
       plug :accepts, ["html", "json"]
       plug :accepts, ~w(html json)
 
-  ## Custom media types
+  ## Tipos de mídia personalizados
 
-  It is possible to add custom media types to your Phoenix application.
-  The first step is to teach Plug about those new media types in
-  your `config/config.exs` file:
+  É possível adicionar tipos de mídia personalizados à sua aplicação Phoenix.
+  O primeiro passo é ensinar o Plug sobre esses novos tipos de mídia em
+  seu arquivo `config/config.exs`:
 
       config :mime, :types, %{
         "application/vnd.api+json" => ["json-api"]
       }
 
-  The key is the media type, the value is a list of formats the
-  media type can be identified with. For example, by using
-  "json-api", you will be able to use templates with extension
-  "index.json-api" or to force a particular format in a given
-  URL by sending "?_format=json-api".
+  A chave é o tipo de mídia, o valor é uma lista de formatos com os quais o
+  tipo de mídia pode ser identificado. Por exemplo, ao usar
+  "json-api", você poderá usar templates com a extensão
+  "index.json-api" ou forçar um formato específico em uma determinada
+  URL enviando "?_format=json-api".
 
-  After this change, you must recompile plug:
+  Após esta alteração, você deve recompilar o plug:
 
       $ mix deps.clean mime --build
       $ mix deps.get
 
-  And now you can use it in accepts too:
+  E agora você pode usá-lo em accepts também:
 
       plug :accepts, ["html", "json-api"]
 
@@ -1624,7 +1621,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Fetches the flash storage.
+  Recupera o armazenamento flash.
   """
   def fetch_flash(conn, _opts \\ []) do
     if Map.get(conn.assigns, :flash) do
@@ -1652,15 +1649,15 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Merges a map into the flash.
+  Mescla um mapa no flash.
 
-  Returns the updated connection.
+  Retorna a conexão atualizada.
 
-  ## Examples
+  ## Exemplos
 
-      iex> conn = merge_flash(conn, info: "Welcome Back!")
+      iex> conn = merge_flash(conn, info: "Bem-vindo de volta!")
       iex> Phoenix.Flash.get(conn.assigns.flash, :info)
-      "Welcome Back!"
+      "Bem-vindo de volta!"
 
   """
   def merge_flash(conn, enumerable) do
@@ -1669,68 +1666,68 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Persists a value in flash.
+  Persiste um valor no flash.
 
-  Returns the updated connection.
+  Retorna a conexão atualizada.
 
-  ## Examples
+  ## Exemplos
 
-      iex> conn = put_flash(conn, :info, "Welcome Back!")
+      iex> conn = put_flash(conn, :info, "Bem-vindo de volta!")
       iex> Phoenix.Flash.get(conn.assigns.flash, :info)
-      "Welcome Back!"
+      "Bem-vindo de volta!"
 
   """
   def put_flash(conn, key, message) do
     flash =
       Map.get(conn.assigns, :flash) ||
-        raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+        raise ArgumentError, message: "flash não buscado, chame fetch_flash/2"
 
     persist_flash(conn, Map.put(flash, flash_key(key), message))
   end
 
   @doc """
-  Returns a map of previously set flash messages or an empty map.
+  Retorna um mapa de mensagens flash previamente definidas ou um mapa vazio.
 
-  ## Examples
+  ## Exemplos
 
       iex> get_flash(conn)
       %{}
 
-      iex> conn = put_flash(conn, :info, "Welcome Back!")
+      iex> conn = put_flash(conn, :info, "Bem-vindo de volta!")
       iex> get_flash(conn)
-      %{"info" => "Welcome Back!"}
+      %{"info" => "Bem-vindo de volta!"}
 
   """
-  @deprecated "get_flash/1 is deprecated. Use the @flash assign provided by the :fetch_flash plug"
+  @deprecated "get_flash/1 está obsoleto. Use o assign @flash fornecido pelo plug :fetch_flash"
   def get_flash(conn) do
     Map.get(conn.assigns, :flash) ||
-      raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+      raise ArgumentError, message: "flash não buscado, chame fetch_flash/2"
   end
 
   @doc """
-  Returns a message from flash by `key` (or `nil` if no message is available for `key`).
+  Retorna uma mensagem do flash por `key` (ou `nil` se nenhuma mensagem estiver disponível para `key`).
 
-  ## Examples
+  ## Exemplos
 
-      iex> conn = put_flash(conn, :info, "Welcome Back!")
+      iex> conn = put_flash(conn, :info, "Bem-vindo de volta!")
       iex> get_flash(conn, :info)
-      "Welcome Back!"
+      "Bem-vindo de volta!"
 
   """
-  @deprecated "get_flash/2 is deprecated. Use Phoenix.Flash.get(@flash, key) instead"
+  @deprecated "get_flash/2 está obsoleto. Use Phoenix.Flash.get(@flash, key) em vez disso"
   def get_flash(conn, key) do
     get_flash(conn)[flash_key(key)]
   end
 
   @doc """
-  Generates a status message from the template name.
+  Gera uma mensagem de status a partir do nome do template.
 
-  ## Examples
+  ## Exemplos
 
       iex> status_message_from_template("404.html")
-      "Not Found"
-      iex> status_message_from_template("whatever.html")
-      "Internal Server Error"
+      "Não encontrado"
+      iex> status_message_from_template("qualquercoisa.html")
+      "Erro interno do servidor"
 
   """
   def status_message_from_template(template) do
@@ -1740,11 +1737,11 @@ defmodule Phoenix.Controller do
     |> String.to_integer()
     |> Plug.Conn.Status.reason_phrase()
   rescue
-    _ -> "Internal Server Error"
+    _ -> "Erro interno do servidor"
   end
 
   @doc """
-  Clears all flash messages.
+  Limpa todas as mensagens flash.
   """
   def clear_flash(conn) do
     persist_flash(conn, %{})
@@ -1758,16 +1755,16 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns the current request path with its default query parameters:
+  Retorna o caminho da requisição atual com seus parâmetros de consulta padrão:
 
       iex> current_path(conn)
       "/users/123?existing=param"
 
-  See `current_path/2` to override the default parameters.
+  Veja `current_path/2` para substituir os parâmetros padrão.
 
-  The path is normalized based on the `conn.script_name` and
-  `conn.path_info`. For example, "/foo//bar/" will become "/foo/bar".
-  If you want the original path, use `conn.request_path` instead.
+  O caminho é normalizado com base em `conn.script_name` e
+  `conn.path_info`. Por exemplo, "/foo//bar/" se tornará "/foo/bar".
+  Se você quiser o caminho original, use `conn.request_path` em vez disso.
   """
   def current_path(%Plug.Conn{query_string: ""} = conn) do
     normalized_request_path(conn)
@@ -1778,12 +1775,12 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns the current path with the given query parameters.
+  Retorna o caminho atual com os parâmetros de consulta fornecidos.
 
-  You may also retrieve only the request path by passing an
-  empty map of params.
+  Você também pode recuperar apenas o caminho da requisição passando um
+  mapa vazio de parâmetros.
 
-  ## Examples
+  ## Exemplos
 
       iex> current_path(conn)
       "/users/123?existing=param"
@@ -1797,9 +1794,9 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{})
       "/users/123"
 
-  The path is normalized based on the `conn.script_name` and
-  `conn.path_info`. For example, "/foo//bar/" will become "/foo/bar".
-  If you want the original path, use `conn.request_path` instead.
+  O caminho é normalizado com base em `conn.script_name` e
+  `conn.path_info`. Por exemplo, "/foo//bar/" se tornará "/foo/bar".
+  Se você quiser o caminho original, use `conn.request_path` em vez disso.
   """
   def current_path(%Plug.Conn{} = conn, params) when params == %{} do
     normalized_request_path(conn)
@@ -1814,30 +1811,30 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns the current request url with its default query parameters:
+  Retorna a URL da requisição atual com seus parâmetros de consulta padrão:
 
       iex> current_url(conn)
       "https://www.example.com/users/123?existing=param"
 
-  See `current_url/2` to override the default parameters.
+  Veja `current_url/2` para substituir os parâmetros padrão.
   """
   def current_url(%Plug.Conn{} = conn) do
     Phoenix.VerifiedRoutes.unverified_url(conn, current_path(conn))
   end
 
   @doc ~S"""
-  Returns the current request URL with query params.
+  Retorna a URL da requisição atual com parâmetros de consulta.
 
-  The path will be retrieved from the currently requested path via
-  `current_path/1`. The scheme, host and others will be received from
-  the URL configuration in your Phoenix endpoint. The reason we don't
-  use the host and scheme information in the request is because most
-  applications are behind proxies and the host and scheme may not
-  actually reflect the host and scheme accessed by the client. If you
-  want to access the url precisely as requested by the client, see
+  O caminho será recuperado do caminho solicitado atualmente via
+  `current_path/1`. O esquema, host e outros serão recebidos da
+  configuração de URL em seu endpoint Phoenix. A razão pela qual não usamos
+  as informações de host e esquema na requisição é porque a maioria
+  das aplicações estão atrás de proxies e o host e o esquema podem não
+  refletir realmente o host e o esquema acessados pelo cliente. Se você
+  quiser acessar a URL precisamente como solicitado pelo cliente, veja
   `Plug.Conn.request_url/1`.
 
-  ## Examples
+  ## Exemplos
 
       iex> current_url(conn)
       "https://www.example.com/users/123?existing=param"
@@ -1848,15 +1845,14 @@ defmodule Phoenix.Controller do
       iex> current_url(conn, %{})
       "https://www.example.com/users/123"
 
-  ## Custom URL Generation
+  ## Geração de URL personalizada
 
-  In some cases, you'll need to generate a request's URL, but using a
-  different scheme, different host, etc. This can be accomplished in
-  two ways.
+  Em alguns casos, você precisará gerar a URL de uma requisição, mas usando um
+  esquema diferente, host diferente, etc. Isso pode ser feito de duas maneiras.
 
-  If you want to do so in a case-by-case basis, you can define a custom
-  function that gets the endpoint URI configuration and changes it accordingly.
-  For example, to get the current URL always in HTTPS format:
+  Se você quiser fazer isso caso a caso, pode definir uma função personalizada
+  que obtém a configuração URI do endpoint e a altera de acordo.
+  Por exemplo, para obter a URL atual sempre no formato HTTPS:
 
       def current_secure_url(conn, params \\ %{}) do
         current_uri = MyAppWeb.Endpoint.struct_url()
@@ -1864,8 +1860,8 @@ defmodule Phoenix.Controller do
         Phoenix.VerifiedRoutes.unverified_url(%URI{current_uri | scheme: "https"}, current_path)
       end
 
-  However, if you want all generated URLs to always have a certain schema,
-  host, etc, you may use `put_router_url/2`.
+  No entanto, se você quiser que todas as URLs geradas sempre tenham um determinado esquema,
+  host, etc, você pode usar `put_router_url/2`.
   """
   def current_url(%Plug.Conn{} = conn, %{} = params) do
     Phoenix.VerifiedRoutes.unverified_url(conn, current_path(conn, params))
