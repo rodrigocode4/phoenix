@@ -22,17 +22,17 @@ Os clientes podem enviar mensagens para os tópicos aos quais se juntaram e tamb
 Os servidores são capazes de transmitir mensagens para todos os clientes inscritos em um determinado tópico. Isso é ilustrado no seguinte diagrama:
 
 ```plaintext
-                                                                  +----------------+
-                                                     +--Tópico X-->| Cliente Móvel  |
-                                                     |            +----------------+
-                                              +-------------------+  |
-+----------------+            |                   |  |            +----------------+
+                                                                          +-----------------+
+                                                            +--Tópico X-->| Cliente Móvel   |
+                                                            |             +-----------------+
+                                  +----------------------+  |
++-------------------+             |                      |  |             +-----------------+
 | Cliente Navegador |--Tópico X-->| Servidor(es) Phoenix |--+--Tópico X-->| Cliente Desktop |
-+----------------+            |                   |  |            +----------------+
-                              +-------------------+  |
-                                                     |            +----------------+
-                                                     +--Tópico X-->| Cliente IoT    |
-                                                                  +----------------+
++-------------------+             |                      |  |             +-----------------+
+                                  +----------------------+  |
+                                                            |             +-----------------+
+                                                            +--Tópico X-->| Cliente IoT     |
+                                                                          +-----------------+
 ```
 
 As transmissões funcionam mesmo se a aplicação estiver em execução em vários nós/computadores. Ou seja, se dois clientes tiverem seu socket conectado a diferentes nós da aplicação e estiverem inscritos no mesmo tópico `T`, ambos receberão mensagens transmitidas para `T`. Isso é possível graças a um mecanismo interno de PubSub.
@@ -66,38 +66,38 @@ Como apenas uma mensagem precisa ser enviada por nó adicional, o custo de desem
 O fluxo de mensagens é mais ou menos assim:
 
 ```plaintext
-                                 Rota do    +-------------------------+      +--------+
-                                  Canal     | Cliente Enviando, Tópico 1 |      | PubSub  |
-                              +----------->|     Canal.Servidor      |----->| Local  |--+
-+----------------+            |            +-------------------------+      +--------+  |
-| Cliente Enviando |-Transporte--+                                                  |      |
-+----------------+                         +-------------------------+           |      |
-                                           | Cliente Enviando, Tópico 2 |           |      |
-                                           |     Canal.Servidor      |           |      |
-                                           +-------------------------+           |      |
-                                                                                 |      |
-                                           +-------------------------+           |      |
-+----------------+                         | Cliente Navegador, Tópico 1 |           |      |
-| Cliente Navegador |<-------Transporte--------|     Canal.Servidor      |<----------+      |
-+----------------+                         +-------------------------+                  |
-                                                                                        |
-                                                                                        |
-                                                                                        |
-                                           +-------------------------+                  |
-+----------------+                         |  Cliente Telefone, Tópico 1  |                  |
-|  Cliente Telefone  |<-------Transporte--------|     Canal.Servidor      |<-+               |
-+----------------+                         +-------------------------+  |   +--------+  |
-                                                                        |   | PubSub  |  |
-                                           +-------------------------+  +---| Remoto |<-+
-+----------------+                         |  Cliente Relógio, Tópico 1  |  |   +--------+  |
-|  Cliente Relógio  |<-------Transporte--------|     Canal.Servidor      |<-+               |
-+----------------+                         +-------------------------+                  |
-                                                                                        |
-                                                                                        |
-                                           +-------------------------+      +--------+  |
-+----------------+                         |   Cliente IoT, Tópico 1   |      | PubSub  |  |
-|   Cliente IoT   |<-------Transporte--------|     Canal.Servidor      |<-----| Remoto |<-+
-+----------------+                         +-------------------------+      +--------+
+                                    Rota do   +-----------------------------+      +--------+
+                                     Canal    | Cliente Enviando, Tópico 1  |      | PubSub |
+                                 +----------->|     Canal.Servidor          |----->| Local  |--+
++------------------+             |            +-----------------------------+      +--------+  |
+| Cliente Enviando |-Transporte--+                                                      |      |
++------------------+                          +-----------------------------+           |      |
+                                              | Cliente Enviando, Tópico 2  |           |      |
+                                              |     Canal.Servidor          |           |      |
+                                              +-----------------------------+           |      |
+                                                                                        |      |
+                                              +-----------------------------+           |      |
++-------------------+                         | Cliente Navegador, Tópico 1 |           |      |
+| Cliente Navegador |<-------Transporte-------|     Canal.Servidor          |<----------+      |
++-------------------+                         +-----------------------------+                  |
+                                                                                               |
+                                                                                               |
+                                                                                               |
+                                              +-----------------------------+                  |
++------------------+                          |  Cliente Telefone, Tópico 1 |                  |
+| Cliente Telefone |<-------Transporte--------|     Canal.Servidor          |<-+               |
++------------------+                          +-----------------------------+  |   +--------+  |
+                                                                               |   | PubSub |  |
+                                              +-----------------------------+  +---| Remoto |<-+
++------------------+                          |  Cliente Relógio, Tópico 1  |  |   +--------+  |
+| Cliente Relógio  |<-------Transporte--------|     Canal.Servidor          |<-+               |
++------------------+                          +-----------------------------+                  |
+                                                                                               |
+                                                                                               |
+                                              +-----------------------------+      +--------+  |
++------------------+                          |   Cliente IoT, Tópico 1     |      | PubSub |  |
+| Cliente IoT      |<-------Transporte--------|     Canal.Servidor          |<-----| Remoto |<-+
++------------------+                          +-----------------------------+      +--------+
 ```
 
 ### Endpoint
