@@ -43,7 +43,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
   test "status_message_from_template/1" do
     assert status_message_from_template("404.html") == "Not Found"
-    assert status_message_from_template("whatever.html") == "Internal Server Error"
+    assert status_message_from_template("whatever.html") == "Erro interno do servidor"
   end
 
   test "put_layout/2 and layout/1" do
